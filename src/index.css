@@ -2,95 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Maddat Design System - Trust-First Humanitarian Platform */
+    
+    /* Background - Warm neutral, calming */
+    --background: 40 20% 98%;
+    --foreground: 220 20% 15%;
 
+    /* Card surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 20% 15%;
 
+    /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 20% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Emerald for trust and growth */
+    --primary: 158 64% 40%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 158 64% 95%;
+    --primary-hover: 158 64% 35%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Soft sage */
+    --secondary: 150 15% 95%;
+    --secondary-foreground: 158 30% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted - Subtle backgrounds */
+    --muted: 40 15% 95%;
+    --muted-foreground: 220 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Warm gold for highlights */
+    --accent: 45 90% 55%;
+    --accent-foreground: 45 90% 20%;
+    --accent-light: 45 90% 95%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Trust blue for secondary actions */
+    --trust: 210 70% 50%;
+    --trust-foreground: 0 0% 100%;
+    --trust-light: 210 70% 96%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Status colors */
+    --verified: 158 64% 40%;
+    --pending: 45 90% 50%;
+    --unverified: 220 10% 60%;
+    
+    /* Category colors */
+    --category-food: 35 90% 55%;
+    --category-shelter: 200 70% 50%;
+    --category-medical: 0 70% 55%;
+    --category-masjid: 158 64% 40%;
+    --category-education: 270 60% 55%;
+
+    /* Destructive */
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border - Soft, subtle */
+    --border: 220 15% 90%;
+    --input: 220 15% 90%;
+    --ring: 158 64% 40%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 15% 15% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(220 15% 15% / 0.08);
+    --shadow-lg: 0 12px 32px -4px hsl(220 15% 15% / 0.12);
+    --shadow-card: 0 2px 8px -2px hsl(220 15% 15% / 0.06);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 20% 15%;
+    --sidebar-primary: 158 64% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 150 15% 95%;
+    --sidebar-accent-foreground: 158 30% 25%;
+    --sidebar-border: 220 15% 92%;
+    --sidebar-ring: 158 64% 40%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 20% 10%;
+    --foreground: 40 15% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 20% 12%;
+    --card-foreground: 40 15% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 20% 12%;
+    --popover-foreground: 40 15% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 158 64% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 158 64% 15%;
+    --primary-hover: 158 64% 50%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 150 20% 85%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 220 10% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 45 85% 50%;
+    --accent-foreground: 45 90% 95%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --trust: 210 70% 55%;
+    --trust-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 158 64% 45%;
+
+    --sidebar-background: 220 20% 10%;
+    --sidebar-foreground: 40 15% 95%;
+    --sidebar-primary: 158 64% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 220 15% 18%;
+    --sidebar-accent-foreground: 150 20% 85%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 158 64% 45%;
   }
 }
 
@@ -100,6 +135,141 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  /* Trust Badge Styles */
+  .badge-verified {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full;
+    background-color: hsl(var(--primary-light));
+    color: hsl(var(--primary));
+  }
+
+  .badge-pending {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full;
+    background-color: hsl(var(--accent-light));
+    color: hsl(var(--accent-foreground));
+  }
+
+  .badge-unverified {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-muted text-muted-foreground;
+  }
+
+  /* Category Tags */
+  .tag-food {
+    background-color: hsl(35 90% 95%);
+    color: hsl(35 90% 35%);
+  }
+
+  .tag-shelter {
+    background-color: hsl(200 70% 95%);
+    color: hsl(200 70% 35%);
+  }
+
+  .tag-medical {
+    background-color: hsl(0 70% 95%);
+    color: hsl(0 70% 40%);
+  }
+
+  .tag-masjid {
+    background-color: hsl(158 64% 95%);
+    color: hsl(158 64% 30%);
+  }
+
+  .tag-education {
+    background-color: hsl(270 60% 95%);
+    color: hsl(270 60% 40%);
+  }
+
+  /* Progress bar animation */
+  .progress-bar {
+    @apply h-2 rounded-full overflow-hidden;
+    background-color: hsl(var(--muted));
+  }
+
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-700 ease-out;
+    background-color: hsl(var(--primary));
+  }
+
+  /* Card hover effect */
+  .card-interactive {
+    @apply transition-all duration-200 ease-out;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-interactive:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  /* Subtle fade-in animation */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out forwards;
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  /* Smooth count animation for numbers */
+  @keyframes countUp {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-prominent {
+    box-shadow: var(--shadow-lg);
   }
 }
