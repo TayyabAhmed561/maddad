@@ -8,8 +8,6 @@ import {
   Building, 
   Landmark,
   CheckCircle,
-  Clock,
-  AlertCircle,
   ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,19 +61,16 @@ const statusExplanations = [
     status: "verified" as const,
     title: "Verified",
     description: "This organization has passed all verification checks. Their registration, finances, and operations have been validated. Donations are protected by our transparency guarantees.",
-    color: "bg-primary-light text-primary"
   },
   {
     status: "pending" as const,
     title: "Pending Verification",
     description: "This organization is currently undergoing our verification process. Some initial checks have passed, but the full review is not yet complete. Donate with awareness that verification is in progress.",
-    color: "bg-accent-light text-accent-foreground"
   },
   {
     status: "unverified" as const,
     title: "Unverified",
     description: "This organization has not yet started or completed our verification process. We cannot guarantee the legitimacy of their operations. We recommend waiting for verification before donating.",
-    color: "bg-muted text-muted-foreground"
   }
 ];
 
@@ -86,7 +81,7 @@ export default function Verification() {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary-light to-background py-16 md:py-20">
+        <section className="bg-gradient-to-br from-primary-light/50 via-background to-accent-light/30 py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-6">
@@ -103,7 +98,7 @@ export default function Verification() {
         </section>
 
         {/* Status Explanations */}
-        <section className="py-16 border-b border-border">
+        <section className="py-16 border-b border-border section-cream">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold text-foreground text-center mb-10">
               Understanding Verification Status
@@ -113,7 +108,7 @@ export default function Verification() {
               {statusExplanations.map((status, index) => (
                 <div 
                   key={status.title}
-                  className="bg-card rounded-xl border border-border p-6 animate-fade-in-up"
+                  className="bg-card rounded-xl border border-border p-6 animate-fade-in-up shadow-card"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex items-center gap-3 mb-4">
@@ -129,7 +124,7 @@ export default function Verification() {
         </section>
 
         {/* Verification Process */}
-        <section className="py-16 md:py-20">
+        <section className="py-16 md:py-20 bg-card">
           <div className="container mx-auto px-4">
             <div className="text-center mb-14">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -144,7 +139,7 @@ export default function Verification() {
               {verificationSteps.map((step, index) => (
                 <div 
                   key={step.title}
-                  className="bg-card rounded-xl border border-border p-8 card-interactive animate-fade-in-up"
+                  className="bg-background rounded-xl border border-border p-8 card-interactive animate-fade-in-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex items-start gap-4 mb-5">
@@ -152,7 +147,7 @@ export default function Verification() {
                       <step.icon size={24} className="text-primary" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-primary mb-1">Step {index + 1}</div>
+                      <div className="text-sm font-medium text-accent mb-1">Step {index + 1}</div>
                       <h3 className="text-xl font-semibold text-foreground">{step.title}</h3>
                     </div>
                   </div>
@@ -176,7 +171,7 @@ export default function Verification() {
         </section>
 
         {/* Ongoing Monitoring */}
-        <section className="py-16 bg-secondary/30">
+        <section className="py-16 section-warm">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
@@ -187,15 +182,15 @@ export default function Verification() {
               </p>
               
               <div className="flex flex-wrap justify-center gap-4">
-                <div className="bg-card rounded-lg px-6 py-4 border border-border">
+                <div className="bg-card rounded-lg px-6 py-4 border border-border shadow-card">
                   <div className="text-2xl font-bold text-primary mb-1">90 days</div>
                   <div className="text-sm text-muted-foreground">Re-verification cycle</div>
                 </div>
-                <div className="bg-card rounded-lg px-6 py-4 border border-border">
+                <div className="bg-card rounded-lg px-6 py-4 border border-border shadow-card">
                   <div className="text-2xl font-bold text-primary mb-1">24 hours</div>
                   <div className="text-sm text-muted-foreground">Concern response time</div>
                 </div>
-                <div className="bg-card rounded-lg px-6 py-4 border border-border">
+                <div className="bg-card rounded-lg px-6 py-4 border border-border shadow-card">
                   <div className="text-2xl font-bold text-primary mb-1">100%</div>
                   <div className="text-sm text-muted-foreground">Transparency commitment</div>
                 </div>
@@ -205,7 +200,7 @@ export default function Verification() {
         </section>
 
         {/* CTA */}
-        <section className="py-16">
+        <section className="py-16 bg-card">
           <div className="container mx-auto px-4">
             <div className="max-w-xl mx-auto text-center">
               <h2 className="text-2xl font-bold text-foreground mb-4">

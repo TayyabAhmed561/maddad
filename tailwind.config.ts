@@ -20,7 +20,11 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
+        background: {
+          DEFAULT: "hsl(var(--background))",
+          warm: "hsl(var(--background-warm))",
+          cream: "hsl(var(--background-cream))",
+        },
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -44,6 +48,7 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
           light: "hsl(var(--accent-light))",
+          muted: "hsl(var(--accent-muted))",
         },
         trust: {
           DEFAULT: "hsl(var(--trust))",
@@ -82,6 +87,7 @@ export default {
         'card': 'var(--shadow-card)',
         'elevated': 'var(--shadow-md)',
         'prominent': 'var(--shadow-lg)',
+        'warm': 'var(--shadow-warm)',
       },
       keyframes: {
         "accordion-down": {

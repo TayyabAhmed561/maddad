@@ -8,6 +8,7 @@ import Explore from "./pages/Explore";
 import NeedDetail from "./pages/NeedDetail";
 import Verification from "./pages/Verification";
 import Impact from "./pages/Impact";
+import Appeals from "./pages/Appeals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,9 +23,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/need/:id" element={<NeedDetail />} />
+          <Route path="/appeals" element={<Appeals />} />
           <Route path="/verification" element={<Verification />} />
           <Route path="/impact" element={<Impact />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

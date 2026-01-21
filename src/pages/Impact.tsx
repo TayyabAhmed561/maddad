@@ -5,10 +5,9 @@ import {
   DollarSign, 
   Users, 
   Clock, 
-  Globe,
+  Package,
   TrendingUp,
   Heart,
-  Package,
   Calendar
 } from "lucide-react";
 
@@ -108,7 +107,7 @@ export default function Impact() {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary-light to-background py-16 md:py-20">
+        <section className="bg-gradient-to-br from-primary-light/50 via-background to-accent-light/30 py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-6">
@@ -125,7 +124,7 @@ export default function Impact() {
         </section>
 
         {/* Main Stats */}
-        <section className="py-10 border-b border-border">
+        <section className="py-10 border-b border-border section-cream">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               {mainStats.map((stat, index) => (
@@ -141,7 +140,7 @@ export default function Impact() {
         </section>
 
         {/* Category Breakdown */}
-        <section className="py-12 md:py-16">
+        <section className="py-12 md:py-16 bg-card">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-foreground mb-8">
@@ -164,7 +163,7 @@ export default function Impact() {
                     </div>
                     <div className="h-3 bg-muted rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
+                        className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${item.percentage}%` }}
                       />
                     </div>
@@ -176,7 +175,7 @@ export default function Impact() {
         </section>
 
         {/* Monthly Overview */}
-        <section className="py-12 md:py-16 bg-secondary/30">
+        <section className="py-12 md:py-16 section-warm">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold text-foreground mb-8">
               Monthly Overview
@@ -186,7 +185,7 @@ export default function Impact() {
               {monthlyStats.map((stat, index) => (
                 <div 
                   key={stat.month}
-                  className="bg-card rounded-xl border border-border p-5 animate-fade-in-up"
+                  className="bg-card rounded-xl border border-border p-5 animate-fade-in-up shadow-card"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
@@ -206,7 +205,7 @@ export default function Impact() {
         </section>
 
         {/* Transparency Log */}
-        <section className="py-12 md:py-16">
+        <section className="py-12 md:py-16 bg-card">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -216,10 +215,10 @@ export default function Impact() {
                 Every fund release is documented and publicly available.
               </p>
               
-              <div className="bg-card rounded-xl border border-border overflow-hidden">
+              <div className="bg-background rounded-xl border border-border overflow-hidden shadow-card">
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-secondary/50">
+                    <thead className="section-cream">
                       <tr>
                         <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Date</th>
                         <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Organization</th>
@@ -231,7 +230,7 @@ export default function Impact() {
                       {recentTransparencyLog.map((entry, index) => (
                         <tr 
                           key={index}
-                          className="hover:bg-secondary/30 transition-colors animate-fade-in-up"
+                          className="hover:bg-muted/30 transition-colors animate-fade-in-up"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
@@ -257,7 +256,7 @@ export default function Impact() {
         </section>
 
         {/* Trust Statement */}
-        <section className="py-12 md:py-16 bg-primary-light/30">
+        <section className="py-12 md:py-16 section-cream">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto text-center">
               <Heart size={32} className="text-primary mx-auto mb-4" />
