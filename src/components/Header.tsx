@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/explore", label: "Explore Needs" },
+  { href: "/appeals", label: "Community Appeals" },
   { href: "/verification", label: "Verification" },
   { href: "/impact", label: "Impact" },
 ];
@@ -19,11 +20,11 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center group-hover:shadow-elevated transition-shadow">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center group-hover:shadow-warm transition-shadow">
               <Heart size={20} className="text-primary-foreground fill-current" />
             </div>
-            <span className="text-xl font-semibold text-foreground">Maddat</span>
+            <span className="text-xl font-semibold text-foreground">Maddad</span>
           </Link>
 
           {/* Desktop Navigation */}
