@@ -52,29 +52,29 @@ export default function Index() {
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section - Warm off-white */}
-        <section className="relative overflow-hidden bg-background">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-light/40 via-background to-accent-light/30" />
-          <div className="container mx-auto px-4 py-20 md:py-28 relative">
+        {/* Hero Section - With subtle geometric pattern */}
+        <section className="relative overflow-hidden bg-background pattern-subtle">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-light/30 via-transparent to-accent-light/20" />
+          <div className="container mx-auto px-4 py-24 md:py-32 relative">
             <div className="max-w-3xl mx-auto text-center">
               {/* Trust pill with gold accent */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full gold-highlight text-sm font-medium mb-6 animate-fade-in-up">
-                <Sparkles size={16} className="text-accent" />
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full gold-highlight text-sm font-medium mb-8 animate-fade-in-up">
+                <Sparkles size={16} className="gold-icon" />
                 <span className="text-accent-foreground">Trusted by 150+ masjids worldwide</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+              <h1 className="heading-display text-4xl md:text-5xl lg:text-6xl text-foreground mb-8 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
                 Know where your charity is needed most, and give with{" "}
                 <span className="text-primary">confidence</span>
               </h1>
               
-              <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+              <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto text-body animate-fade-in-up" style={{ animationDelay: "200ms" }}>
                 Maddad connects you with verified humanitarian needs around the world, ensuring your sadaqah and zakat reach those who need it most—with full transparency.
               </p>
               
               {/* Single primary CTA */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-                <Button variant="hero" asChild>
+                <Button variant="hero" size="xl" asChild>
                   <Link to="/explore">
                     <MapPin size={20} />
                     Explore Needs
@@ -83,22 +83,25 @@ export default function Index() {
               </div>
             </div>
           </div>
+          
+          {/* Decorative arch-inspired bottom edge */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background-cream to-transparent" />
         </section>
 
-        {/* Stats Section - Cream background */}
-        <section className="border-y border-border section-cream">
-          <div className="container mx-auto px-4 py-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+        {/* Stats Section - Cream background with subtle pattern */}
+        <section className="relative border-y border-border section-cream pattern-geometric">
+          <div className="container mx-auto px-4 py-14 relative">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               {stats.map((stat, index) => (
                 <div 
                   key={stat.label} 
                   className="text-center animate-fade-in-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="text-2xl md:text-3xl font-bold text-primary mb-1">
+                  <div className="font-serif text-3xl md:text-4xl font-semibold text-primary mb-2">
                     {stat.value}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-muted-foreground font-medium">
                     {stat.label}
                   </div>
                 </div>
@@ -108,31 +111,31 @@ export default function Index() {
         </section>
 
         {/* Features Section - White cards on warm background */}
-        <section className="py-20 md:py-24 section-warm">
+        <section className="section-spacing section-warm relative">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <div className="text-center mb-16">
+              <h2 className="heading-section text-3xl md:text-4xl text-foreground mb-5">
                 Built on Trust
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-body">
                 We believe effective giving starts with transparency. Here's how Maddad ensures your donations make real impact.
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid md:grid-cols-3 gap-8 md:gap-10">
               {features.map((feature, index) => (
                 <div 
                   key={feature.title}
-                  className="bg-card rounded-xl p-8 border border-border card-interactive animate-fade-in-up"
+                  className="bg-card rounded-xl p-8 md:p-10 border border-border card-interactive animate-fade-in-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-primary-light flex items-center justify-center mb-5">
-                    <feature.icon size={24} className="text-primary" />
+                  <div className="w-14 h-14 rounded-xl bg-primary-light flex items-center justify-center mb-6">
+                    <feature.icon size={26} className="text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
+                  <h3 className="text-xl font-semibold text-foreground mb-4 font-serif">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground text-body">
                     {feature.description}
                   </p>
                 </div>
@@ -141,28 +144,31 @@ export default function Index() {
           </div>
         </section>
 
+        {/* Ornamental divider */}
+        <div className="divider-ornamental" />
+
         {/* How It Works Section */}
-        <section className="py-20 md:py-24 bg-card">
+        <section className="section-spacing-sm bg-card relative">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <div className="text-center mb-16">
+              <h2 className="heading-section text-3xl md:text-4xl text-foreground mb-5">
                 How Maddad Works
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-body">
                 From discovery to impact, we make giving simple and transparent.
               </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-10 max-w-4xl mx-auto">
               {[
                 { step: "01", title: "Explore", desc: "Browse verified needs on our interactive map, filtered by location, category, or urgency." },
                 { step: "02", title: "Give", desc: "Choose your amount, select zakat or sadaqah, and donate securely in seconds." },
                 { step: "03", title: "Track", desc: "Receive updates on how your donation is being used and the impact it creates." }
               ].map((item, index) => (
-                <div key={item.step} className="text-center animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                  <div className="text-5xl font-bold text-primary/20 mb-4">{item.step}</div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-muted-foreground">{item.desc}</p>
+                <div key={item.step} className="text-center animate-fade-in-up" style={{ animationDelay: `${index * 150}ms` }}>
+                  <div className="font-serif text-5xl font-bold text-accent/30 mb-5">{item.step}</div>
+                  <h3 className="text-xl font-semibold text-foreground mb-3 font-serif">{item.title}</h3>
+                  <p className="text-muted-foreground text-body">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -170,20 +176,20 @@ export default function Index() {
         </section>
 
         {/* Community Appeals Highlight */}
-        <section className="py-16 md:py-20 section-cream border-y border-border">
-          <div className="container mx-auto px-4">
+        <section className="py-20 md:py-24 section-cream border-y border-border relative pattern-arch">
+          <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full endorsement-badge mb-6">
-                <Users size={14} />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full endorsement-badge mb-8">
+                <Users size={16} className="gold-icon" />
                 <span>Community-Powered</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+              <h2 className="heading-section text-2xl md:text-3xl text-foreground mb-5">
                 Community Appeals
               </h2>
-              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+              <p className="text-muted-foreground mb-10 max-w-xl mx-auto text-body">
                 Support verified personal fundraisers endorsed by local masjids and trusted organizations. Community-led compassion with full accountability.
               </p>
-              <Button variant="outline" asChild>
+              <Button variant="outline" size="lg" asChild>
                 <Link to="/appeals">
                   View Community Appeals
                   <ArrowRight size={18} />
@@ -194,22 +200,22 @@ export default function Index() {
         </section>
 
         {/* Partners Section */}
-        <section className="py-16 md:py-20 bg-card border-b border-border">
+        <section className="section-spacing-sm bg-card border-b border-border">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-10">
-              <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
+            <div className="text-center mb-12">
+              <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-3">
                 Trusted Partners
               </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+              <h2 className="heading-section text-2xl md:text-3xl text-foreground">
                 Working with leading organizations
               </h2>
             </div>
             
-            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+            <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
               {partners.map((partner) => (
                 <div 
                   key={partner}
-                  className="px-6 py-3 bg-background rounded-lg border border-border shadow-soft text-muted-foreground font-medium"
+                  className="px-8 py-4 bg-background rounded-lg border border-border shadow-soft text-muted-foreground font-medium text-sm"
                 >
                   {partner}
                 </div>
@@ -219,26 +225,36 @@ export default function Index() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-24 section-warm">
+        <section className="section-spacing section-warm">
           <div className="container mx-auto px-4">
-            <div className="bg-gradient-to-br from-primary to-primary-hover rounded-2xl p-10 md:p-16 text-center shadow-warm">
-              <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-                Start giving with confidence
-              </h2>
-              <p className="text-lg text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-                Join thousands of Muslims who trust Maddad to connect them with verified humanitarian needs.
-              </p>
-              <Button 
-                variant="outline" 
-                size="xl"
-                className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-0"
-                asChild
-              >
-                <Link to="/explore">
-                  Explore Needs
-                  <ArrowRight size={20} />
-                </Link>
-              </Button>
+            <div className="bg-gradient-to-br from-primary to-primary-hover rounded-2xl p-12 md:p-20 text-center shadow-prominent relative overflow-hidden">
+              {/* Subtle pattern overlay */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 1px)`,
+                  backgroundSize: '24px 24px'
+                }} />
+              </div>
+              
+              <div className="relative">
+                <h2 className="heading-display text-3xl md:text-4xl text-primary-foreground mb-5">
+                  Start giving with confidence
+                </h2>
+                <p className="text-lg text-primary-foreground/85 mb-10 max-w-xl mx-auto">
+                  Join thousands of Muslims who trust Maddad to connect them with verified humanitarian needs.
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="xl"
+                  className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 border-0 shadow-warm"
+                  asChild
+                >
+                  <Link to="/explore">
+                    Explore Needs
+                    <ArrowRight size={20} />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>

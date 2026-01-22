@@ -99,14 +99,14 @@ function AppealCard({ appeal }: { appeal: CommunityAppeal }) {
   const category = categoryLabels[appeal.category];
   
   return (
-    <div className="bg-card rounded-xl border border-border p-6 card-interactive">
+    <div className="bg-card rounded-xl border border-border p-7 card-interactive">
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex items-start justify-between gap-3 mb-5">
         <div className="flex-1">
-          <span className={cn("inline-flex px-2.5 py-1 rounded-full text-xs font-medium border mb-3", category.color)}>
+          <span className={cn("inline-flex px-3 py-1.5 rounded-full text-xs font-medium border mb-4", category.color)}>
             {category.label}
           </span>
-          <h3 className="font-semibold text-foreground text-lg leading-tight mb-1">
+          <h3 className="font-serif font-semibold text-foreground text-lg leading-tight mb-2">
             {appeal.title}
           </h3>
           <p className="text-sm text-muted-foreground">{appeal.beneficiary}</p>
@@ -114,28 +114,28 @@ function AppealCard({ appeal }: { appeal: CommunityAppeal }) {
       </div>
 
       {/* Endorsement Badge */}
-      <div className="endorsement-badge mb-4">
+      <div className="endorsement-badge mb-5">
         {appeal.endorsedBy.type === "masjid" ? (
-          <Building2 size={14} className="text-accent" />
+          <Building2 size={14} className="gold-icon" />
         ) : (
-          <Shield size={14} className="text-accent" />
+          <Shield size={14} className="gold-icon" />
         )}
         <span>Endorsed by {appeal.endorsedBy.name}</span>
       </div>
 
       {/* Description */}
-      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+      <p className="text-sm text-muted-foreground mb-5 line-clamp-2 leading-relaxed">
         {appeal.description}
       </p>
 
       {/* Location & Zakat */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-5 text-sm text-muted-foreground mb-5">
+        <div className="flex items-center gap-2">
           <MapPin size={14} className="shrink-0" />
           <span>{appeal.location}</span>
         </div>
         {appeal.zakatEligible && (
-          <div className="flex items-center gap-1.5 text-primary">
+          <div className="flex items-center gap-2 text-primary">
             <CheckCircle size={14} />
             <span className="font-medium">Zakat Eligible</span>
           </div>
@@ -143,11 +143,11 @@ function AppealCard({ appeal }: { appeal: CommunityAppeal }) {
       </div>
 
       {/* Progress */}
-      <ProgressBar current={appeal.raised} goal={appeal.goal} size="sm" className="mb-4" />
+      <ProgressBar current={appeal.raised} goal={appeal.goal} size="sm" className="mb-5" />
 
       {/* Footer */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock size={12} />
           <span>{appeal.lastUpdated}</span>
         </div>
@@ -173,17 +173,17 @@ export default function Appeals() {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-accent-light/50 via-background to-primary-light/30 py-16 md:py-20">
-          <div className="container mx-auto px-4">
+        <section className="relative bg-gradient-to-br from-accent-light/40 via-background to-primary-light/30 py-20 md:py-24 pattern-arch">
+          <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full endorsement-badge mb-6">
-                <Users size={14} />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full endorsement-badge mb-8">
+                <Users size={16} className="gold-icon" />
                 <span>Community-Powered Giving</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              <h1 className="heading-display text-4xl md:text-5xl text-foreground mb-5">
                 Community Appeals
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-body">
                 Support verified personal fundraisers endorsed by local masjids and trusted organizations. Every appeal is vetted for legitimacy and accountability.
               </p>
             </div>
@@ -191,7 +191,7 @@ export default function Appeals() {
         </section>
 
         {/* Trust Notice */}
-        <section className="border-y border-border section-cream py-6">
+        <section className="border-y border-border section-cream py-7">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-3 text-sm">
               <Shield size={18} className="text-primary" />
@@ -203,9 +203,9 @@ export default function Appeals() {
         </section>
 
         {/* Filters */}
-        <section className="py-6 bg-card border-b border-border">
+        <section className="py-7 bg-card border-b border-border">
           <div className="container mx-auto px-4">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-sm font-medium text-foreground mr-2">Filter by:</span>
               {[
                 { value: "all", label: "All Appeals" },
@@ -218,9 +218,9 @@ export default function Appeals() {
                   key={option.value}
                   onClick={() => setFilter(option.value)}
                   className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                    "px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
                     filter === option.value
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground shadow-soft"
                       : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                   )}
                 >
@@ -232,9 +232,9 @@ export default function Appeals() {
         </section>
 
         {/* Appeals Grid */}
-        <section className="py-12 md:py-16">
+        <section className="section-spacing-sm">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-7">
               {filteredAppeals.map((appeal, index) => (
                 <div 
                   key={appeal.id}
@@ -247,7 +247,7 @@ export default function Appeals() {
             </div>
 
             {filteredAppeals.length === 0 && (
-              <div className="text-center py-12">
+              <div className="text-center py-16">
                 <p className="text-muted-foreground">No appeals found in this category.</p>
               </div>
             )}
@@ -255,13 +255,13 @@ export default function Appeals() {
         </section>
 
         {/* How It Works */}
-        <section className="py-16 section-warm">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-12">
+        <section className="section-spacing section-warm pattern-geometric">
+          <div className="container mx-auto px-4 relative">
+            <h2 className="heading-section text-2xl md:text-3xl text-foreground text-center mb-14">
               How Community Appeals Work
             </h2>
             
-            <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8 max-w-5xl mx-auto">
               {[
                 { 
                   step: "01", 
@@ -287,11 +287,11 @@ export default function Appeals() {
                 <div 
                   key={item.step} 
                   className="text-center animate-fade-in-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  style={{ animationDelay: `${index * 120}ms` }}
                 >
-                  <div className="text-3xl font-bold text-accent mb-3">{item.step}</div>
-                  <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                  <div className="font-serif text-4xl font-bold text-accent/40 mb-4">{item.step}</div>
+                  <h3 className="font-serif font-semibold text-foreground mb-3">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -299,20 +299,20 @@ export default function Appeals() {
         </section>
 
         {/* Rules & Guidelines */}
-        <section className="py-16 bg-card border-y border-border">
+        <section className="section-spacing-sm bg-card border-y border-border">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
-              <h2 className="text-2xl font-bold text-foreground mb-8 text-center">
+              <h2 className="heading-section text-2xl text-foreground mb-10 text-center">
                 Appeal Guidelines
               </h2>
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-background rounded-xl border border-border p-6">
-                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+              <div className="grid md:grid-cols-2 gap-7">
+                <div className="bg-background rounded-xl border border-border p-7 shadow-card">
+                  <h3 className="font-semibold text-foreground mb-5 flex items-center gap-2">
                     <CheckCircle size={18} className="text-primary" />
                     Allowed Categories
                   </h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
+                  <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Medical emergencies</li>
                     <li>• Disaster relief (fire, flood, etc.)</li>
                     <li>• Education hardship</li>
@@ -320,12 +320,12 @@ export default function Appeals() {
                   </ul>
                 </div>
                 
-                <div className="bg-background rounded-xl border border-border p-6">
-                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <div className="bg-background rounded-xl border border-border p-7 shadow-card">
+                  <h3 className="font-semibold text-foreground mb-5 flex items-center gap-2">
                     <AlertCircle size={18} className="text-muted-foreground" />
                     Requirements
                   </h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
+                  <ul className="space-y-3 text-sm text-muted-foreground">
                     <li>• Endorsement from verified masjid/org</li>
                     <li>• Identity verification of beneficiary</li>
                     <li>• Regular update commitment</li>
@@ -338,16 +338,16 @@ export default function Appeals() {
         </section>
 
         {/* CTA */}
-        <section className="py-16 section-cream">
+        <section className="section-spacing-sm section-cream">
           <div className="container mx-auto px-4">
             <div className="max-w-xl mx-auto text-center">
-              <h2 className="text-2xl font-bold text-foreground mb-4">
+              <h2 className="heading-section text-2xl text-foreground mb-5">
                 Need to create an appeal?
               </h2>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground mb-8 text-body">
                 Contact your local masjid or a verified organization to submit an appeal on your behalf.
               </p>
-              <Button variant="outline" asChild>
+              <Button variant="outline" size="lg" asChild>
                 <a href="/verification">
                   Learn About Verification
                   <ArrowRight size={18} />

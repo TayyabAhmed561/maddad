@@ -37,14 +37,14 @@ export function NeedCard({
   return (
     <div 
       className={cn(
-        "bg-card rounded-xl p-5 border border-border card-interactive",
+        "bg-card rounded-xl p-6 border border-border card-interactive",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground text-base leading-tight mb-1 line-clamp-2">
+          <h3 className="font-serif font-semibold text-foreground text-base leading-tight mb-2 line-clamp-2">
             {title}
           </h3>
           <div className="flex items-center gap-2 flex-wrap">
@@ -58,17 +58,17 @@ export function NeedCard({
       </div>
 
       {/* Location */}
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
         <MapPin size={14} className="shrink-0" />
         <span className="truncate">{location}</span>
       </div>
 
       {/* Progress */}
-      <ProgressBar current={raised} goal={goal} size="sm" className="mb-4" />
+      <ProgressBar current={raised} goal={goal} size="sm" className="mb-5" />
 
       {/* Footer */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock size={12} />
           <span>Updated {lastUpdated}</span>
         </div>
