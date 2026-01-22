@@ -122,18 +122,18 @@ export default function Explore() {
       <Header />
       
       {/* Top Bar */}
-      <div className="sticky top-16 z-30 bg-card border-b border-border">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
+      <div className="sticky top-18 z-30 bg-card/95 backdrop-blur-sm border-b border-border">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search by city, crisis, or organization..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-secondary text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow duration-200"
               />
             </div>
             
@@ -141,9 +141,9 @@ export default function Explore() {
             <button
               onClick={() => setVerifiedOnly(!verifiedOnly)}
               className={cn(
-                "hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
+                "hidden sm:flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
                 verifiedOnly
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-soft"
                   : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
               )}
             >
@@ -154,6 +154,7 @@ export default function Explore() {
             {/* Filters Button */}
             <Button
               variant="outline"
+              size="lg"
               onClick={() => setFilterDrawerOpen(true)}
               className="gap-2"
             >
@@ -166,7 +167,7 @@ export default function Explore() {
 
       {/* Main Content */}
       <main className="flex-1">
-        <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)]">
+        <div className="flex flex-col lg:flex-row h-[calc(100vh-8.5rem)]">
           {/* Map Section */}
           <div className="w-full lg:w-[60%] xl:w-[65%] h-64 lg:h-full p-4 lg:pr-2">
             <MapPlaceholder 
@@ -176,10 +177,10 @@ export default function Explore() {
           </div>
           
           {/* List Section */}
-          <div className="w-full lg:w-[40%] xl:w-[35%] h-full overflow-y-auto border-t lg:border-t-0 lg:border-l border-border">
-            <div className="p-4 space-y-4">
+          <div className="w-full lg:w-[40%] xl:w-[35%] h-full overflow-y-auto border-t lg:border-t-0 lg:border-l border-border section-warm">
+            <div className="p-5 space-y-5">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-foreground">
+                <h2 className="font-serif font-semibold text-foreground text-lg">
                   {filteredNeeds.length} needs found
                 </h2>
                 
@@ -187,7 +188,7 @@ export default function Explore() {
                 <button
                   onClick={() => setVerifiedOnly(!verifiedOnly)}
                   className={cn(
-                    "sm:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                    "sm:hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
                     verifiedOnly
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary text-secondary-foreground"
@@ -202,7 +203,7 @@ export default function Explore() {
                 <div 
                   key={need.id}
                   className="animate-fade-in-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  style={{ animationDelay: `${index * 80}ms` }}
                 >
                   <NeedCard
                     {...need}
@@ -213,7 +214,7 @@ export default function Explore() {
               ))}
 
               {filteredNeeds.length === 0 && (
-                <div className="text-center py-12">
+                <div className="text-center py-16">
                   <p className="text-muted-foreground">No needs found matching your criteria.</p>
                 </div>
               )}

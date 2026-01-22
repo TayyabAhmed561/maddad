@@ -18,13 +18,13 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-18">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center group-hover:shadow-warm transition-shadow">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft group-hover:shadow-warm transition-shadow duration-300">
               <Heart size={20} className="text-primary-foreground fill-current" />
             </div>
-            <span className="text-xl font-semibold text-foreground">Maddad</span>
+            <span className="text-xl font-serif font-semibold text-foreground">Maddad</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -34,10 +34,10 @@ export function Header() {
                 key={link.href}
                 to={link.href}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   location.pathname === link.href
                     ? "bg-secondary text-secondary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                 )}
               >
                 {link.label}
@@ -53,7 +53,7 @@ export function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-secondary"
+            className="md:hidden p-2.5 rounded-lg hover:bg-secondary transition-colors duration-200"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -62,17 +62,17 @@ export function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border animate-fade-in-up">
+          <div className="md:hidden py-5 border-t border-border animate-fade-in-up">
             <nav className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
                   className={cn(
-                    "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                    "px-4 py-3.5 rounded-lg text-sm font-medium transition-all duration-200",
                     location.pathname === link.href
                       ? "bg-secondary text-secondary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -80,7 +80,7 @@ export function Header() {
                 </Link>
               ))}
             </nav>
-            <div className="flex gap-3 mt-4 px-4">
+            <div className="flex gap-3 mt-5 px-4">
               <Button variant="outline" className="flex-1">Sign In</Button>
               <Button className="flex-1">Donate Now</Button>
             </div>

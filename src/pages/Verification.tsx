@@ -81,16 +81,16 @@ export default function Verification() {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary-light/50 via-background to-accent-light/30 py-16 md:py-20">
-          <div className="container mx-auto px-4">
+        <section className="relative bg-gradient-to-br from-primary-light/40 via-background to-accent-light/30 py-20 md:py-24 pattern-subtle">
+          <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-6">
-                <Shield size={32} />
+              <div className="inline-flex items-center justify-center w-18 h-18 rounded-2xl bg-primary text-primary-foreground mb-8 shadow-warm">
+                <Shield size={36} />
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              <h1 className="heading-display text-4xl md:text-5xl text-foreground mb-5">
                 How We Verify Organizations
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-body">
                 Trust is the foundation of effective giving. We maintain rigorous verification standards to ensure your donations reach legitimate, accountable organizations.
               </p>
             </div>
@@ -98,20 +98,20 @@ export default function Verification() {
         </section>
 
         {/* Status Explanations */}
-        <section className="py-16 border-b border-border section-cream">
+        <section className="section-spacing-sm border-b border-border section-cream">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-foreground text-center mb-10">
+            <h2 className="heading-section text-2xl text-foreground text-center mb-12">
               Understanding Verification Status
             </h2>
             
-            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-7 max-w-5xl mx-auto">
               {statusExplanations.map((status, index) => (
                 <div 
                   key={status.title}
-                  className="bg-card rounded-xl border border-border p-6 animate-fade-in-up shadow-card"
+                  className="bg-card rounded-xl border border-border p-7 animate-fade-in-up shadow-card"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-3 mb-5">
                     <VerificationBadge status={status.status} />
                   </div>
                   <p className="text-muted-foreground text-sm leading-relaxed">
@@ -124,13 +124,13 @@ export default function Verification() {
         </section>
 
         {/* Verification Process */}
-        <section className="py-16 md:py-20 bg-card">
+        <section className="section-spacing bg-card">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <div className="text-center mb-16">
+              <h2 className="heading-section text-3xl md:text-4xl text-foreground mb-5">
                 Our Verification Process
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-body">
                 Every organization goes through a comprehensive four-step verification process before receiving the "Verified" badge.
               </p>
             </div>
@@ -139,27 +139,27 @@ export default function Verification() {
               {verificationSteps.map((step, index) => (
                 <div 
                   key={step.title}
-                  className="bg-background rounded-xl border border-border p-8 card-interactive animate-fade-in-up"
+                  className="bg-background rounded-xl border border-border p-8 md:p-10 card-interactive animate-fade-in-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="flex items-start gap-4 mb-5">
-                    <div className="w-12 h-12 rounded-xl bg-primary-light flex items-center justify-center shrink-0">
-                      <step.icon size={24} className="text-primary" />
+                  <div className="flex items-start gap-5 mb-6">
+                    <div className="w-14 h-14 rounded-xl bg-primary-light flex items-center justify-center shrink-0">
+                      <step.icon size={26} className="text-primary" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-accent mb-1">Step {index + 1}</div>
-                      <h3 className="text-xl font-semibold text-foreground">{step.title}</h3>
+                      <div className="text-sm font-medium gold-text mb-1.5">Step {index + 1}</div>
+                      <h3 className="text-xl font-serif font-semibold text-foreground">{step.title}</h3>
                     </div>
                   </div>
                   
-                  <p className="text-muted-foreground mb-5">
+                  <p className="text-muted-foreground mb-6 text-body">
                     {step.description}
                   </p>
                   
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {step.checks.map((check, checkIndex) => (
-                      <li key={checkIndex} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle size={14} className="text-primary shrink-0" />
+                      <li key={checkIndex} className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <CheckCircle size={15} className="text-primary shrink-0" />
                         {check}
                       </li>
                     ))}
@@ -171,27 +171,27 @@ export default function Verification() {
         </section>
 
         {/* Ongoing Monitoring */}
-        <section className="py-16 section-warm">
-          <div className="container mx-auto px-4">
+        <section className="section-spacing section-warm pattern-geometric">
+          <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+              <h2 className="heading-section text-2xl md:text-3xl text-foreground mb-5">
                 Continuous Monitoring
               </h2>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-muted-foreground mb-10 text-body">
                 Verification isn't just a one-time event. We continuously monitor verified organizations to ensure they maintain our standards. Organizations must submit regular updates, and we conduct periodic re-verification.
               </p>
               
-              <div className="flex flex-wrap justify-center gap-4">
-                <div className="bg-card rounded-lg px-6 py-4 border border-border shadow-card">
-                  <div className="text-2xl font-bold text-primary mb-1">90 days</div>
+              <div className="flex flex-wrap justify-center gap-5">
+                <div className="bg-card rounded-xl px-8 py-6 border border-border shadow-card">
+                  <div className="font-serif text-3xl font-bold text-primary mb-2">90 days</div>
                   <div className="text-sm text-muted-foreground">Re-verification cycle</div>
                 </div>
-                <div className="bg-card rounded-lg px-6 py-4 border border-border shadow-card">
-                  <div className="text-2xl font-bold text-primary mb-1">24 hours</div>
+                <div className="bg-card rounded-xl px-8 py-6 border border-border shadow-card">
+                  <div className="font-serif text-3xl font-bold text-primary mb-2">24 hours</div>
                   <div className="text-sm text-muted-foreground">Concern response time</div>
                 </div>
-                <div className="bg-card rounded-lg px-6 py-4 border border-border shadow-card">
-                  <div className="text-2xl font-bold text-primary mb-1">100%</div>
+                <div className="bg-card rounded-xl px-8 py-6 border border-border shadow-card">
+                  <div className="font-serif text-3xl font-bold text-primary mb-2">100%</div>
                   <div className="text-sm text-muted-foreground">Transparency commitment</div>
                 </div>
               </div>
@@ -200,16 +200,16 @@ export default function Verification() {
         </section>
 
         {/* CTA */}
-        <section className="py-16 bg-card">
+        <section className="section-spacing-sm bg-card">
           <div className="container mx-auto px-4">
             <div className="max-w-xl mx-auto text-center">
-              <h2 className="text-2xl font-bold text-foreground mb-4">
+              <h2 className="heading-section text-2xl text-foreground mb-5">
                 Ready to give with confidence?
               </h2>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground mb-8 text-body">
                 Explore verified humanitarian needs and make an impact you can trust.
               </p>
-              <Button asChild>
+              <Button size="lg" asChild>
                 <Link to="/explore">
                   Explore Verified Needs
                   <ArrowRight size={18} />

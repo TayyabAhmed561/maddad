@@ -107,16 +107,16 @@ export default function Impact() {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary-light/50 via-background to-accent-light/30 py-16 md:py-20">
-          <div className="container mx-auto px-4">
+        <section className="relative bg-gradient-to-br from-primary-light/40 via-background to-accent-light/30 py-20 md:py-24 pattern-subtle">
+          <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-6">
-                <TrendingUp size={32} />
+              <div className="inline-flex items-center justify-center w-18 h-18 rounded-2xl bg-primary text-primary-foreground mb-8 shadow-warm">
+                <TrendingUp size={36} />
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              <h1 className="heading-display text-4xl md:text-5xl text-foreground mb-5">
                 Impact Dashboard
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-body">
                 Full transparency into where donations go and the impact they create. Updated in real-time.
               </p>
             </div>
@@ -124,9 +124,9 @@ export default function Impact() {
         </section>
 
         {/* Main Stats */}
-        <section className="py-10 border-b border-border section-cream">
+        <section className="py-12 border-b border-border section-cream">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-7">
               {mainStats.map((stat, index) => (
                 <StatCard 
                   key={stat.label}
@@ -140,31 +140,34 @@ export default function Impact() {
         </section>
 
         {/* Category Breakdown */}
-        <section className="py-12 md:py-16 bg-card">
+        <section className="section-spacing-sm bg-card">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-foreground mb-8">
+              <h2 className="heading-section text-2xl text-foreground mb-10">
                 Funds Allocated by Category
               </h2>
               
-              <div className="space-y-6">
+              <div className="space-y-7">
                 {categoryBreakdown.map((item, index) => (
                   <div 
                     key={item.category}
                     className="animate-fade-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-3">
                       <span className="font-medium text-foreground">{item.category}</span>
                       <div className="text-right">
-                        <span className="font-semibold text-foreground">{formatCurrency(item.amount)}</span>
+                        <span className="font-serif font-semibold text-foreground">{formatCurrency(item.amount)}</span>
                         <span className="text-sm text-muted-foreground ml-2">({item.percentage}%)</span>
                       </div>
                     </div>
                     <div className="h-3 bg-muted rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-700 ease-out"
-                        style={{ width: `${item.percentage}%` }}
+                        className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full"
+                        style={{ 
+                          width: `${item.percentage}%`,
+                          transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
                       />
                     </div>
                   </div>
@@ -175,24 +178,24 @@ export default function Impact() {
         </section>
 
         {/* Monthly Overview */}
-        <section className="py-12 md:py-16 section-warm">
-          <div className="container mx-auto px-4">
-            <h2 className="text-2xl font-bold text-foreground mb-8">
+        <section className="section-spacing-sm section-warm pattern-geometric">
+          <div className="container mx-auto px-4 relative">
+            <h2 className="heading-section text-2xl text-foreground mb-10">
               Monthly Overview
             </h2>
             
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-4 gap-5">
               {monthlyStats.map((stat, index) => (
                 <div 
                   key={stat.month}
-                  className="bg-card rounded-xl border border-border p-5 animate-fade-in-up shadow-card"
+                  className="bg-card rounded-xl border border-border p-6 animate-fade-in-up shadow-card"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                     <Calendar size={14} />
                     {stat.month}
                   </div>
-                  <div className="text-xl font-bold text-foreground mb-1">
+                  <div className="font-serif text-2xl font-bold text-foreground mb-2">
                     {formatCurrency(stat.raised)}
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -205,13 +208,13 @@ export default function Impact() {
         </section>
 
         {/* Transparency Log */}
-        <section className="py-12 md:py-16 bg-card">
+        <section className="section-spacing-sm bg-card">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-foreground mb-2">
+              <h2 className="heading-section text-2xl text-foreground mb-3">
                 Recent Transparency Log
               </h2>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-muted-foreground mb-10">
                 Every fund release is documented and publicly available.
               </p>
               
@@ -220,29 +223,29 @@ export default function Impact() {
                   <table className="w-full">
                     <thead className="section-cream">
                       <tr>
-                        <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Date</th>
-                        <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Organization</th>
-                        <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Purpose</th>
-                        <th className="text-right px-6 py-4 text-sm font-medium text-muted-foreground">Amount</th>
+                        <th className="text-left px-7 py-5 text-sm font-medium text-muted-foreground">Date</th>
+                        <th className="text-left px-7 py-5 text-sm font-medium text-muted-foreground">Organization</th>
+                        <th className="text-left px-7 py-5 text-sm font-medium text-muted-foreground">Purpose</th>
+                        <th className="text-right px-7 py-5 text-sm font-medium text-muted-foreground">Amount</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {recentTransparencyLog.map((entry, index) => (
                         <tr 
                           key={index}
-                          className="hover:bg-muted/30 transition-colors animate-fade-in-up"
-                          style={{ animationDelay: `${index * 50}ms` }}
+                          className="hover:bg-muted/30 transition-colors duration-200 animate-fade-in-up"
+                          style={{ animationDelay: `${index * 60}ms` }}
                         >
-                          <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                          <td className="px-7 py-5 text-sm text-muted-foreground whitespace-nowrap">
                             {entry.date}
                           </td>
-                          <td className="px-6 py-4 text-sm font-medium text-foreground">
+                          <td className="px-7 py-5 text-sm font-medium text-foreground">
                             {entry.organization}
                           </td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground">
+                          <td className="px-7 py-5 text-sm text-muted-foreground">
                             {entry.purpose}
                           </td>
-                          <td className="px-6 py-4 text-sm font-semibold text-primary text-right whitespace-nowrap">
+                          <td className="px-7 py-5 text-sm font-serif font-semibold text-primary text-right whitespace-nowrap">
                             {entry.amount}
                           </td>
                         </tr>
@@ -256,14 +259,14 @@ export default function Impact() {
         </section>
 
         {/* Trust Statement */}
-        <section className="py-12 md:py-16 section-cream">
+        <section className="section-spacing-sm section-cream">
           <div className="container mx-auto px-4">
             <div className="max-w-2xl mx-auto text-center">
-              <Heart size={32} className="text-primary mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-foreground mb-4">
+              <Heart size={36} className="text-primary mx-auto mb-5" />
+              <h2 className="heading-section text-2xl text-foreground mb-5">
                 Our Commitment to Transparency
               </h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground text-body">
                 Every donation is tracked from the moment it's received to the moment it reaches those in need. We publish complete fund allocation reports monthly, and our platform fee never exceeds 2%. Your trust is our responsibility.
               </p>
             </div>
