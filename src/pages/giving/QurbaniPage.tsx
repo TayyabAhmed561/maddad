@@ -18,92 +18,39 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useDonation } from "@/hooks/useDonation";
+import { 
+  qurbaniPackages, 
+  qurbaniProcessSteps, 
+  animalLabels,
+  allocationRules 
+} from "@/data/givingData";
 import type { QurbaniPackage } from "@/types/giving";
-
-const qurbaniPackages: QurbaniPackage[] = [
-  {
-    id: "1",
-    animal: "sheep",
-    price: 150,
-    region: "Pakistan",
-    partner: "Islamic Relief",
-    description: "One sheep provides meat for approximately 15-20 families"
-  },
-  {
-    id: "2",
-    animal: "goat",
-    price: 120,
-    region: "Bangladesh",
-    partner: "Muslim Aid",
-    description: "One goat provides meat for approximately 12-15 families"
-  },
-  {
-    id: "3",
-    animal: "cow-share",
-    price: 180,
-    region: "India",
-    partner: "Helping Hand",
-    description: "1/7 share of a cow, provides for approximately 8-10 families"
-  },
-  {
-    id: "4",
-    animal: "sheep",
-    price: 200,
-    region: "Palestine",
-    partner: "PCRF",
-    description: "One sheep distributed to families in Gaza and West Bank"
-  },
-  {
-    id: "5",
-    animal: "cow-full",
-    price: 950,
-    region: "Somalia",
-    partner: "Islamic Relief",
-    description: "Full cow provides meat for approximately 70+ families"
-  },
-  {
-    id: "6",
-    animal: "sheep",
-    price: 175,
-    region: "Yemen",
-    partner: "Mercy Corps",
-    description: "One sheep for families affected by ongoing crisis"
-  }
-];
-
-const processSteps = [
-  { step: 1, title: "Selection", description: "Choose your Qurbani animal and region" },
-  { step: 2, title: "Verification", description: "Animal is inspected for health and eligibility" },
-  { step: 3, title: "Sacrifice", description: "Performed on Eid days following Islamic guidelines" },
-  { step: 4, title: "Distribution", description: "Fresh meat distributed to verified families" },
-  { step: 5, title: "Confirmation", description: "You receive a report with distribution details" }
-];
-
-const animalLabels: Record<string, string> = {
-  "sheep": "Sheep",
-  "goat": "Goat",
-  "cow-share": "Cow Share (1/7)",
-  "cow-full": "Full Cow"
-};
 
 export default function QurbaniPage() {
   const [selectedPackage, setSelectedPackage] = useState<QurbaniPackage | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [anonymous, setAnonymous] = useState(true);
-  const [hideAmount, setHideAmount] = useState(false);
-  const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  
+  const [donationState, donationActions] = useDonation({
+    defaultAnonymous: true
+  });
+
+  const { anonymous, hideAmount, duaIntention, isLoading, isSuccess } = donationState;
+  const { setAnonymous, setHideAmount, setDuaIntention, processDonation, reset } = donationActions;
 
   const totalAmount = selectedPackage ? selectedPackage.price * quantity : 0;
+  const allocationItems = allocationRules.qurbani;
 
   const handleDonate = () => {
     if (!selectedPackage) return;
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-    }, 1500);
+    donationActions.setAmount(totalAmount);
+    processDonation();
+  };
+
+  const handleReset = () => {
+    reset();
+    setSelectedPackage(null);
+    setQuantity(1);
   };
 
   // Mock: Check if we're in Qurbani season (Dhul Hijjah)
@@ -162,7 +109,7 @@ export default function QurbaniPage() {
             </h2>
             
             <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-              {processSteps.map((step, index) => (
+              {qurbaniProcessSteps.map((step, index) => (
                 <div key={step.step} className="flex items-center gap-3">
                   <div className="flex flex-col items-center text-center max-w-[120px]">
                     <div className="w-10 h-10 rounded-full bg-primary-light flex items-center justify-center text-primary font-semibold mb-2">
@@ -171,7 +118,7 @@ export default function QurbaniPage() {
                     <p className="text-sm font-medium text-foreground">{step.title}</p>
                     <p className="text-xs text-muted-foreground">{step.description}</p>
                   </div>
-                  {index < processSteps.length - 1 && (
+                  {index < qurbaniProcessSteps.length - 1 && (
                     <div className="hidden md:block w-8 h-px bg-border" />
                   )}
                 </div>
@@ -313,11 +260,7 @@ export default function QurbaniPage() {
                     </div>
 
                     <AllocationBreakdown
-                      items={[
-                        { label: "Animal & slaughter", percentage: 85 },
-                        { label: "Distribution", percentage: 12 },
-                        { label: "Admin", percentage: 3 }
-                      ]}
+                      items={allocationItems}
                       className="mb-6"
                     />
 
@@ -346,9 +289,19 @@ export default function QurbaniPage() {
                     </Button>
 
                     {isSuccess && (
-                      <p className="text-sm text-center text-muted-foreground mt-4">
-                        Eid Mubarak! You will receive a confirmation report after distribution.
-                      </p>
+                      <div className="mt-4 space-y-3">
+                        <p className="text-sm text-center text-muted-foreground">
+                          Eid Mubarak! You will receive a confirmation report after distribution.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={handleReset}
+                        >
+                          Book Another Qurbani
+                        </Button>
+                      </div>
                     )}
                   </>
                 ) : (
