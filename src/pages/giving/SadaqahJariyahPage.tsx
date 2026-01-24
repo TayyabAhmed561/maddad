@@ -9,7 +9,6 @@ import { RecurringDonationToggle } from "@/components/giving/RecurringDonationTo
 import { ProgressBar } from "@/components/ProgressBar";
 import { 
   Infinity,
-  Heart,
   Loader2,
   Check,
   ArrowLeft,
@@ -23,87 +22,23 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useDonation } from "@/hooks/useDonation";
+import { 
+  sadaqahJariyahProjects, 
+  sadaqahJariyahConfig,
+  allocationRules 
+} from "@/data/givingData";
 import type { SadaqahJariyahProject, DonationFrequency } from "@/types/giving";
 
-const projectTypes = [
-  { id: "all", label: "All Projects", icon: Infinity },
-  { id: "water", label: "Water Wells", icon: Droplets },
-  { id: "education", label: "Education", icon: BookOpen },
-  { id: "masjid", label: "Masjid", icon: Building2 },
-  { id: "healthcare", label: "Healthcare", icon: Stethoscope },
-  { id: "orphan-care", label: "Orphan Care", icon: Users }
-];
-
-const sampleProjects: SadaqahJariyahProject[] = [
-  {
-    id: "1",
-    title: "Community Water Well — Rural Pakistan",
-    type: "water",
-    description: "A deep-bore water well serving 500+ villagers daily. Provides clean drinking water for generations.",
-    raised: 3200,
-    goal: 5000,
-    impactYears: 25,
-    location: "Punjab, Pakistan",
-    partner: "Islamic Relief"
-  },
-  {
-    id: "2",
-    title: "Quran School Endowment — Somalia",
-    type: "education",
-    description: "Endowment fund to support teachers, materials, and facilities for a Quran memorization school.",
-    raised: 8500,
-    goal: 15000,
-    impactYears: 50,
-    location: "Mogadishu, Somalia",
-    partner: "Muslim Aid"
-  },
-  {
-    id: "3",
-    title: "Masjid Construction — Rural Indonesia",
-    type: "masjid",
-    description: "Building a masjid in an underserved village. Will serve as community center and place of worship.",
-    raised: 22000,
-    goal: 35000,
-    impactYears: 100,
-    location: "Sumatra, Indonesia",
-    partner: "Helping Hand"
-  },
-  {
-    id: "4",
-    title: "Medical Clinic Equipment — Yemen",
-    type: "healthcare",
-    description: "Equipping a maternal health clinic with essential medical equipment to save lives.",
-    raised: 12000,
-    goal: 20000,
-    impactYears: 15,
-    location: "Sana'a, Yemen",
-    partner: "ICNA Relief"
-  },
-  {
-    id: "5",
-    title: "Orphan Education Fund — Gaza",
-    type: "orphan-care",
-    description: "Long-term educational support for orphaned children, covering tuition and supplies.",
-    raised: 6800,
-    goal: 12000,
-    impactYears: 18,
-    location: "Gaza, Palestine",
-    partner: "PCRF"
-  },
-  {
-    id: "6",
-    title: "Islamic Library Endowment — USA",
-    type: "education",
-    description: "Creating a permanent Islamic library resource center for a growing Muslim community.",
-    raised: 15000,
-    goal: 25000,
-    impactYears: 30,
-    location: "Chicago, USA",
-    partner: "ISNA"
-  }
-];
-
-const presetAmounts = [50, 100, 250, 500, 1000];
+// Map icon strings to components
+const typeIconMap: Record<string, typeof Infinity> = {
+  "Infinity": Infinity,
+  "Droplets": Droplets,
+  "BookOpen": BookOpen,
+  "Building2": Building2,
+  "Stethoscope": Stethoscope,
+  "Users": Users
+};
 
 const typeIcons: Record<string, typeof Infinity> = {
   "water": Droplets,
@@ -116,28 +51,38 @@ const typeIcons: Record<string, typeof Infinity> = {
 export default function SadaqahJariyahPage() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedProject, setSelectedProject] = useState<SadaqahJariyahProject | null>(null);
-  const [amount, setAmount] = useState<number>(100);
+  const [localAmount, setLocalAmount] = useState<number>(100);
   const [customAmount, setCustomAmount] = useState("");
-  const [frequency, setFrequency] = useState<DonationFrequency>("monthly");
-  const [anonymous, setAnonymous] = useState(true);
-  const [hideAmount, setHideAmount] = useState(false);
-  const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  
+  const [donationState, donationActions] = useDonation({
+    defaultAmount: 100,
+    defaultFrequency: "monthly",
+    defaultAnonymous: true
+  });
 
-  const selectedAmount = customAmount ? parseFloat(customAmount) || 0 : amount;
+  const { frequency, anonymous, hideAmount, duaIntention, isLoading, isSuccess } = donationState;
+  const { setFrequency, setAnonymous, setHideAmount, setDuaIntention, processDonation, reset } = donationActions;
+
+  const selectedAmount = customAmount ? parseFloat(customAmount) || 0 : localAmount;
+  const allocationItems = allocationRules["sadaqah-jariyah"];
+  const presetAmounts = sadaqahJariyahConfig.presetAmounts;
+  const projectTypes = sadaqahJariyahConfig.projectTypes;
 
   const filteredProjects = selectedType === "all" 
-    ? sampleProjects 
-    : sampleProjects.filter(p => p.type === selectedType);
+    ? sadaqahJariyahProjects 
+    : sadaqahJariyahProjects.filter(p => p.type === selectedType);
 
   const handleDonate = () => {
     if (!selectedProject || selectedAmount <= 0) return;
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-    }, 1500);
+    donationActions.setAmount(selectedAmount);
+    processDonation();
+  };
+
+  const handleReset = () => {
+    reset();
+    setSelectedProject(null);
+    setLocalAmount(100);
+    setCustomAmount("");
   };
 
   return (
@@ -190,7 +135,7 @@ export default function SadaqahJariyahPage() {
               {/* Project Type Filter */}
               <div className="flex flex-wrap gap-2">
                 {projectTypes.map((type) => {
-                  const Icon = type.icon;
+                  const Icon = typeIconMap[type.icon] || Infinity;
                   return (
                     <button
                       key={type.id}
@@ -286,12 +231,12 @@ export default function SadaqahJariyahPage() {
                         <button
                           key={preset}
                           onClick={() => {
-                            setAmount(preset);
+                            setLocalAmount(preset);
                             setCustomAmount("");
                           }}
                           className={cn(
                             "py-3 px-4 rounded-lg text-sm font-medium transition-all",
-                            amount === preset && !customAmount
+                            localAmount === preset && !customAmount
                               ? "bg-primary text-primary-foreground shadow-soft"
                               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                           )}
@@ -319,7 +264,7 @@ export default function SadaqahJariyahPage() {
 
                   <RecurringDonationToggle
                     value={frequency}
-                    onChange={setFrequency}
+                    onChange={(f: DonationFrequency) => setFrequency(f)}
                     showYearly={true}
                   />
 
@@ -389,11 +334,7 @@ export default function SadaqahJariyahPage() {
                     </div>
 
                     <AllocationBreakdown
-                      items={[
-                        { label: "Project delivery", percentage: 90 },
-                        { label: "Maintenance fund", percentage: 7 },
-                        { label: "Admin", percentage: 3 }
-                      ]}
+                      items={allocationItems}
                       className="mb-6"
                     />
 
@@ -422,9 +363,19 @@ export default function SadaqahJariyahPage() {
                     </Button>
 
                     {isSuccess && (
-                      <p className="text-sm text-center text-muted-foreground mt-4">
-                        May this be a source of ongoing reward. Updates will be sent to your email.
-                      </p>
+                      <div className="mt-4 space-y-3">
+                        <p className="text-sm text-center text-muted-foreground">
+                          May this be a source of ongoing reward. Updates will be sent to your email.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={handleReset}
+                        >
+                          Make Another Contribution
+                        </Button>
+                      </div>
                     )}
                   </>
                 ) : (
