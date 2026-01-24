@@ -14,65 +14,58 @@ import {
   Loader2,
   Check,
   ArrowLeft,
-  Info
+  Info,
+  ShieldCheck
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import type { GivingPartner, MealImpactLog } from "@/types/giving";
-
-const FIDYA_AMOUNT_PER_DAY = 15; // Example amount
-
-const samplePartners: GivingPartner[] = [
-  {
-    id: "1",
-    name: "Al-Khair Kitchen Network",
-    region: "Local (USA)",
-    verified: true,
-    taxDeductible: true,
-    description: "Community kitchens providing hot meals across 12 cities in the United States."
-  },
-  {
-    id: "2",
-    name: "Global Feeding Initiative",
-    region: "International",
-    verified: true,
-    taxDeductible: true,
-    description: "Provides meals in Yemen, Syria, and Gaza through trusted local partners."
-  },
-  {
-    id: "3",
-    name: "Masjid Al-Rahman Food Bank",
-    region: "Chicago, IL",
-    verified: true,
-    taxDeductible: true,
-    description: "Local masjid-operated food bank serving 500+ families monthly."
-  }
-];
-
-const sampleImpactLogs: MealImpactLog[] = [
-  { id: "1", date: "January 22, 2024", mealsDelivered: 1250, location: "Chicago, IL", partner: "Masjid Al-Rahman" },
-  { id: "2", date: "January 20, 2024", mealsDelivered: 3400, location: "Gaza Strip", partner: "Global Feeding Initiative" },
-  { id: "3", date: "January 18, 2024", mealsDelivered: 890, location: "Detroit, MI", partner: "Al-Khair Kitchen" }
-];
+import { 
+  fidyaConfig, 
+  verifiedPartners, 
+  allocationRules, 
+  fidyaImpactLogs 
+} from "@/data/givingData";
+import type { GivingPartner } from "@/types/giving";
 
 export default function FidyaPage() {
+  const navigate = useNavigate();
   const [missedDays, setMissedDays] = useState<number>(1);
   const [selectedPartner, setSelectedPartner] = useState<GivingPartner | null>(null);
-  const [anonymous, setAnonymous] = useState(true);
-  const [hideAmount, setHideAmount] = useState(false);
+  const [anonymous, setAnonymous] = useState(true); // Anonymous by default for Fidya
+  const [hideAmount, setHideAmount] = useState(true); // Hide amount by default for privacy
   const [duaIntention, setDuaIntention] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const totalAmount = missedDays * FIDYA_AMOUNT_PER_DAY;
+  const partners = verifiedPartners.fidya || [];
+  const allocation = allocationRules.fidya;
+  const totalAmount = missedDays * fidyaConfig.amountPerDay;
 
-  const handleDonate = () => {
+  const handleDonate = async () => {
     if (!selectedPartner) return;
+    
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-    }, 1500);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setIsLoading(false);
+    setIsSuccess(true);
+    
+    // Store donation intent privately (in production, this goes to backend)
+    console.log("Fidya donation processed:", {
+      days: missedDays,
+      amount: totalAmount,
+      partner: selectedPartner.id, // Only store ID, not name for privacy
+      anonymous,
+      hideAmount,
+      // Dua intention is stored privately, never displayed publicly
+      duaIntention: duaIntention ? "[PRIVATE]" : undefined
+    });
+  };
+
+  const handleViewImpact = () => {
+    navigate("/impact");
   };
 
   return (
@@ -109,6 +102,12 @@ export default function FidyaPage() {
                 For those unable to fast due to chronic illness, old age, or other valid reasons, 
                 Fidya provides a way to fulfill your obligation by feeding those in need.
               </p>
+
+              {/* Privacy assurance */}
+              <div className="flex items-center gap-2 mt-6 text-sm text-muted-foreground">
+                <ShieldCheck size={16} className="text-primary" />
+                <span>Your donation and recipient information remain completely private</span>
+              </div>
             </div>
           </div>
         </section>
@@ -144,7 +143,7 @@ export default function FidyaPage() {
                   
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Info size={14} />
-                    <span>Amount per day: ${FIDYA_AMOUNT_PER_DAY} (cost of one meal)</span>
+                    <span>Amount per day: ${fidyaConfig.amountPerDay} (cost of one meal)</span>
                   </div>
                   
                   <div className="bg-primary-light rounded-lg p-4 mt-4">
@@ -155,31 +154,37 @@ export default function FidyaPage() {
                       </span>
                     </div>
                     <p className="text-xs text-secondary-foreground mt-1">
-                      {missedDays} day{missedDays > 1 ? 's' : ''} × ${FIDYA_AMOUNT_PER_DAY} per meal
+                      {missedDays} day{missedDays > 1 ? 's' : ''} × ${fidyaConfig.amountPerDay} per meal
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Partner Selection */}
+              {/* Partner Selection - Privacy-focused display */}
               <div className="bg-card rounded-xl border border-border p-6 md:p-8">
                 <h2 className="font-serif text-xl font-semibold text-foreground mb-2">
                   Select a Feeding Partner
                 </h2>
                 <p className="text-sm text-muted-foreground mb-6">
-                  All partners are verified and provide meal distribution confirmations.
+                  All partners are verified. Distribution details remain private to protect beneficiary dignity.
                 </p>
                 
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {samplePartners.map((partner) => (
-                    <PartnerCard
-                      key={partner.id}
-                      partner={partner}
-                      selected={selectedPartner?.id === partner.id}
-                      onSelect={setSelectedPartner}
-                    />
-                  ))}
-                </div>
+                {partners.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {partners.map((partner) => (
+                      <PartnerCard
+                        key={partner.id}
+                        partner={partner}
+                        selected={selectedPartner?.id === partner.id}
+                        onSelect={setSelectedPartner}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No partners available at this time. Please check back later.</p>
+                  </div>
+                )}
               </div>
 
               {/* Privacy & Intention */}
@@ -230,11 +235,7 @@ export default function FidyaPage() {
                 </div>
 
                 <AllocationBreakdown
-                  items={[
-                    { label: "Meal delivery", percentage: 92 },
-                    { label: "Logistics", percentage: 6 },
-                    { label: "Platform", percentage: 2 }
-                  ]}
+                  items={allocation}
                   className="mb-6"
                 />
 
@@ -263,16 +264,29 @@ export default function FidyaPage() {
                 </Button>
 
                 {isSuccess && (
-                  <p className="text-sm text-center text-muted-foreground mt-4">
-                    May Allah accept your Fidya. A receipt has been sent to your email.
-                  </p>
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm text-center text-muted-foreground">
+                      May Allah accept your Fidya. A private receipt has been sent to your email.
+                    </p>
+                    <p className="text-xs text-center text-muted-foreground italic">
+                      Fidya fulfilled through verified partners. No recipient details are shared publicly.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={handleViewImpact}
+                    >
+                      View Aggregate Impact
+                    </Button>
+                  </div>
                 )}
               </div>
 
-              {/* Impact Log */}
+              {/* Impact Log - Anonymized aggregate data only */}
               <ImpactLog 
-                logs={sampleImpactLogs} 
-                title="Recent Meal Distributions"
+                logs={fidyaImpactLogs} 
+                title="Recent Distributions (Aggregate)"
               />
             </div>
           </div>

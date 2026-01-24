@@ -17,48 +17,18 @@ import {
   Users,
   ShieldCheck
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import type { GivingPartner, MealImpactLog, DonationFrequency } from "@/types/giving";
-
-const MEAL_COST = 8;
-
-const presetMeals = [10, 25, 50, 100, 250];
-
-const samplePartners: GivingPartner[] = [
-  {
-    id: "1",
-    name: "Community Iftar Network",
-    region: "USA Nationwide",
-    verified: true,
-    taxDeductible: true,
-    description: "Provides hot meals at community centers and masjids across 40+ cities."
-  },
-  {
-    id: "2",
-    name: "Mercy Kitchen International",
-    region: "Middle East & Africa",
-    verified: true,
-    taxDeductible: true,
-    description: "Operates feeding centers in refugee camps and underserved communities."
-  },
-  {
-    id: "3",
-    name: "Local Masjid Food Program",
-    region: "Your City",
-    verified: true,
-    taxDeductible: true,
-    description: "Support your local masjid's weekly food distribution program."
-  }
-];
-
-const sampleImpactLogs: MealImpactLog[] = [
-  { id: "1", date: "January 23, 2024", mealsDelivered: 2100, location: "Houston, TX", partner: "Community Iftar Network" },
-  { id: "2", date: "January 21, 2024", mealsDelivered: 5600, location: "Lebanon", partner: "Mercy Kitchen International" },
-  { id: "3", date: "January 19, 2024", mealsDelivered: 340, location: "Dallas, TX", partner: "Irving Islamic Center" }
-];
+import { 
+  mealSponsorshipConfig, 
+  verifiedPartners, 
+  allocationRules, 
+  mealSponsorshipImpactLogs 
+} from "@/data/givingData";
+import type { GivingPartner, DonationFrequency } from "@/types/giving";
 
 export default function MealSponsorshipPage() {
+  const navigate = useNavigate();
   const [meals, setMeals] = useState<number>(25);
   const [customMeals, setCustomMeals] = useState("");
   const [selectedPartner, setSelectedPartner] = useState<GivingPartner | null>(null);
@@ -69,16 +39,34 @@ export default function MealSponsorshipPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const selectedMeals = customMeals ? parseInt(customMeals) || 0 : meals;
-  const totalAmount = selectedMeals * MEAL_COST;
+  const partners = verifiedPartners["meal-sponsorship"] || [];
+  const allocation = allocationRules["meal-sponsorship"];
+  const { mealCost, presetMeals } = mealSponsorshipConfig;
 
-  const handleDonate = () => {
+  const selectedMeals = customMeals ? parseInt(customMeals) || 0 : meals;
+  const totalAmount = selectedMeals * mealCost;
+
+  const handleDonate = async () => {
     if (!selectedPartner || selectedMeals <= 0) return;
+    
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSuccess(true);
-    }, 1500);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsLoading(false);
+    setIsSuccess(true);
+
+    // Log donation (in production, this goes to backend)
+    console.log("Meal sponsorship processed:", {
+      meals: selectedMeals,
+      amount: totalAmount,
+      partner: selectedPartner.id,
+      frequency,
+      anonymous,
+      hideAmount
+    });
+  };
+
+  const handleViewImpact = () => {
+    navigate("/impact");
   };
 
   return (
@@ -140,7 +128,7 @@ export default function MealSponsorshipPage() {
                   How many meals would you like to sponsor?
                 </h2>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Each meal costs ${MEAL_COST} and provides a nutritious, hot meal to someone in need.
+                  Each meal costs ${mealCost} and provides a nutritious, hot meal to someone in need.
                 </p>
                 
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
@@ -183,7 +171,7 @@ export default function MealSponsorshipPage() {
                     </span>
                   </div>
                   <p className="text-xs text-secondary-foreground mt-1">
-                    {selectedMeals.toLocaleString()} meals × ${MEAL_COST} each
+                    {selectedMeals.toLocaleString()} meals × ${mealCost} each
                   </p>
                 </div>
               </div>
@@ -213,16 +201,22 @@ export default function MealSponsorshipPage() {
                   Select where you'd like your meals to be distributed.
                 </p>
                 
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {samplePartners.map((partner) => (
-                    <PartnerCard
-                      key={partner.id}
-                      partner={partner}
-                      selected={selectedPartner?.id === partner.id}
-                      onSelect={setSelectedPartner}
-                    />
-                  ))}
-                </div>
+                {partners.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {partners.map((partner) => (
+                      <PartnerCard
+                        key={partner.id}
+                        partner={partner}
+                        selected={selectedPartner?.id === partner.id}
+                        onSelect={setSelectedPartner}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No partners available. Please check back later.</p>
+                  </div>
+                )}
               </div>
 
               {/* Privacy & Intention */}
@@ -279,11 +273,7 @@ export default function MealSponsorshipPage() {
                 </div>
 
                 <AllocationBreakdown
-                  items={[
-                    { label: "Food & preparation", percentage: 88 },
-                    { label: "Distribution", percentage: 8 },
-                    { label: "Admin & platform", percentage: 4 }
-                  ]}
+                  items={allocation}
                   className="mb-6"
                 />
 
@@ -312,15 +302,25 @@ export default function MealSponsorshipPage() {
                 </Button>
 
                 {isSuccess && (
-                  <p className="text-sm text-center text-muted-foreground mt-4">
-                    JazakAllah Khair. A confirmation has been sent to your email.
-                  </p>
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm text-center text-muted-foreground">
+                      JazakAllah Khair. A confirmation has been sent to your email.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={handleViewImpact}
+                    >
+                      View Aggregate Impact
+                    </Button>
+                  </div>
                 )}
               </div>
 
               {/* Impact Log */}
               <ImpactLog 
-                logs={sampleImpactLogs} 
+                logs={mealSponsorshipImpactLogs} 
                 title="Recent Distributions"
               />
             </div>

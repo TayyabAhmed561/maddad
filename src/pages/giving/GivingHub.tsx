@@ -12,45 +12,16 @@ import {
   Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { givingTypes, platformStats } from "@/data/givingData";
 
-const givingTypes = [
-  {
-    title: "Fidya",
-    description: "Compensate for missed fasts by providing meals to those in need. Calculate your obligation and support verified feeding partners.",
-    icon: Moon,
-    href: "/giving/fidya",
-    seasonal: false
-  },
-  {
-    title: "Meal Sponsorship",
-    description: "Sponsor nutritious meals for verified beneficiaries through trusted partner organizations and masjids.",
-    icon: Utensils,
-    href: "/giving/meal-sponsorship",
-    seasonal: false
-  },
-  {
-    title: "Zakat Distribution",
-    description: "Fulfill your Zakat obligation through verified, eligible recipients confirmed by local masjids and scholars.",
-    icon: Coins,
-    href: "/giving/zakat",
-    seasonal: false
-  },
-  {
-    title: "Qurbani / Udhiyah",
-    description: "Sponsor Qurbani during Eid al-Adha. Select your region, choose a partner, and receive distribution confirmation.",
-    icon: Heart,
-    href: "/giving/qurbani",
-    seasonal: true,
-    seasonLabel: "Dhul Hijjah"
-  },
-  {
-    title: "Sadaqah Jariyah",
-    description: "Invest in ongoing reward through endowment-style projects: wells, education, masjid construction, and more.",
-    icon: Infinity,
-    href: "/giving/sadaqah-jariyah",
-    seasonal: false
-  }
-];
+// Icon mapping for dynamic lookup
+const iconMap = {
+  Moon,
+  Utensils,
+  Coins,
+  Heart,
+  Infinity
+};
 
 export default function GivingHub() {
   return (
@@ -84,14 +55,22 @@ export default function GivingHub() {
         <section className="section-spacing section-warm">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {givingTypes.map((type, index) => (
-                <GivingTypeCard
-                  key={type.title}
-                  {...type}
-                  className="animate-fade-in-up"
-                  style={{ animationDelay: `${index * 100}ms` } as React.CSSProperties}
-                />
-              ))}
+              {givingTypes.map((type, index) => {
+                const IconComponent = iconMap[type.icon as keyof typeof iconMap] || Heart;
+                return (
+                  <GivingTypeCard
+                    key={type.id}
+                    title={type.title}
+                    description={type.description}
+                    icon={IconComponent}
+                    href={type.href}
+                    seasonal={type.seasonal}
+                    seasonLabel={type.seasonLabel}
+                    className="animate-fade-in-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  />
+                );
+              })}
             </div>
           </div>
         </section>
@@ -110,18 +89,24 @@ export default function GivingHub() {
               </p>
               
               <div className="grid sm:grid-cols-3 gap-6 mt-10">
-                {[
-                  { label: "Verified Partners", value: "47" },
-                  { label: "Countries Served", value: "23" },
-                  { label: "Meals Delivered", value: "180K+" }
-                ].map((stat) => (
-                  <div key={stat.label} className="text-center">
-                    <div className="font-serif text-2xl font-semibold text-primary mb-1">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-center">
+                  <div className="font-serif text-2xl font-semibold text-primary mb-1">
+                    {platformStats.verifiedPartners}
                   </div>
-                ))}
+                  <div className="text-sm text-muted-foreground">Verified Partners</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-serif text-2xl font-semibold text-primary mb-1">
+                    {platformStats.countriesServed}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Countries Served</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-serif text-2xl font-semibold text-primary mb-1">
+                    {platformStats.mealsDelivered}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Meals Delivered</div>
+                </div>
               </div>
             </div>
           </div>
