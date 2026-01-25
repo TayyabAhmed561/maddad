@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import maddadLogo from "@/assets/maddad-logo.png";
 
 export function Footer() {
   return (
@@ -9,9 +9,11 @@ export function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft">
-                <Heart size={20} className="text-primary-foreground fill-current" />
-              </div>
+              <img 
+                src={maddadLogo} 
+                alt="Maddad logo" 
+                className="h-10 w-auto"
+              />
               <span className="text-xl font-serif font-semibold text-foreground">Maddad</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
