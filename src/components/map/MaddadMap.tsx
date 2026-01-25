@@ -52,9 +52,11 @@ interface MaddadMapProps {
   selectedItemId?: string | null;
   isPanelOpen?: boolean;
   onFocusItem?: (itemId: string) => void;
+  onScopeChange?: (scope: ScopeLevel) => void;
+  onUserLocationChange?: (location: { lat: number; lng: number } | null) => void;
 }
 
-export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen = true, onFocusItem }: MaddadMapProps) {
+export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen = true, onFocusItem, onScopeChange, onUserLocationChange }: MaddadMapProps) {
   const navigate = useNavigate();
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -380,9 +382,14 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            setUserLocation({ lat: latitude, lng: longitude });
+            const location = { lat: latitude, lng: longitude };
+            setUserLocation(location);
             setScopeLevel("local");
             setIsLocating(false);
+            
+            // Notify parent of scope and location change
+            onScopeChange?.("local");
+            onUserLocationChange?.(location);
 
             flyToWithOffset({ lat: latitude, lng: longitude }, LOCAL_ZOOM);
 
@@ -400,12 +407,14 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
             });
             // Fallback to provincial
             setScopeLevel("provincial");
+            onScopeChange?.("provincial");
             fitBoundsWithPadding(ONTARIO_BOUNDS, ONTARIO_MAX_ZOOM);
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
       } else {
         setScopeLevel(scope);
+        onScopeChange?.(scope);
         closePopup();
 
         if (scope === "provincial") {
@@ -417,7 +426,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         }
       }
     },
-    [closePopup, flyToWithOffset, fitBoundsWithPadding]
+    [closePopup, flyToWithOffset, fitBoundsWithPadding, onScopeChange, onUserLocationChange]
   );
 
   // Get scope label for tooltip

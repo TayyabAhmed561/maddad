@@ -91,7 +91,7 @@ export default function CharityDetail() {
       <main className="flex-1">
         {/* Hero Section */}
         <div className="bg-gradient-to-b from-muted/50 to-background">
-          <div className="container-narrow pt-6 pb-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
             {/* Back Button */}
             <button
               onClick={() => navigate("/explore")}
@@ -211,32 +211,27 @@ export default function CharityDetail() {
                     </div>
                   )}
                   
-                  {/* Donation Buttons */}
+                  {/* Donation Buttons - Dual CTA */}
                   <div className="space-y-3">
+                    {/* Primary CTA: Donate on Maddad */}
                     {(charity.type === "need" || charity.type === "appeal") && (
-                      <>
-                        <Button 
-                          size="lg" 
-                          className="w-full"
-                          onClick={() => {
-                            // For now, show coming soon - in production this would open payment flow
-                            navigate(`/need/${charity.id}#donate`);
-                          }}
-                        >
-                          <Heart className="w-4 h-4 mr-2" />
-                          Donate Now
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="lg" 
-                          className="w-full"
-                        >
-                          <Share2 className="w-4 h-4 mr-2" />
-                          Share Appeal
-                        </Button>
-                      </>
+                      <Button 
+                        size="lg" 
+                        className="w-full"
+                        onClick={() => {
+                          // Scroll to inline donate section or open modal
+                          const donateSection = document.getElementById("donate-inline");
+                          if (donateSection) {
+                            donateSection.scrollIntoView({ behavior: "smooth" });
+                          }
+                        }}
+                      >
+                        <Heart className="w-4 h-4 mr-2" />
+                        Donate on Maddad
+                      </Button>
                     )}
                     
+                    {/* Secondary CTA: Visit Website (for verified orgs) */}
                     {externalUrl && (
                       <a
                         href={externalUrl}
@@ -244,12 +239,21 @@ export default function CharityDetail() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-2 w-full"
                       >
-                        <Button variant="secondary" size="lg" className="w-full">
+                        <Button variant="outline" size="lg" className="w-full">
                           <Globe className="w-4 h-4 mr-2" />
                           Visit Website
                         </Button>
                       </a>
                     )}
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="lg" 
+                      className="w-full"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Button>
                   </div>
                   
                   {/* Trust Indicators */}
@@ -286,9 +290,74 @@ export default function CharityDetail() {
           </div>
         </div>
         
+        {/* Inline Donation Section */}
+        <section id="donate-inline" className="py-12 bg-muted/20 scroll-mt-24">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-xl mx-auto">
+              <div className="bg-card rounded-2xl border border-border p-6 md:p-8 shadow-card">
+                <h3 className="font-serif text-xl font-semibold text-foreground mb-6 text-center">
+                  Make a Donation
+                </h3>
+                
+                {/* Amount Picker */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {[25, 50, 100, 250, 500, 1000].map((amount) => (
+                    <button
+                      key={amount}
+                      className="py-3 px-4 rounded-lg text-sm font-medium transition-all bg-muted text-foreground hover:bg-muted/80"
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Custom Amount */}
+                <div className="mb-6">
+                  <label className="text-sm text-muted-foreground mb-2 block">
+                    Custom amount
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <input
+                      type="text"
+                      placeholder="Enter amount"
+                      className="w-full pl-8 pr-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
+                
+                {/* Zakat Eligibility Notice */}
+                {charity.zakatEligible && (
+                  <div className="bg-primary/5 rounded-lg p-4 mb-6">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          This cause qualifies for Zakat funds.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Donate Button */}
+                <Button className="w-full py-6 text-base">
+                  <Heart className="w-4 h-4 mr-2" />
+                  Complete Donation
+                </Button>
+                
+                <p className="text-xs text-muted-foreground text-center mt-4">
+                  Secure payment powered by Stripe. Tax receipt available.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
         {/* Additional Information Section */}
         <section className="py-12 bg-muted/30">
-          <div className="container-narrow">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 gap-8">
               {/* About the Organization */}
               {charity.orgName && (

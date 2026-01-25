@@ -52,6 +52,8 @@ export default function Explore() {
           onItemSelect={handleMapItemSelect}
           selectedItemId={selectedMapItemId}
           isPanelOpen={isPanelOpen}
+          onScopeChange={handleScopeChange}
+          onUserLocationChange={handleUserLocationChange}
         />
 
         {isMobile ? (
