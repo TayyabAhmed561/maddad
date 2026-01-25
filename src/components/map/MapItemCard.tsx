@@ -3,22 +3,41 @@ import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { cn } from "@/lib/utils";
 import { MapItem, categoryColors } from "@/data/mapData";
+import { toast } from "@/hooks/use-toast";
 
 interface MapItemCardProps {
   item: MapItem;
   onView: (id: string) => void;
   onDonate: (id: string) => void;
   className?: string;
+  isSelected?: boolean;
 }
 
-export function MapItemCard({ item, onView, onDonate, className }: MapItemCardProps) {
+export function MapItemCard({ item, onView, onDonate, className, isSelected }: MapItemCardProps) {
   const categoryStyle = categoryColors[item.category];
   const hasProgress = item.goal && item.fundingRaised !== undefined;
+  
+  const handleView = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "Coming soon",
+      description: `Full details for "${item.title}" will be available soon.`,
+    });
+  };
+
+  const handleDonate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "Coming soon",
+      description: `Donations for "${item.title}" will be available soon.`,
+    });
+  };
   
   return (
     <div 
       className={cn(
-        "bg-card rounded-xl p-5 border border-border card-interactive",
+        "bg-card rounded-xl p-5 border border-border card-interactive transition-all duration-300",
+        isSelected && "border-primary shadow-md",
         className
       )}
     >
@@ -104,10 +123,7 @@ export function MapItemCard({ item, onView, onDonate, className }: MapItemCardPr
           <Button 
             variant="card-secondary" 
             size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onView(item.id);
-            }}
+            onClick={handleView}
           >
             View
           </Button>
@@ -115,10 +131,7 @@ export function MapItemCard({ item, onView, onDonate, className }: MapItemCardPr
             <Button 
               variant="card" 
               size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDonate(item.id);
-              }}
+              onClick={handleDonate}
             >
               Donate
             </Button>

@@ -166,6 +166,7 @@ export function ResultsPanel({
                   item={item}
                   onView={onView}
                   onDonate={onDonate}
+                  isSelected={selectedItemId === item.id}
                 />
               </div>
             ))
@@ -264,6 +265,7 @@ export function ResultsPanel({
                 item={item}
                 onView={onView}
                 onDonate={onDonate}
+                isSelected={selectedItemId === item.id}
               />
             </div>
           ))
