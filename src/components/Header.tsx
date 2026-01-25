@@ -22,12 +22,12 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo Lockup */}
-          <Link to="/" className="flex items-center gap-3 group cursor-pointer flex-shrink-0">
-            <div className="h-[52px] w-[52px] overflow-hidden flex items-center justify-center">
+          <Link to="/" className="flex items-center gap-2 group cursor-pointer flex-shrink-0">
+            <div className="h-[60px] w-[60px] overflow-hidden flex items-center justify-center">
               <img
                 src={maddadLogo}
                 alt="Maddad logo"
-                className="h-full w-full object-cover scale-[1.35] origin-center"
+                className="h-full w-full object-cover scale-[1.45] origin-center"
               />
             </div>
 
