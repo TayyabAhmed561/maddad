@@ -47,17 +47,25 @@ const AppRoutes = () => (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/explore" element={<Explore />} />
+      <Route path="/needs" element={<Explore />} />
       <Route path="/need/:id" element={<NeedDetail />} />
+      <Route path="/needs/:id" element={<NeedDetail />} />
       <Route path="/appeals" element={<Appeals />} />
-      <Route path="/appeal/:id" element={<AppealDetail />} />
+      <Route path="/appeals/:id" element={<AppealDetail />} />
       <Route path="/verification" element={<Verification />} />
       <Route path="/impact" element={<Impact />} />
       <Route path="/giving" element={<GivingHub />} />
+      <Route path="/give" element={<GivingHub />} />
       <Route path="/giving/fidya" element={<FidyaPage />} />
+      <Route path="/give/fidya" element={<FidyaPage />} />
       <Route path="/giving/meal-sponsorship" element={<MealSponsorshipPage />} />
+      <Route path="/give/meals" element={<MealSponsorshipPage />} />
       <Route path="/giving/zakat" element={<ZakatPage />} />
+      <Route path="/give/zakat" element={<ZakatPage />} />
       <Route path="/giving/qurbani" element={<QurbaniPage />} />
+      <Route path="/give/qurbani" element={<QurbaniPage />} />
       <Route path="/giving/sadaqah-jariyah" element={<SadaqahJariyahPage />} />
+      <Route path="/give/jariyah" element={<SadaqahJariyahPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </>
