@@ -61,7 +61,9 @@ export function Header() {
             <Button variant="ghost" size="sm">
               Sign In
             </Button>
-            <Button size="sm">Donate Now</Button>
+            <Link to="/explore">
+              <Button size="sm">Donate Now</Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -101,7 +103,9 @@ export function Header() {
               <Button variant="outline" className="flex-1">
                 Sign In
               </Button>
-              <Button className="flex-1">Donate Now</Button>
+              <Link to="/explore" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full">Donate Now</Button>
+              </Link>
             </div>
           </div>
         )}
