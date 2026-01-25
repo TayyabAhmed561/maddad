@@ -23,19 +23,22 @@ export function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo Lockup */}
           <Link to="/" className="flex items-center gap-3 group cursor-pointer flex-shrink-0">
-            <img 
-              src={maddadLogo} 
-              alt="Maddad logo" 
-              className="h-[46px] w-auto object-contain flex-shrink-0"
-            />
+            <div className="h-[52px] w-[52px] overflow-hidden flex items-center justify-center">
+              <img
+                src={maddadLogo}
+                alt="Maddad logo"
+                className="h-full w-full object-cover scale-[1.35] origin-center"
+              />
+            </div>
+
             <span className="text-2xl font-serif font-semibold text-foreground leading-none">Maddad</span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.href || 
-                (link.href !== "/" && location.pathname.startsWith(link.href));
+              const isActive =
+                location.pathname === link.href || (link.href !== "/" && location.pathname.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
@@ -44,7 +47,7 @@ export function Header() {
                     "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-secondary text-secondary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
                   )}
                 >
                   {link.label}
@@ -55,7 +58,9 @@ export function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm">Sign In</Button>
+            <Button variant="ghost" size="sm">
+              Sign In
+            </Button>
             <Button size="sm">Donate Now</Button>
           </div>
 
@@ -73,8 +78,8 @@ export function Header() {
           <div className="md:hidden py-5 border-t border-border animate-fade-in-up">
             <nav className="flex flex-col gap-1">
               {navLinks.map((link) => {
-                const isActive = location.pathname === link.href || 
-                  (link.href !== "/" && location.pathname.startsWith(link.href));
+                const isActive =
+                  location.pathname === link.href || (link.href !== "/" && location.pathname.startsWith(link.href));
                 return (
                   <Link
                     key={link.href}
@@ -83,7 +88,7 @@ export function Header() {
                       "px-4 py-3.5 rounded-lg text-sm font-medium transition-all duration-200",
                       isActive
                         ? "bg-secondary text-secondary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
                     )}
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -93,7 +98,9 @@ export function Header() {
               })}
             </nav>
             <div className="flex gap-3 mt-5 px-4">
-              <Button variant="outline" className="flex-1">Sign In</Button>
+              <Button variant="outline" className="flex-1">
+                Sign In
+              </Button>
               <Button className="flex-1">Donate Now</Button>
             </div>
           </div>
