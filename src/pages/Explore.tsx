@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { NeedCard } from "@/components/NeedCard";
 import { NeedCardSkeleton } from "@/components/skeletons/CardSkeleton";
-import { MapPlaceholder } from "@/components/MapPlaceholder";
+import { MaddadMap } from "@/components/map/MaddadMap";
+import "@/components/map/MapPopupStyles.css";
 import { FilterDrawer } from "@/components/FilterDrawer";
 import { Button } from "@/components/ui/button";
 import { needsData } from "@/data/needsData";
-import { Search, SlidersHorizontal, CheckCircle, MapPin } from "lucide-react";
+import { mapItems, MapItem } from "@/data/mapData";
+import { Search, SlidersHorizontal, CheckCircle, MapPin, Map as MapIcon, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Explore() {
@@ -17,6 +19,8 @@ export default function Explore() {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [selectedMapItem, setSelectedMapItem] = useState<MapItem | null>(null);
 
   // Filter needs based on search and verified filter
   const filteredNeeds = needsData.filter((need) => {
@@ -40,9 +44,14 @@ export default function Explore() {
     navigate(`/need/${id}#donate`);
   };
 
-  // Handle map marker click
-  const handleMarkerClick = (id: string) => {
-    navigate(`/need/${id}`);
+  // Handle map item selection
+  const handleMapItemSelect = (item: MapItem) => {
+    setSelectedMapItem(item);
+  };
+
+  // Toggle view mode
+  const toggleViewMode = () => {
+    setViewMode(prev => prev === "map" ? "list" : "map");
   };
 
   return (
@@ -113,9 +122,12 @@ export default function Explore() {
               {/* Map */}
               <div className="order-2 lg:order-1">
                 <div className="h-[400px] lg:h-[600px]">
-                  <MapPlaceholder 
+                  <MaddadMap 
                     className="h-full"
-                    onMarkerClick={handleMarkerClick}
+                    onItemSelect={handleMapItemSelect}
+                    showListToggle={true}
+                    onToggleView={toggleViewMode}
+                    isListView={viewMode === "list"}
                   />
                 </div>
               </div>
