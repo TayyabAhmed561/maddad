@@ -14,6 +14,7 @@ interface MapFiltersOverlayProps {
   verifiedOnly: boolean;
   onVerifiedChange: (verified: boolean) => void;
   className?: string;
+  isPanelOpen?: boolean;
 }
 
 export function MapFiltersOverlay({
@@ -25,9 +26,16 @@ export function MapFiltersOverlay({
   verifiedOnly,
   onVerifiedChange,
   className,
+  isPanelOpen = true,
 }: MapFiltersOverlayProps) {
+  // Calculate max width to prevent overlap with right panel
+  // Panel is ~420px + 24px margin = ~444px, add some buffer
+  const maxWidthClass = isPanelOpen 
+    ? "max-w-[calc(100vw-480px)]" 
+    : "max-w-[calc(100vw-80px)]";
+
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
+    <div className={cn("flex flex-col gap-3", maxWidthClass, className)}>
       {/* Scope Level Control */}
       <ScopeLevelControl
         currentScope={scopeLevel}
@@ -36,7 +44,7 @@ export function MapFiltersOverlay({
       />
 
       {/* Category Chips - Horizontally Scrollable */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide max-w-[calc(100vw-200px)] md:max-w-md">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
         <button
           onClick={() => onCategoryChange("All")}
           className={cn(
