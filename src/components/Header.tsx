@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import maddadLogo from "@/assets/maddad-logo.png";
 
 const navLinks = [
   { href: "/explore", label: "Explore Needs" },
@@ -22,9 +23,11 @@ export function Header() {
         <div className="flex items-center justify-between h-18">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft group-hover:shadow-warm transition-shadow duration-300">
-              <Heart size={20} className="text-primary-foreground fill-current" />
-            </div>
+            <img 
+              src={maddadLogo} 
+              alt="Maddad logo" 
+              className="w-10 h-10 object-contain"
+            />
             <span className="text-xl font-serif font-semibold text-foreground">Maddad</span>
           </Link>
 
