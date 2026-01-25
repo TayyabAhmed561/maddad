@@ -20,7 +20,7 @@ import {
  * Hardcode Mapbox token like your ESV project.
  * Paste your token here (must start with "pk.").
  */
-mapboxgl.accessToken = pk.eyJ1IjoibWluaW9uc2EwMCIsImEiOiJjbWt0eTF1MzUxa3dxM3FwcHJuYjhiNXlvIn0.U9u4rqrM2m5yWiqYE5bv2Q;
+mapboxgl.accessToken = "pk.eyJ1IjoibWluaW9uc2EwMCIsImEiOiJjbWt0eTF1MzUxa3dxM3FwcHJuYjhiNXlvIn0.U9u4rqrM2m5yWiqYE5bv2Q";
 
 // Ontario bounds: [west, south, east, north]
 const ONTARIO_BOUNDS_LNG_LAT: [number, number, number, number] = [-95.2, 41.7, -74.3, 56.9];
