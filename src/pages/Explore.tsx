@@ -1,228 +1,186 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { NeedCard } from "@/components/NeedCard";
+import { NeedCardSkeleton } from "@/components/skeletons/CardSkeleton";
 import { MapPlaceholder } from "@/components/MapPlaceholder";
 import { FilterDrawer } from "@/components/FilterDrawer";
 import { Button } from "@/components/ui/button";
-import { Search, SlidersHorizontal, CheckCircle } from "lucide-react";
+import { needsData } from "@/data/needsData";
+import { Search, SlidersHorizontal, CheckCircle, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Category } from "@/components/CategoryTag";
-
-interface Need {
-  id: string;
-  title: string;
-  organization: string;
-  isVerified: boolean;
-  category: Category;
-  location: string;
-  raised: number;
-  goal: number;
-  lastUpdated: string;
-}
-
-const sampleNeeds: Need[] = [
-  {
-    id: "1",
-    title: "Emergency Food Distribution in Gaza",
-    organization: "Palestine Relief Network",
-    isVerified: true,
-    category: "food",
-    location: "Gaza, Palestine",
-    raised: 45000,
-    goal: 75000,
-    lastUpdated: "2 hours ago"
-  },
-  {
-    id: "2",
-    title: "Shelter Rebuilding After Earthquake",
-    organization: "Turkish Red Crescent",
-    isVerified: true,
-    category: "shelter",
-    location: "Hatay, Turkey",
-    raised: 128000,
-    goal: 200000,
-    lastUpdated: "1 day ago"
-  },
-  {
-    id: "3",
-    title: "Medical Supplies for Rural Clinic",
-    organization: "Health Without Borders",
-    isVerified: true,
-    category: "medical",
-    location: "Dhaka, Bangladesh",
-    raised: 8500,
-    goal: 15000,
-    lastUpdated: "5 hours ago"
-  },
-  {
-    id: "4",
-    title: "Masjid Construction Project",
-    organization: "Al-Noor Foundation",
-    isVerified: true,
-    category: "masjid",
-    location: "Lagos, Nigeria",
-    raised: 67000,
-    goal: 120000,
-    lastUpdated: "3 days ago"
-  },
-  {
-    id: "5",
-    title: "School Supplies for Orphans",
-    organization: "Yemen Education Trust",
-    isVerified: false,
-    category: "education",
-    location: "Sana'a, Yemen",
-    raised: 3200,
-    goal: 10000,
-    lastUpdated: "12 hours ago"
-  },
-  {
-    id: "6",
-    title: "Winter Food Packages",
-    organization: "Syrian Relief Initiative",
-    isVerified: true,
-    category: "food",
-    location: "Aleppo, Syria",
-    raised: 22000,
-    goal: 40000,
-    lastUpdated: "6 hours ago"
-  }
-];
 
 export default function Explore() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredNeeds = sampleNeeds.filter(need => {
-    if (verifiedOnly && !need.isVerified) return false;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        need.title.toLowerCase().includes(query) ||
-        need.organization.toLowerCase().includes(query) ||
-        need.location.toLowerCase().includes(query)
-      );
-    }
-    return true;
+  // Filter needs based on search and verified filter
+  const filteredNeeds = needsData.filter((need) => {
+    const matchesSearch = 
+      need.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      need.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      need.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesVerified = !verifiedOnly || need.isVerified;
+    
+    return matchesSearch && matchesVerified;
   });
 
+  // Navigate to detail page
   const handleView = (id: string) => {
     navigate(`/need/${id}`);
   };
 
+  // Navigate to detail page with donate anchor
   const handleDonate = (id: string) => {
+    navigate(`/need/${id}#donate`);
+  };
+
+  // Handle map marker click
+  const handleMarkerClick = (id: string) => {
     navigate(`/need/${id}`);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      {/* Top Bar */}
-      <div className="sticky top-18 z-30 bg-card/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="flex-1 relative">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search by city, crisis, or organization..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow duration-200"
-              />
-            </div>
-            
-            {/* Verified Toggle */}
-            <button
-              onClick={() => setVerifiedOnly(!verifiedOnly)}
-              className={cn(
-                "hidden sm:flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap",
-                verifiedOnly
-                  ? "bg-primary text-primary-foreground shadow-soft"
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              )}
-            >
-              <CheckCircle size={16} />
-              Verified only
-            </button>
-            
-            {/* Filters Button */}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setFilterDrawerOpen(true)}
-              className="gap-2"
-            >
-              <SlidersHorizontal size={16} />
-              <span className="hidden sm:inline">Filters</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <main className="flex-1">
-        <div className="flex flex-col lg:flex-row h-[calc(100vh-8.5rem)]">
-          {/* Map Section */}
-          <div className="w-full lg:w-[60%] xl:w-[65%] h-64 lg:h-full p-4 lg:pr-2">
-            <MapPlaceholder 
-              className="h-full"
-              onMarkerClick={(id) => handleView(id)}
-            />
+        {/* Hero Section */}
+        <section className="section-warm py-10 md:py-14 border-b border-border">
+          <div className="container max-w-7xl mx-auto px-4 md:px-6">
+            <h1 className="font-serif text-3xl md:text-4xl font-semibold text-foreground mb-3">
+              Explore Verified Needs
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-2xl">
+              Discover verified humanitarian needs from trusted organizations. Every cause is carefully reviewed for transparency and impact.
+            </p>
           </div>
-          
-          {/* List Section */}
-          <div className="w-full lg:w-[40%] xl:w-[35%] h-full overflow-y-auto border-t lg:border-t-0 lg:border-l border-border section-warm">
-            <div className="p-5 space-y-5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-serif font-semibold text-foreground text-lg">
-                  {filteredNeeds.length} needs found
-                </h2>
-                
-                {/* Mobile verified toggle */}
+        </section>
+
+        {/* Filters Bar */}
+        <section className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border py-4">
+          <div className="container max-w-7xl mx-auto px-4 md:px-6">
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search needs, organizations, locations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
+
+              {/* Filter Toggles */}
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => setVerifiedOnly(!verifiedOnly)}
                   className={cn(
-                    "sm:hidden flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
                     verifiedOnly
                       ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground"
+                      : "bg-card border border-border text-foreground hover:bg-muted"
                   )}
                 >
-                  <CheckCircle size={14} />
-                  Verified
+                  <CheckCircle size={16} />
+                  Verified Only
                 </button>
-              </div>
-              
-              {filteredNeeds.map((need, index) => (
-                <div 
-                  key={need.id}
-                  className="animate-fade-in-up"
-                  style={{ animationDelay: `${index * 80}ms` }}
+                
+                <Button 
+                  variant="outline" 
+                  size="default"
+                  onClick={() => setFilterDrawerOpen(true)}
                 >
-                  <NeedCard
-                    {...need}
-                    onView={handleView}
-                    onDonate={handleDonate}
-                  />
-                </div>
-              ))}
-
-              {filteredNeeds.length === 0 && (
-                <div className="text-center py-16">
-                  <p className="text-muted-foreground">No needs found matching your criteria.</p>
-                </div>
-              )}
+                  <SlidersHorizontal size={16} />
+                  Filters
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Main Content - Map + List */}
+        <section className="py-8 md:py-12">
+          <div className="container max-w-7xl mx-auto px-4 md:px-6">
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Map */}
+              <div className="order-2 lg:order-1">
+                <div className="lg:sticky lg:top-32">
+                  <MapPlaceholder 
+                    height="h-[400px] lg:h-[600px]"
+                    onMarkerClick={handleMarkerClick}
+                  />
+                </div>
+              </div>
+
+              {/* Needs List */}
+              <div className="order-1 lg:order-2">
+                <div className="flex items-center justify-between mb-6">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">{filteredNeeds.length}</span> needs found
+                  </p>
+                </div>
+
+                {/* Loading State */}
+                {isLoading ? (
+                  <div className="space-y-5">
+                    {[1, 2, 3, 4].map((i) => (
+                      <NeedCardSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : filteredNeeds.length > 0 ? (
+                  <div className="space-y-5">
+                    {filteredNeeds.map((need, index) => (
+                      <div 
+                        key={need.id}
+                        className="animate-fade-in-up"
+                        style={{ animationDelay: `${index * 80}ms` }}
+                      >
+                        <NeedCard
+                          {...need}
+                          onView={handleView}
+                          onDonate={handleDonate}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Empty State */
+                  <div className="text-center py-16 bg-card rounded-xl border border-border">
+                    <MapPin size={48} className="mx-auto text-muted-foreground mb-4" />
+                    <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
+                      No needs found
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      Try adjusting your search or filters to find more needs.
+                    </p>
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setVerifiedOnly(false);
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
+      <Footer />
+
+      {/* Filter Drawer */}
       <FilterDrawer 
         isOpen={filterDrawerOpen} 
         onClose={() => setFilterDrawerOpen(false)} 
