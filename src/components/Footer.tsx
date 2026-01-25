@@ -130,7 +130,7 @@ export function Footer() {
         <div className="divider-subtle my-10" />
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">© 2024 Maddad. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">© 2026 Maddad. All rights reserved.</p>
           <p className="text-sm text-muted-foreground">Built with trust for the Muslim community</p>
         </div>
       </div>
