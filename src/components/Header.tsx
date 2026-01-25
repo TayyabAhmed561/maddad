@@ -20,15 +20,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-18">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo Lockup */}
+          <Link to="/" className="flex items-center gap-3 group cursor-pointer flex-shrink-0">
             <img 
               src={maddadLogo} 
               alt="Maddad logo" 
-              className="h-12 w-auto object-contain"
+              className="h-[46px] w-auto object-contain flex-shrink-0"
             />
-            <span className="text-xl font-serif font-semibold text-foreground">Maddad</span>
+            <span className="text-2xl font-serif font-semibold text-foreground leading-none">Maddad</span>
           </Link>
 
           {/* Desktop Navigation */}
