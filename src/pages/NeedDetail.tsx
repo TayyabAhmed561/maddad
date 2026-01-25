@@ -1,79 +1,69 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { CategoryTag } from "@/components/CategoryTag";
 import { ProgressBar } from "@/components/ProgressBar";
-import { DonationModule } from "@/components/DonationModule";
+import { Button } from "@/components/ui/button";
+import { AllocationBreakdown } from "@/components/giving/AllocationBreakdown";
+import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
+import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
+import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
+import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
+import { getNeedById } from "@/data/needsData";
+import { allocationRules } from "@/data/givingData";
 import { 
   MapPin, 
-  AlertTriangle, 
   CheckCircle, 
   Clock, 
   FileText,
   ArrowLeft,
-  Users,
-  Calendar
+  Calendar,
+  Heart,
+  AlertCircle
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
-// Sample data - in a real app this would come from an API
-const needData = {
-  id: "1",
-  title: "Emergency Food Distribution in Gaza",
-  organization: "Palestine Relief Network",
-  isVerified: true,
-  category: "food" as const,
-  location: "Gaza, Palestine",
-  raised: 45000,
-  goal: 75000,
-  urgency: "critical",
-  zakatEligible: true,
-  description: "With ongoing restrictions limiting food imports, families in Gaza face severe food insecurity. This campaign aims to provide emergency food packages to 2,000 families over the next three months, ensuring they have access to essential nutrition during this critical time.",
-  coverageItems: [
-    "Monthly food packages for 2,000 families",
-    "Clean water distribution",
-    "Infant formula and baby food",
-    "Special dietary items for medical conditions"
-  ],
-  updates: [
-    {
-      date: "January 15, 2024",
-      title: "First distribution completed",
-      content: "Successfully delivered food packages to 450 families in northern Gaza. Distribution continues this week."
-    },
-    {
-      date: "January 10, 2024",
-      title: "Supplies secured",
-      content: "All food supplies for the first phase have been secured and are ready for distribution."
-    },
-    {
-      date: "January 5, 2024",
-      title: "Campaign launched",
-      content: "Emergency food campaign launched in response to escalating humanitarian needs."
-    }
-  ],
-  verificationChecks: [
-    { label: "Organization registration verified", passed: true },
-    { label: "Bank account validated", passed: true },
-    { label: "Previous campaigns audited", passed: true },
-    { label: "Local partner confirmed", passed: true },
-    { label: "Distribution plan reviewed", passed: true }
-  ],
-  documents: [
-    "Registration Certificate",
-    "Financial Audit 2023",
-    "Distribution Plan",
-    "Partner Agreement"
-  ],
-  transparencyLog: [
-    { date: "Jan 12, 2024", action: "Funds released", amount: "$15,000", recipient: "Local distributor" },
-    { date: "Jan 8, 2024", action: "Funds released", amount: "$10,000", recipient: "Food supplier" }
-  ]
-};
+import { cn } from "@/lib/utils";
 
 export default function NeedDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const need = id ? getNeedById(id) : undefined;
+  
+  const [donationState, donationActions] = useDonation({
+    defaultAmount: 50,
+    defaultAnonymous: true,
+    onSuccess: () => {
+      // Could integrate with analytics or toast notification
+    }
+  });
+
+  // Show 404 if need not found
+  if (!need) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center px-4">
+            <AlertCircle size={64} className="mx-auto text-muted-foreground mb-4" />
+            <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">
+              Need Not Found
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              The need you're looking for doesn't exist or has been removed.
+            </p>
+            <Button onClick={() => navigate("/explore")}>
+              <ArrowLeft size={16} />
+              Back to Explore
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const presetAmounts = [25, 50, 100, 250, 500];
+  const effectiveAmount = getEffectiveAmount(donationState);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -95,37 +85,39 @@ export default function NeedDetail() {
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-4">
-                  <CategoryTag category={needData.category} />
-                  {needData.isVerified && <VerificationBadge status="verified" />}
+                  <CategoryTag category={need.category} />
+                  {need.isVerified && <VerificationBadge status="verified" />}
+                  {need.zakatEligible && (
+                    <span className="badge-verified">
+                      <CheckCircle size={14} />
+                      Zakat Eligible
+                    </span>
+                  )}
                 </div>
                 
                 <h1 className="heading-display text-3xl md:text-4xl text-foreground mb-4">
-                  {needData.title}
+                  {need.title}
                 </h1>
                 
                 <p className="text-lg text-muted-foreground mb-5">
-                  by <span className="text-foreground font-medium">{needData.organization}</span>
+                  by <span className="text-foreground font-medium">{need.organization}</span>
                 </p>
                 
                 {/* Quick Stats */}
                 <div className="flex flex-wrap gap-5 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin size={16} />
-                    <span>{needData.location}</span>
+                    <span>{need.location}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <AlertTriangle size={16} className="gold-icon" />
-                    <span className="capitalize">{needData.urgency} urgency</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <CheckCircle size={16} className="text-primary" />
-                    <span>Zakat eligible</span>
+                    <Clock size={16} />
+                    <span>Updated {need.lastUpdated}</span>
                   </div>
                 </div>
               </div>
               
               <div className="lg:w-80">
-                <ProgressBar current={needData.raised} goal={needData.goal} />
+                <ProgressBar current={need.raised} goal={need.goal} showLabels />
               </div>
             </div>
           </div>
@@ -140,7 +132,7 @@ export default function NeedDetail() {
               <div>
                 <h2 className="heading-section text-xl text-foreground mb-5">Why this need matters</h2>
                 <p className="text-muted-foreground text-body">
-                  {needData.description}
+                  {need.description}
                 </p>
               </div>
 
@@ -150,7 +142,7 @@ export default function NeedDetail() {
               <div>
                 <h2 className="heading-section text-xl text-foreground mb-5">What your donation covers</h2>
                 <ul className="space-y-4">
-                  {needData.coverageItems.map((item, index) => (
+                  {need.coverageItems.map((item, index) => (
                     <li key={index} className="flex items-start gap-3">
                       <CheckCircle size={18} className="text-primary mt-0.5 shrink-0" />
                       <span className="text-muted-foreground">{item}</span>
@@ -165,14 +157,15 @@ export default function NeedDetail() {
               <div>
                 <h2 className="heading-section text-xl text-foreground mb-6">Updates</h2>
                 <div className="space-y-8">
-                  {needData.updates.map((update, index) => (
-                    <div key={index} className="relative pl-7 border-l-2 border-border pb-8 last:pb-0">
+                  {need.updates.map((update) => (
+                    <div key={update.id} className="relative pl-7 border-l-2 border-border pb-8 last:pb-0">
                       <div className="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-primary shadow-soft" />
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                         <Calendar size={14} />
                         <span>{update.date}</span>
+                        <span className="text-border">•</span>
+                        <span>{update.author}</span>
                       </div>
-                      <h3 className="font-semibold text-foreground mb-2">{update.title}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">{update.content}</p>
                     </div>
                   ))}
@@ -186,30 +179,27 @@ export default function NeedDetail() {
                 {/* Verification Checklist */}
                 <div className="mb-8">
                   <h3 className="font-semibold text-foreground mb-4">Verification Checklist</h3>
-                  <div className="space-y-3">
-                    {needData.verificationChecks.map((check, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <CheckCircle size={16} className="text-primary" />
-                        <span className="text-sm text-muted-foreground">{check.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="divider-subtle mb-8" />
-
-                {/* Documents */}
-                <div className="mb-8">
-                  <h3 className="font-semibold text-foreground mb-4">Documents</h3>
-                  <div className="flex flex-wrap gap-3">
-                    {needData.documents.map((doc, index) => (
-                      <button
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {need.verificationChecks.map((check, index) => (
+                      <div 
                         key={index}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors duration-200"
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-lg",
+                          check.verified ? "bg-primary-light" : "bg-muted"
+                        )}
                       >
-                        <FileText size={14} />
-                        {doc}
-                      </button>
+                        {check.verified ? (
+                          <CheckCircle size={16} className="text-primary shrink-0" />
+                        ) : (
+                          <Clock size={16} className="text-muted-foreground shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{check.label}</p>
+                          {check.verifier && (
+                            <p className="text-xs text-muted-foreground truncate">{check.verifier}</p>
+                          )}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -218,15 +208,18 @@ export default function NeedDetail() {
 
                 {/* Fund Release Log */}
                 <div>
-                  <h3 className="font-semibold text-foreground mb-4">Fund Release Log</h3>
-                  <div className="space-y-4">
-                    {needData.transparencyLog.map((entry, index) => (
-                      <div key={index} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{entry.action}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{entry.date} • {entry.recipient}</p>
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText size={18} className="text-primary" />
+                    <h3 className="font-semibold text-foreground">Fund Release Log</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {need.transparencyLog.map((entry) => (
+                      <div key={entry.id} className="flex items-start gap-3 text-sm">
+                        <span className="text-muted-foreground shrink-0 w-16">{entry.date}</span>
+                        <div className="flex-1">
+                          <p className="text-foreground">{entry.action}</p>
+                          <p className="text-xs text-muted-foreground">{entry.verifier}</p>
                         </div>
-                        <span className="text-sm font-semibold text-primary">{entry.amount}</span>
                       </div>
                     ))}
                   </div>
@@ -236,8 +229,144 @@ export default function NeedDetail() {
 
             {/* Right Column - Donation Module (Sticky) */}
             <div className="lg:w-96">
-              <div className="lg:sticky lg:top-24">
-                <DonationModule />
+              <div 
+                id="donate"
+                className="lg:sticky lg:top-24 bg-card rounded-xl border border-border p-6 shadow-card"
+              >
+                {donationState.isSuccess ? (
+                  /* Success State */
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
+                      <Heart size={32} className="text-primary" />
+                    </div>
+                    <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
+                      JazakAllah Khair
+                    </h3>
+                    <p className="text-muted-foreground text-sm mb-6">
+                      Your donation of ${effectiveAmount.toLocaleString()} has been processed.
+                      {donationState.anonymous && " Your donation will remain anonymous."}
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      onClick={donationActions.reset}
+                      className="w-full"
+                    >
+                      Make Another Donation
+                    </Button>
+                  </div>
+                ) : (
+                  /* Donation Form */
+                  <>
+                    <h3 className="font-serif text-xl font-semibold text-foreground mb-6">
+                      Support This Need
+                    </h3>
+
+                    {/* Preset Amounts */}
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      {presetAmounts.map((preset) => (
+                        <button
+                          key={preset}
+                          onClick={() => {
+                            donationActions.setAmount(preset);
+                            donationActions.setCustomAmount("");
+                          }}
+                          className={cn(
+                            "py-3 px-4 rounded-lg text-sm font-medium transition-all",
+                            donationState.amount === preset && !donationState.customAmount
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-foreground hover:bg-muted/80"
+                          )}
+                        >
+                          ${preset}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Custom Amount */}
+                    <div className="mb-6">
+                      <label className="text-sm text-muted-foreground mb-2 block">
+                        Custom amount
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                        <input
+                          type="text"
+                          value={donationState.customAmount}
+                          onChange={(e) => donationActions.setCustomAmount(e.target.value)}
+                          placeholder="Enter amount"
+                          className="w-full pl-8 pr-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Recurring Toggle */}
+                    <RecurringDonationToggle
+                      value={donationState.frequency}
+                      onChange={donationActions.setFrequency}
+                      className="mb-6"
+                    />
+
+                    {/* Privacy Options */}
+                    <AnonymousDonationToggle
+                      anonymous={donationState.anonymous}
+                      hideAmount={donationState.hideAmount}
+                      onAnonymousChange={donationActions.setAnonymous}
+                      onHideAmountChange={donationActions.setHideAmount}
+                      className="mb-6"
+                    />
+
+                    {/* Zakat Eligibility Notice */}
+                    {need.zakatEligible && (
+                      <div className="bg-primary-light rounded-lg p-4 mb-6">
+                        <div className="flex items-start gap-3">
+                          <CheckCircle size={18} className="text-primary shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              This need qualifies for Zakat funds as verified by {need.organization}.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Allocation Breakdown */}
+                    <AllocationBreakdown
+                      items={allocationRules["general"]}
+                      className="mb-6"
+                    />
+
+                    {/* Dua Intention */}
+                    <DuaIntentionField
+                      value={donationState.duaIntention}
+                      onChange={donationActions.setDuaIntention}
+                      className="mb-6"
+                    />
+
+                    {/* Donate Button */}
+                    <Button 
+                      className="w-full py-6 text-base"
+                      onClick={donationActions.processDonation}
+                      disabled={donationState.isLoading || effectiveAmount <= 0}
+                    >
+                      {donationState.isLoading ? (
+                        "Processing..."
+                      ) : (
+                        <>
+                          <Heart size={18} />
+                          Donate ${effectiveAmount.toLocaleString()}
+                          {donationState.frequency !== "one-time" && `/${donationState.frequency.slice(0, 2)}`}
+                        </>
+                      )}
+                    </Button>
+
+                    {donationState.error && (
+                      <p className="text-sm text-destructive mt-3 text-center">
+                        {donationState.error}
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
