@@ -1,5 +1,9 @@
 /* Custom Mapbox Popup Styles for Maddad */
 
+.mapboxgl-popup {
+  z-index: 50 !important;
+}
+
 .mapboxgl-popup-content {
   background: hsl(45, 30%, 98%);
   border-radius: 12px;
@@ -23,6 +27,13 @@
 }
 
 .mapboxgl-popup-tip {
+  border-top-color: hsl(45, 30%, 98%);
+}
+
+/* Popup anchor adjustments to avoid overlapping with right panel */
+.maddad-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.maddad-popup.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.maddad-popup.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
   border-top-color: hsl(45, 30%, 98%);
 }
 
@@ -50,4 +61,21 @@
 
 .mapboxgl-ctrl-group button:hover {
   background-color: hsl(40, 22%, 90%) !important;
+}
+
+/* Attribution control - less prominent */
+.mapboxgl-ctrl-attrib {
+  background: hsl(45, 30%, 98% / 0.8) !important;
+  border-radius: 4px !important;
+  font-size: 10px !important;
+}
+
+/* Scrollbar hiding utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

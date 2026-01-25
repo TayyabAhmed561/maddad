@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useNavigate } from "react-router-dom";
-import { MapPin, AlertCircle, CheckCircle, Clock, Award, List, Map as MapIcon } from "lucide-react";
+import { MapPin, AlertCircle, CheckCircle, Clock, Award, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { MapControls } from "./MapControls";
+import { MapFiltersOverlay } from "./MapFiltersOverlay";
 import {
   mapItems,
   MapItem,
@@ -12,33 +15,27 @@ import {
   categoryColors,
   ONTARIO_CENTER,
   ONTARIO_ZOOM,
+  ONTARIO_BOUNDS,
+  CANADA_CENTER,
+  CANADA_ZOOM,
   GLOBAL_CENTER,
   GLOBAL_ZOOM,
+  LOCAL_ZOOM,
+  LOCAL_RADIUS_KM,
+  ScopeLevel,
+  getDistanceKm,
 } from "@/data/mapData";
 
-/**
- * Hardcode Mapbox token like your ESV project.
- * Paste your token here (must start with "pk.").
- */
 mapboxgl.accessToken = "pk.eyJ1IjoibWluaW9uc2EwMCIsImEiOiJjbWt0eTF1MzUxa3dxM3FwcHJuYjhiNXlvIn0.U9u4rqrM2m5yWiqYE5bv2Q";
-
-// Ontario bounds: [west, south, east, north]
-const ONTARIO_BOUNDS_LNG_LAT: [number, number, number, number] = [-95.2, 41.7, -74.3, 56.9];
 
 const allCategories: MapCategory[] = ["Food", "Shelter", "Medical", "Education", "Masjid", "Fidya", "Qurbani", "Zakat"];
 
-type RegionView = "ontario" | "global";
-
-interface MaddadMapProps {
-  className?: string;
-  onItemSelect?: (item: MapItem) => void;
-  showListToggle?: boolean;
-  onToggleView?: () => void;
-  isListView?: boolean;
-}
-
 function isOntarioItem(item: MapItem) {
   return item.locationLabel.includes("ON");
+}
+
+function isCanadaItem(item: MapItem) {
+  return item.countryCode === "CA";
 }
 
 function getVerifiedLabel(status: MapItem["verifiedStatus"]) {
@@ -47,13 +44,13 @@ function getVerifiedLabel(status: MapItem["verifiedStatus"]) {
   return "Unverified";
 }
 
-export function MaddadMap({
-  className,
-  onItemSelect,
-  showListToggle = false,
-  onToggleView,
-  isListView = false,
-}: MaddadMapProps) {
+interface MaddadMapProps {
+  className?: string;
+  onItemSelect?: (item: MapItem) => void;
+  selectedItemId?: string | null;
+}
+
+export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMapProps) {
   const navigate = useNavigate();
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -63,18 +60,31 @@ export function MaddadMap({
   const popupContentRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedItem, setSelectedItem] = useState<MapItem | null>(null);
-  const [regionView, setRegionView] = useState<RegionView>("ontario");
+  const [scopeLevel, setScopeLevel] = useState<ScopeLevel>("provincial");
   const [activeCategory, setActiveCategory] = useState<MapCategory | "All">("All");
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
 
+  // Filter items based on scope, category, verified, and user location
   const filteredItems = useMemo(() => {
     return mapItems.filter((item) => {
-      if (regionView === "ontario" && !isOntarioItem(item)) return false;
+      // Scope filtering
+      if (scopeLevel === "local" && userLocation) {
+        const distance = getDistanceKm(userLocation.lat, userLocation.lng, item.lat, item.lng);
+        if (distance > LOCAL_RADIUS_KM) return false;
+      } else if (scopeLevel === "provincial" && !isOntarioItem(item)) {
+        return false;
+      } else if (scopeLevel === "canada" && !isCanadaItem(item)) {
+        return false;
+      }
+      // Global shows all
+
       if (activeCategory !== "All" && item.category !== activeCategory) return false;
       if (verifiedOnly && item.verifiedStatus !== "verified") return false;
       return true;
     });
-  }, [regionView, activeCategory, verifiedOnly]);
+  }, [scopeLevel, activeCategory, verifiedOnly, userLocation]);
 
   const geojson = useMemo(() => {
     return {
@@ -112,23 +122,23 @@ export function MaddadMap({
         closeButton: true,
         closeOnClick: false,
         anchor: "bottom",
-        offset: 14,
+        offset: [0, -14],
         maxWidth: "320px",
+        className: "maddad-popup",
       })
         .setLngLat(lngLat)
         .setDOMContent(popupContentRef.current)
         .addTo(mapRef.current!);
 
-      // If user closes popup using the X button
       popupRef.current.on("close", () => {
         setSelectedItem(null);
         popupRef.current = null;
       });
     },
-    [onItemSelect],
+    [onItemSelect]
   );
 
-  // Initialize map once (ESV-style)
+  // Initialize map
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
@@ -139,20 +149,17 @@ export function MaddadMap({
       style: "mapbox://styles/mapbox/light-v11",
       center: initialCenter,
       zoom: ONTARIO_ZOOM,
-      minZoom: 4,
-      maxBounds: ONTARIO_BOUNDS_LNG_LAT,
+      minZoom: 2,
       attributionControl: true,
     });
 
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
 
     map.on("load", () => {
-      // Source
       if (!map.getSource("maddad-items")) {
         map.addSource("maddad-items", { type: "geojson", data: geojson });
       }
 
-      // Cleanup layers if hot reloading
       if (map.getLayer("maddad-items-ring")) map.removeLayer("maddad-items-ring");
       if (map.getLayer("maddad-items-layer")) map.removeLayer("maddad-items-layer");
 
@@ -237,7 +244,6 @@ export function MaddadMap({
     return () => {
       if (popupRef.current) popupRef.current.remove();
       popupRef.current = null;
-
       map.remove();
       mapRef.current = null;
     };
@@ -252,50 +258,112 @@ export function MaddadMap({
     const source = map.getSource("maddad-items") as mapboxgl.GeoJSONSource | undefined;
     if (source) source.setData(geojson);
 
-    // If the selected item got filtered out, close popup
     if (selectedItem && !filteredItems.some((x) => x.id === selectedItem.id)) {
       closePopup();
     }
   }, [geojson, filteredItems, selectedItem, closePopup]);
 
-  // Re-render popup React UI whenever selectedItem changes
-  useEffect(() => {
-    if (!selectedItem) return;
-    if (!popupContentRef.current) return;
-
-    // We render the popup UI below in JSX into this div via React using a portal approach.
-    // Easiest approach here: just let React render it in the normal tree (below) and we mount it into the div using a ref.
-    // So this effect does nothing, but we keep the ref target alive.
-  }, [selectedItem]);
-
-  const handleRegionChange = useCallback(
-    (region: RegionView) => {
-      setRegionView(region);
-      closePopup();
-
+  // Handle scope level change
+  const handleScopeChange = useCallback(
+    (scope: ScopeLevel) => {
       const map = mapRef.current;
       if (!map) return;
 
-      if (region === "ontario") {
-        map.setMinZoom(4);
-        map.setMaxBounds(ONTARIO_BOUNDS_LNG_LAT);
-        map.flyTo({
-          center: [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat],
-          zoom: ONTARIO_ZOOM,
-          essential: true,
-        });
+      if (scope === "local") {
+        setIsLocating(true);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setUserLocation({ lat: latitude, lng: longitude });
+            setScopeLevel("local");
+            setIsLocating(false);
+
+            map.flyTo({
+              center: [longitude, latitude],
+              zoom: LOCAL_ZOOM,
+              essential: true,
+            });
+
+            toast({
+              title: "Location found",
+              description: `Showing needs within ${LOCAL_RADIUS_KM}km of your location.`,
+            });
+          },
+          (error) => {
+            setIsLocating(false);
+            toast({
+              title: "Location access denied",
+              description: "Showing Ontario view instead. Please enable location access in your browser settings.",
+              variant: "destructive",
+            });
+            // Fallback to provincial
+            setScopeLevel("provincial");
+            map.flyTo({
+              center: [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat],
+              zoom: ONTARIO_ZOOM,
+              essential: true,
+            });
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
       } else {
-        map.setMinZoom(1);
-        map.setMaxBounds(null);
-        map.flyTo({
-          center: [GLOBAL_CENTER.lng, GLOBAL_CENTER.lat],
-          zoom: GLOBAL_ZOOM,
-          essential: true,
-        });
+        setScopeLevel(scope);
+        closePopup();
+
+        if (scope === "provincial") {
+          map.flyTo({
+            center: [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat],
+            zoom: ONTARIO_ZOOM,
+            essential: true,
+          });
+        } else if (scope === "canada") {
+          map.flyTo({
+            center: [CANADA_CENTER.lng, CANADA_CENTER.lat],
+            zoom: CANADA_ZOOM,
+            essential: true,
+          });
+        } else if (scope === "global") {
+          map.flyTo({
+            center: [GLOBAL_CENTER.lng, GLOBAL_CENTER.lat],
+            zoom: GLOBAL_ZOOM,
+            essential: true,
+          });
+        }
       }
     },
-    [closePopup],
+    [closePopup]
   );
+
+  // Recenter to Ontario
+  const handleRecenterOntario = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    setScopeLevel("provincial");
+    closePopup();
+    map.flyTo({
+      center: [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat],
+      zoom: ONTARIO_ZOOM,
+      essential: true,
+    });
+  }, [closePopup]);
+
+  // Reset zoom based on current scope
+  const handleResetZoom = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    let targetZoom = ONTARIO_ZOOM;
+    if (scopeLevel === "local" && userLocation) {
+      targetZoom = LOCAL_ZOOM;
+    } else if (scopeLevel === "canada") {
+      targetZoom = CANADA_ZOOM;
+    } else if (scopeLevel === "global") {
+      targetZoom = GLOBAL_ZOOM;
+    }
+
+    map.zoomTo(targetZoom, { duration: 500 });
+  }, [scopeLevel, userLocation]);
 
   const handleViewDetails = useCallback(
     (item: MapItem) => {
@@ -303,16 +371,31 @@ export function MaddadMap({
       else if (item.type === "need") navigate(`/need/${item.id}`);
       else navigate(`/need/${item.id}`);
     },
-    [navigate],
+    [navigate]
   );
 
-  // If token not pasted, show placeholder
+  // Focus on selected item from external selection
+  useEffect(() => {
+    if (selectedItemId && mapRef.current) {
+      const item = mapItems.find((x) => x.id === selectedItemId);
+      if (item) {
+        mapRef.current.flyTo({
+          center: [item.lng, item.lat],
+          zoom: Math.max(mapRef.current.getZoom(), 10),
+          essential: true,
+        });
+        openPopupForItem(item, [item.lng, item.lat]);
+      }
+    }
+  }, [selectedItemId, openPopupForItem]);
+
+  // Token check
   if (!mapboxgl.accessToken || !mapboxgl.accessToken.startsWith("pk.")) {
     return (
       <div
         className={cn(
           "relative w-full h-full min-h-[400px] bg-card rounded-2xl border border-border overflow-hidden flex items-center justify-center",
-          className,
+          className
         )}
       >
         <div className="text-center p-8 max-w-md">
@@ -321,8 +404,7 @@ export function MaddadMap({
           </div>
           <h3 className="font-serif text-xl font-semibold text-foreground mb-2">Map Temporarily Unavailable</h3>
           <p className="text-muted-foreground mb-3">
-            Paste your Mapbox token into <span className="font-mono">mapboxgl.accessToken</span> in{" "}
-            <span className="font-mono">MaddadMap.tsx</span>, then refresh.
+            The map is temporarily unavailable. Please try again later.
           </p>
           <Button variant="outline" onClick={() => navigate("/explore")}>
             <List className="w-4 h-4 mr-2" />
@@ -334,119 +416,37 @@ export function MaddadMap({
   }
 
   return (
-    <div
-      className={cn(
-        "relative w-full h-full min-h-[400px] bg-background-warm rounded-2xl border border-border overflow-hidden",
-        "shadow-[0_6px_24px_-6px_hsl(35_30%_25%_/_0.08)]",
-        className,
-      )}
-    >
-      {/* Controls Overlay */}
-      <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-1 p-1 bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-card">
-            <button
-              onClick={() => handleRegionChange("ontario")}
-              className={cn(
-                "px-4 py-2 text-sm font-medium rounded-md transition-all duration-300",
-                regionView === "ontario"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
-              )}
-            >
-              Ontario
-            </button>
-            <button
-              onClick={() => handleRegionChange("global")}
-              className={cn(
-                "px-4 py-2 text-sm font-medium rounded-md transition-all duration-300",
-                regionView === "global"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
-              )}
-            >
-              Global
-            </button>
-          </div>
-
-          {showListToggle && (
-            <button
-              onClick={onToggleView}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-card/95 backdrop-blur-sm rounded-lg border border-border shadow-card text-foreground hover:bg-muted transition-all duration-300"
-            >
-              {isListView ? (
-                <>
-                  <MapIcon className="w-4 h-4" />
-                  Map View
-                </>
-              ) : (
-                <>
-                  <List className="w-4 h-4" />
-                  List View
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          <button
-            onClick={() => setActiveCategory("All")}
-            className={cn(
-              "flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300",
-              activeCategory === "All"
-                ? "bg-primary text-primary-foreground"
-                : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            All
-          </button>
-          {allCategories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={cn(
-                "flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300",
-                activeCategory === category
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center">
-          <button
-            onClick={() => setVerifiedOnly(!verifiedOnly)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300",
-              verifiedOnly
-                ? "bg-primary text-primary-foreground"
-                : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <CheckCircle className="w-3.5 h-3.5" />
-            Verified Only
-          </button>
-        </div>
-      </div>
-
+    <div className={cn("relative w-full h-full", className)}>
       {/* Map Canvas */}
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
 
-      {/* Popup content renderer into the Mapbox popup div */}
+      {/* Top-Left Filters Overlay */}
+      <div className="absolute top-4 left-4 z-10">
+        <MapFiltersOverlay
+          scopeLevel={scopeLevel}
+          onScopeChange={handleScopeChange}
+          isLocating={isLocating}
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+          verifiedOnly={verifiedOnly}
+          onVerifiedChange={setVerifiedOnly}
+        />
+      </div>
+
+      {/* Top-Right Map Controls */}
+      <div className="absolute top-4 right-4 z-10">
+        <MapControls
+          onRecenterOntario={handleRecenterOntario}
+          onResetZoom={handleResetZoom}
+        />
+      </div>
+
+      {/* Popup content renderer */}
       {selectedItem && popupContentRef.current && (
         <div
           style={{ display: "none" }}
           ref={(node) => {
-            // Render JSX into the popup div by replacing its contents
-            // Simple approach without portals: manually mount HTML via innerHTML is messy,
-            // so we use this trick: we keep React rendering hidden, then copy the HTML.
-            // If you want a cleaner version, tell me and I’ll convert it to a React portal.
             if (!node) return;
-
             const html = node.innerHTML;
             popupContentRef.current!.innerHTML = html;
           }}
@@ -462,7 +462,7 @@ export function MaddadMap({
                   "inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full",
                   selectedItem.verifiedStatus === "verified" && "bg-primary/10 text-primary",
                   selectedItem.verifiedStatus === "pending" && "bg-accent/10 text-accent-foreground",
-                  selectedItem.verifiedStatus === "unverified" && "bg-muted text-muted-foreground",
+                  selectedItem.verifiedStatus === "unverified" && "bg-muted text-muted-foreground"
                 )}
               >
                 {selectedItem.verifiedStatus === "verified" ? (
@@ -547,7 +547,7 @@ export function MaddadMap({
       </div>
 
       {/* Results count */}
-      <div className="absolute bottom-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-card border border-border">
+      <div className="absolute bottom-4 right-16 bg-card/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-card border border-border">
         <span className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">{filteredItems.length}</span> locations
         </span>

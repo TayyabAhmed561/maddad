@@ -20,6 +20,7 @@ export interface MapItem {
   goal?: number;
   privacyLevel: PrivacyLevel;
   description?: string;
+  countryCode?: string;
 }
 
 // Ontario-focused sample data with global entries
@@ -39,7 +40,8 @@ export const mapItems: MapItem[] = [
     lng: -79.3832,
     lastUpdated: "2 hours ago",
     privacyLevel: "global_ok",
-    description: "Emergency food assistance and sustainable livelihoods programs."
+    description: "Emergency food assistance and sustainable livelihoods programs.",
+    countryCode: "CA"
   },
   {
     id: "map-2",
@@ -56,7 +58,8 @@ export const mapItems: MapItem[] = [
     fundingRaised: 45000,
     goal: 75000,
     privacyLevel: "global_ok",
-    description: "Providing warm shelter for homeless families during winter months."
+    description: "Providing warm shelter for homeless families during winter months.",
+    countryCode: "CA"
   },
   {
     id: "map-3",
@@ -72,7 +75,8 @@ export const mapItems: MapItem[] = [
     lng: -79.4163,
     lastUpdated: "1 day ago",
     privacyLevel: "local_private",
-    description: "Verified restaurant partner for Fidya meal distribution."
+    description: "Verified restaurant partner for Fidya meal distribution.",
+    countryCode: "CA"
   },
   // Mississauga
   {
@@ -89,7 +93,8 @@ export const mapItems: MapItem[] = [
     lng: -79.6441,
     lastUpdated: "3 hours ago",
     privacyLevel: "global_ok",
-    description: "Weekly food bank serving 500+ families in the Peel region."
+    description: "Weekly food bank serving 500+ families in the Peel region.",
+    countryCode: "CA"
   },
   {
     id: "map-5",
@@ -104,7 +109,8 @@ export const mapItems: MapItem[] = [
     lng: -79.6125,
     lastUpdated: "12 hours ago",
     privacyLevel: "global_ok",
-    description: "Official Qurbani meat processing and distribution partner."
+    description: "Official Qurbani meat processing and distribution partner.",
+    countryCode: "CA"
   },
   // Kitchener-Waterloo
   {
@@ -123,7 +129,8 @@ export const mapItems: MapItem[] = [
     fundingRaised: 12000,
     goal: 20000,
     privacyLevel: "global_ok",
-    description: "Supporting Muslim students facing unexpected financial hardship."
+    description: "Supporting Muslim students facing unexpected financial hardship.",
+    countryCode: "CA"
   },
   // London
   {
@@ -139,7 +146,8 @@ export const mapItems: MapItem[] = [
     lng: -81.2453,
     lastUpdated: "1 day ago",
     privacyLevel: "global_ok",
-    description: "Community services, prayer facilities, and educational programs."
+    description: "Community services, prayer facilities, and educational programs.",
+    countryCode: "CA"
   },
   {
     id: "map-8",
@@ -156,7 +164,8 @@ export const mapItems: MapItem[] = [
     fundingRaised: 8500,
     goal: 15000,
     privacyLevel: "global_ok",
-    description: "Providing essential medical equipment for underserved clinics."
+    description: "Providing essential medical equipment for underserved clinics.",
+    countryCode: "CA"
   },
   // Ottawa
   {
@@ -173,7 +182,8 @@ export const mapItems: MapItem[] = [
     lng: -75.6972,
     lastUpdated: "8 hours ago",
     privacyLevel: "global_ok",
-    description: "Central mosque and community hub for Ottawa's Muslim population."
+    description: "Central mosque and community hub for Ottawa's Muslim population.",
+    countryCode: "CA"
   },
   {
     id: "map-10",
@@ -191,7 +201,8 @@ export const mapItems: MapItem[] = [
     fundingRaised: 32000,
     goal: 50000,
     privacyLevel: "global_ok",
-    description: "Housing and integration support for newly arrived refugee families."
+    description: "Housing and integration support for newly arrived refugee families.",
+    countryCode: "CA"
   },
   // Hamilton
   {
@@ -207,7 +218,8 @@ export const mapItems: MapItem[] = [
     lng: -79.8711,
     lastUpdated: "3 days ago",
     privacyLevel: "local_private",
-    description: "Preparing and delivering Fidya meals to eligible recipients."
+    description: "Preparing and delivering Fidya meals to eligible recipients.",
+    countryCode: "CA"
   },
   // Global entries
   {
@@ -225,7 +237,8 @@ export const mapItems: MapItem[] = [
     fundingRaised: 2500000,
     goal: 5000000,
     privacyLevel: "global_ok",
-    description: "Critical medical supplies and emergency healthcare services."
+    description: "Critical medical supplies and emergency healthcare services.",
+    countryCode: "PS"
   },
   {
     id: "map-13",
@@ -243,7 +256,8 @@ export const mapItems: MapItem[] = [
     fundingRaised: 180000,
     goal: 300000,
     privacyLevel: "global_ok",
-    description: "Winterization kits and heating fuel for displaced families."
+    description: "Winterization kits and heating fuel for displaced families.",
+    countryCode: "SY"
   },
   {
     id: "map-14",
@@ -258,7 +272,8 @@ export const mapItems: MapItem[] = [
     lng: 91.8687,
     lastUpdated: "6 hours ago",
     privacyLevel: "global_ok",
-    description: "Emergency food packages for flood-affected communities."
+    description: "Emergency food packages for flood-affected communities.",
+    countryCode: "BD"
   },
   {
     id: "map-15",
@@ -276,7 +291,8 @@ export const mapItems: MapItem[] = [
     fundingRaised: 75000,
     goal: 150000,
     privacyLevel: "global_ok",
-    description: "Learning centres and educational materials for Rohingya children."
+    description: "Learning centres and educational materials for Rohingya children.",
+    countryCode: "BD"
   }
 ];
 
@@ -295,7 +311,31 @@ export const categoryColors: Record<MapCategory, { bg: string; text: string; mar
 // Ontario bounds for focused view
 export const ONTARIO_CENTER = { lat: 43.65, lng: -79.38 };
 export const ONTARIO_ZOOM = 6;
+export const ONTARIO_BOUNDS: [number, number, number, number] = [-95.2, 41.7, -74.3, 56.9];
+
+// Canada center
+export const CANADA_CENTER = { lat: 56.13, lng: -106.35 };
+export const CANADA_ZOOM = 3.5;
 
 // Global view settings
 export const GLOBAL_CENTER = { lat: 30, lng: 20 };
 export const GLOBAL_ZOOM = 2;
+
+// Local view settings
+export const LOCAL_ZOOM = 12;
+export const LOCAL_RADIUS_KM = 50;
+
+// Scope level type
+export type ScopeLevel = "local" | "provincial" | "canada" | "global";
+
+// Helper: Haversine distance in km
+export function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
