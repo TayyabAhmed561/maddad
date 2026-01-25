@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,8 @@ import {
   Award,
   Heart,
   Share2,
-  Globe
+  Globe,
+  Info
 } from "lucide-react";
 import { realMapItems, MapItem, categoryColors } from "@/data/mapData";
 import { cn } from "@/lib/utils";
@@ -27,13 +28,19 @@ const organizationUrls: Record<string, string> = {
   "Islamic Society of North America": "https://isna.ca",
   "National Zakat Foundation Canada": "https://nzfcanada.com",
   "Muslim Welfare Centre of Toronto": "https://muslimwelfarecentre.com",
+  "Muslim Welfare Centre": "https://muslimwelfarecentre.com",
   "Muslim Association of Canada": "https://macnet.ca",
 };
+
+// Donation amount presets
+const donationAmounts = [25, 50, 100, 250, 500, 1000];
 
 export default function CharityDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(100);
+  const [customAmount, setCustomAmount] = useState<string>("");
   
   // Find the charity by ID from the real items
   const charity = realMapItems.find(item => item.id === id);
@@ -44,12 +51,24 @@ export default function CharityDetail() {
   // Scroll to donate section if hash present
   useEffect(() => {
     if (location.hash === "#donate") {
-      const donateSection = document.getElementById("donate");
+      const donateSection = document.getElementById("donate-panel");
       if (donateSection) {
         donateSection.scrollIntoView({ behavior: "smooth" });
       }
     }
   }, [location.hash]);
+
+  const handleAmountSelect = (amount: number) => {
+    setSelectedAmount(amount);
+    setCustomAmount("");
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    setCustomAmount(value);
+    setSelectedAmount(null);
+  };
+
+  const currentAmount = selectedAmount || (customAmount ? parseFloat(customAmount) : 0);
   
   if (!charity) {
     return (
@@ -83,15 +102,20 @@ export default function CharityDetail() {
   const progressPercent = hasProgress 
     ? Math.min((charity.fundingRaised! / charity.goal!) * 100, 100) 
     : 0;
+
+  // Determine if this is a Palestine-related charity
+  const isPalestineRelief = charity.locationLabel.includes("Palestine") || 
+    charity.id.startsWith("ps-gl-") || 
+    charity.id.startsWith("gl-ps-");
   
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
       <main className="flex-1">
-        {/* Hero Section */}
+        {/* Hero Section with Two-Column Layout */}
         <div className="bg-gradient-to-b from-muted/50 to-background">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12">
             {/* Back Button */}
             <button
               onClick={() => navigate("/explore")}
@@ -101,9 +125,9 @@ export default function CharityDetail() {
               Back to Explore
             </button>
             
-            <div className="grid md:grid-cols-3 gap-8">
-              {/* Main Content */}
-              <div className="md:col-span-2 space-y-6">
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Left Column - Main Content (2/3 width) */}
+              <div className="lg:col-span-2 space-y-6">
                 {/* Category & Status Badges */}
                 <div className="flex flex-wrap items-center gap-3">
                   <span
@@ -175,6 +199,21 @@ export default function CharityDetail() {
                     Updated {charity.lastUpdated}
                   </span>
                 </div>
+
+                {/* Palestine Relief Notice */}
+                {isPalestineRelief && (
+                  <div className="bg-primary/5 border border-primary/10 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Canadian Organization Supporting Palestine Relief</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          This campaign is organized by a registered Canadian charity providing humanitarian aid to communities in {charity.locationLabel.split(",")[0]}.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Description */}
                 {charity.description && (
@@ -184,77 +223,197 @@ export default function CharityDetail() {
                     </p>
                   </div>
                 )}
+
+                {/* Progress Bar - Full Width on Left Column */}
+                {hasProgress && (
+                  <div className="bg-card rounded-xl border border-border p-6">
+                    <div className="flex justify-between items-baseline mb-3">
+                      <span className="text-2xl font-bold text-foreground">
+                        ${charity.fundingRaised!.toLocaleString()}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        raised of ${charity.goal!.toLocaleString()} goal
+                      </span>
+                    </div>
+                    <ProgressBar 
+                      current={charity.fundingRaised!} 
+                      goal={charity.goal!} 
+                      size="md"
+                    />
+                    <p className="text-xs text-muted-foreground mt-3">
+                      {Math.round(progressPercent)}% of goal reached
+                    </p>
+                  </div>
+                )}
+
+                {/* About Section */}
+                <div className="space-y-6 pt-4">
+                  {/* About the Campaign */}
+                  <div className="bg-card rounded-xl border border-border p-6">
+                    <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
+                      About This Campaign
+                    </h3>
+                    <div className="space-y-4 text-muted-foreground">
+                      <p>
+                        This {charity.category.toLowerCase()} initiative is organized by {charity.orgName || "a verified community organization"} to serve communities in the {charity.locationLabel} area.
+                      </p>
+                      {charity.zakatEligible && (
+                        <p>
+                          This campaign has been verified as Zakat-eligible, meaning your Zakat contributions will be directed to those who meet the criteria as defined by Islamic jurisprudence.
+                        </p>
+                      )}
+                      <p>
+                        All donations are processed securely through the Maddad platform. Tax receipts are issued by the partner charity organization.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* About the Organization */}
+                  {charity.orgName && (
+                    <div className="bg-card rounded-xl border border-border p-6">
+                      <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
+                        About {charity.orgName}
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        {charity.orgName} is a verified partner on the Maddad platform, 
+                        working to support communities in need through transparent, 
+                        accountable giving programs.
+                      </p>
+                      {externalUrl && (
+                        <a
+                          href={externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-primary hover:underline"
+                        >
+                          Learn more on their website
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Impact Section */}
+                  <div className="bg-card rounded-xl border border-border p-6">
+                    <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
+                      Your Impact
+                    </h3>
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-muted/30 rounded-lg">
+                        <p className="text-2xl font-bold text-primary">$25</p>
+                        <p className="text-xs text-muted-foreground mt-1">Provides 5 meals</p>
+                      </div>
+                      <div className="text-center p-4 bg-muted/30 rounded-lg">
+                        <p className="text-2xl font-bold text-primary">$100</p>
+                        <p className="text-xs text-muted-foreground mt-1">Provides a week of support</p>
+                      </div>
+                      <div className="text-center p-4 bg-muted/30 rounded-lg">
+                        <p className="text-2xl font-bold text-primary">$500</p>
+                        <p className="text-xs text-muted-foreground mt-1">Supports a family for a month</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               
-              {/* Donation Card */}
-              <div className="md:col-span-1">
+              {/* Right Column - Sticky Donation Panel (1/3 width) */}
+              <div className="lg:col-span-1">
                 <div 
-                  id="donate"
-                  className="bg-card rounded-2xl border border-border p-6 shadow-card sticky top-24 scroll-mt-24"
+                  id="donate-panel"
+                  className="bg-card rounded-2xl border border-border p-6 shadow-card lg:sticky lg:top-24 scroll-mt-24"
                 >
-                  {/* Progress */}
-                  {hasProgress && (
-                    <div className="mb-6">
-                      <div className="flex justify-between items-baseline mb-2">
-                        <span className="text-2xl font-bold text-foreground">
-                          ${charity.fundingRaised!.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          of ${charity.goal!.toLocaleString()} goal
-                        </span>
-                      </div>
-                      <ProgressBar 
-                        current={charity.fundingRaised!} 
-                        goal={charity.goal!} 
-                        size="md"
+                  <h3 className="font-serif text-xl font-semibold text-foreground mb-6 text-center">
+                    Make a Donation
+                  </h3>
+                  
+                  {/* Amount Picker */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {donationAmounts.map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => handleAmountSelect(amount)}
+                        className={cn(
+                          "py-3 px-4 rounded-lg text-sm font-medium transition-all border",
+                          selectedAmount === amount
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted text-foreground hover:bg-muted/80 border-transparent"
+                        )}
+                      >
+                        ${amount}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* Custom Amount */}
+                  <div className="mb-6">
+                    <label className="text-sm text-muted-foreground mb-2 block">
+                      Custom amount
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                      <input
+                        type="number"
+                        placeholder="Enter amount"
+                        value={customAmount}
+                        onChange={(e) => handleCustomAmountChange(e.target.value)}
+                        className="w-full pl-8 pr-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                       />
+                    </div>
+                  </div>
+                  
+                  {/* Zakat Eligibility Notice */}
+                  {charity.zakatEligible && (
+                    <div className="bg-primary/5 rounded-lg p-4 mb-6">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            This cause qualifies for Zakat funds.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                   
-                  {/* Donation Buttons - Dual CTA */}
-                  <div className="space-y-3">
-                    {/* Primary CTA: Donate on Maddad */}
-                    {(charity.type === "need" || charity.type === "appeal") && (
-                      <Button 
-                        size="lg" 
-                        className="w-full"
-                        onClick={() => {
-                          // Scroll to inline donate section or open modal
-                          const donateSection = document.getElementById("donate-inline");
-                          if (donateSection) {
-                            donateSection.scrollIntoView({ behavior: "smooth" });
-                          }
-                        }}
-                      >
-                        <Heart className="w-4 h-4 mr-2" />
-                        Donate on Maddad
-                      </Button>
-                    )}
-                    
-                    {/* Secondary CTA: Visit Website (for verified orgs) */}
-                    {externalUrl && (
-                      <a
-                        href={externalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 w-full"
-                      >
-                        <Button variant="outline" size="lg" className="w-full">
-                          <Globe className="w-4 h-4 mr-2" />
-                          Visit Website
-                        </Button>
-                      </a>
-                    )}
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="lg" 
-                      className="w-full"
+                  {/* Primary CTA - Donate on Maddad */}
+                  <Button 
+                    className="w-full py-6 text-base mb-3" 
+                    disabled={currentAmount <= 0}
+                  >
+                    <Heart className="w-4 h-4 mr-2" />
+                    {currentAmount > 0 
+                      ? `Donate $${currentAmount.toLocaleString()} on Maddad`
+                      : "Select an Amount"
+                    }
+                  </Button>
+                  
+                  {/* Secondary CTA - Visit Website */}
+                  {externalUrl && (
+                    <a
+                      href={externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full"
                     >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Share
-                    </Button>
-                  </div>
+                      <Button variant="outline" className="w-full">
+                        <Globe className="w-4 h-4 mr-2" />
+                        Visit Website
+                      </Button>
+                    </a>
+                  )}
+                  
+                  <Button 
+                    variant="ghost" 
+                    className="w-full mt-2"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground text-center mt-4">
+                    Secure payment powered by Stripe. Tax receipt available.
+                  </p>
                   
                   {/* Trust Indicators */}
                   <div className="mt-6 pt-6 border-t border-border">
@@ -275,7 +434,7 @@ export default function CharityDetail() {
                       {charity.endorsedBy && (
                         <li className="flex items-center gap-2">
                           <Award className="w-4 h-4 text-accent-foreground" />
-                          Endorsed by {charity.endorsedBy}
+                          {charity.endorsedBy}
                         </li>
                       )}
                       <li className="flex items-center gap-2">
@@ -290,117 +449,24 @@ export default function CharityDetail() {
           </div>
         </div>
         
-        {/* Inline Donation Section */}
-        <section id="donate-inline" className="py-12 bg-muted/20 scroll-mt-24">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-xl mx-auto">
-              <div className="bg-card rounded-2xl border border-border p-6 md:p-8 shadow-card">
-                <h3 className="font-serif text-xl font-semibold text-foreground mb-6 text-center">
-                  Make a Donation
-                </h3>
-                
-                {/* Amount Picker */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {[25, 50, 100, 250, 500, 1000].map((amount) => (
-                    <button
-                      key={amount}
-                      className="py-3 px-4 rounded-lg text-sm font-medium transition-all bg-muted text-foreground hover:bg-muted/80"
-                    >
-                      ${amount}
-                    </button>
-                  ))}
-                </div>
-                
-                {/* Custom Amount */}
-                <div className="mb-6">
-                  <label className="text-sm text-muted-foreground mb-2 block">
-                    Custom amount
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                    <input
-                      type="text"
-                      placeholder="Enter amount"
-                      className="w-full pl-8 pr-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                </div>
-                
-                {/* Zakat Eligibility Notice */}
-                {charity.zakatEligible && (
-                  <div className="bg-primary/5 rounded-lg p-4 mb-6">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          This cause qualifies for Zakat funds.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Donate Button */}
-                <Button className="w-full py-6 text-base">
-                  <Heart className="w-4 h-4 mr-2" />
-                  Complete Donation
-                </Button>
-                
-                <p className="text-xs text-muted-foreground text-center mt-4">
-                  Secure payment powered by Stripe. Tax receipt available.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        {/* Additional Information Section */}
+        {/* Location Section */}
         <section className="py-12 bg-muted/30">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* About the Organization */}
-              {charity.orgName && (
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
-                    About {charity.orgName}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    This organization is a verified partner on the Maddad platform, 
-                    working to support communities in need through transparent, 
-                    accountable giving programs.
-                  </p>
-                  {externalUrl && (
-                    <a
-                      href={externalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-primary hover:underline"
-                    >
-                      Learn more on their website
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-              )}
-              
-              {/* Location Details */}
-              <div className="bg-card rounded-xl border border-border p-6">
-                <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
-                  Location
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  This {charity.category.toLowerCase()} initiative serves the 
-                  {" "}{charity.locationLabel} area.
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate(`/explore`)}
-                >
-                  <MapPin className="w-4 h-4 mr-2" />
-                  View on Map
-                </Button>
-              </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-card rounded-xl border border-border p-6 max-w-2xl">
+              <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
+                Location
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                This {charity.category.toLowerCase()} initiative serves the 
+                {" "}{charity.locationLabel} area.
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate(`/explore`)}
+              >
+                <MapPin className="w-4 h-4 mr-2" />
+                View on Map
+              </Button>
             </div>
           </div>
         </section>
