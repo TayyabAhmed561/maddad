@@ -22,11 +22,11 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-18">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <img 
               src={maddadLogo} 
               alt="Maddad logo" 
-              className="w-10 h-10 object-contain"
+              className="h-8 w-auto object-contain"
             />
             <span className="text-xl font-serif font-semibold text-foreground">Maddad</span>
           </Link>
