@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { MapPin, Clock, CheckCircle, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
+import { AnimatedDonateButton } from "@/components/AnimatedDonateButton";
 import { cn } from "@/lib/utils";
 import { MapItem, categoryColors } from "@/data/mapData";
 import { toast } from "@/hooks/use-toast";
@@ -32,8 +33,7 @@ export function MapItemCard({ item, onView, onDonate, className, isSelected }: M
     }
   };
 
-  const handleDonate = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDonate = () => {
     if (isPlaceholder) {
       toast({
         title: "Coming soon",
@@ -139,13 +139,13 @@ export function MapItemCard({ item, onView, onDonate, className, isSelected }: M
             View
           </Button>
           {(item.type === "need" || item.type === "appeal") && (
-            <Button 
-              variant="card" 
+            <AnimatedDonateButton
               size="sm"
-              onClick={handleDonate}
-            >
-              Donate
-            </Button>
+              variant="card"
+              onComplete={handleDonate}
+              showToast={!isPlaceholder}
+              navigateAfter={false}
+            />
           )}
         </div>
       </div>

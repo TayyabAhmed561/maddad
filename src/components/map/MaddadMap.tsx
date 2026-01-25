@@ -162,8 +162,54 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       }
       
       if (donateButton) {
-        donateButton.addEventListener("click", () => {
-          navigate(`/charity/${item.id}#donate`);
+        donateButton.addEventListener("click", (e) => {
+          const btn = e.target as HTMLButtonElement;
+          
+          // Prevent double-click
+          if (btn.dataset.animating === "true") return;
+          btn.dataset.animating = "true";
+          
+          // Press animation
+          btn.style.transform = "scale(0.96)";
+          btn.style.boxShadow = "0 0 0 4px rgba(34, 95, 74, 0.2)";
+          
+          setTimeout(() => {
+            // Loading state
+            btn.style.transform = "scale(1)";
+            btn.innerHTML = `<span style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              Processing…
+            </span>`;
+            btn.style.opacity = "0.8";
+            btn.style.cursor = "wait";
+            
+            // Show toast
+            toast({
+              title: "Coming soon",
+              description: "Demo mode: donation simulated",
+              duration: 3000,
+            });
+            
+            setTimeout(() => {
+              // Success state
+              btn.innerHTML = `<span style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                Done
+              </span>`;
+              btn.style.backgroundColor = "hsl(160, 45%, 32%)";
+              btn.style.color = "white";
+              btn.style.opacity = "1";
+              
+              setTimeout(() => {
+                // Navigate after animation
+                navigate(`/charity/${item.id}#donate`);
+              }, 600);
+            }, 800 + Math.random() * 400);
+          }, 150);
         });
       }
 

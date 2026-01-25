@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { AnimatedDonateButton } from "@/components/AnimatedDonateButton";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -12,7 +13,6 @@ import {
   ExternalLink, 
   CheckCircle, 
   Award,
-  Heart,
   Share2,
   Globe,
   Info
@@ -377,16 +377,19 @@ export default function CharityDetail() {
                   )}
                   
                   {/* Primary CTA - Donate on Maddad */}
-                  <Button 
+                  <AnimatedDonateButton 
                     className="w-full py-6 text-base mb-3" 
+                    size="lg"
+                    variant="default"
                     disabled={currentAmount <= 0}
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    {currentAmount > 0 
+                    label={currentAmount > 0 
                       ? `Donate $${currentAmount.toLocaleString()} on Maddad`
                       : "Select an Amount"
                     }
-                  </Button>
+                    showToast={true}
+                    toastMessage="Demo mode: full payment integration coming soon"
+                    navigateAfter={false}
+                  />
                   
                   {/* Secondary CTA - Visit Website */}
                   {externalUrl && (
