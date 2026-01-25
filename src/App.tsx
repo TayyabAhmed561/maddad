@@ -12,6 +12,7 @@ import Impact from "./pages/Impact";
 import Appeals from "./pages/Appeals";
 import AppealDetail from "./pages/AppealDetail";
 import NotFound from "./pages/NotFound";
+import CharityDetail from "./pages/CharityDetail";
 import GivingHub from "./pages/giving/GivingHub";
 import FidyaPage from "./pages/giving/FidyaPage";
 import MealSponsorshipPage from "./pages/giving/MealSponsorshipPage";
@@ -52,6 +53,7 @@ const AppRoutes = () => (
       <Route path="/needs/:id" element={<NeedDetail />} />
       <Route path="/appeals" element={<Appeals />} />
       <Route path="/appeals/:id" element={<AppealDetail />} />
+      <Route path="/charity/:id" element={<CharityDetail />} />
       <Route path="/verification" element={<Verification />} />
       <Route path="/impact" element={<Impact />} />
       <Route path="/giving" element={<GivingHub />} />

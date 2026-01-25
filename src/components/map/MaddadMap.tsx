@@ -2,12 +2,13 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useNavigate } from "react-router-dom";
-import { MapPin, AlertCircle, CheckCircle, Clock, Award, List } from "lucide-react";
+import { AlertCircle, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { MapControls } from "./MapControls";
 import { MapFiltersOverlay } from "./MapFiltersOverlay";
+import { renderPopupHTML } from "./MapPopup";
 import {
   mapItems,
   MapItem,
@@ -44,11 +45,6 @@ function isCanadaItem(item: MapItem) {
   return item.countryCode === "CA";
 }
 
-function getVerifiedLabel(status: MapItem["verifiedStatus"]) {
-  if (status === "verified") return "Verified";
-  if (status === "pending") return "Pending";
-  return "Unverified";
-}
 
 interface MaddadMapProps {
   className?: string;
@@ -65,7 +61,6 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
   const mapRef = useRef<mapboxgl.Map | null>(null);
 
   const popupRef = useRef<mapboxgl.Popup | null>(null);
-  const popupContentRef = useRef<HTMLDivElement | null>(null);
 
   const [selectedItem, setSelectedItem] = useState<MapItem | null>(null);
   const [scopeLevel, setScopeLevel] = useState<ScopeLevel>("provincial");
@@ -135,10 +130,13 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       setSelectedItem(item);
       onItemSelect?.(item);
 
-      if (!popupContentRef.current) popupContentRef.current = document.createElement("div");
-
+      // Remove existing popup
       if (popupRef.current) popupRef.current.remove();
 
+      // Create popup element with unique content for this item
+      const popupElement = document.createElement("div");
+      popupElement.innerHTML = renderPopupHTML(item);
+      
       popupRef.current = new mapboxgl.Popup({
         closeButton: true,
         closeOnClick: false,
@@ -148,15 +146,31 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         className: "maddad-popup",
       })
         .setLngLat(lngLat)
-        .setDOMContent(popupContentRef.current)
+        .setDOMContent(popupElement)
         .addTo(mapRef.current!);
+
+      // Attach event listeners to buttons in popup
+      const viewButton = popupElement.querySelector(`#popup-view-${item.id}`);
+      const donateButton = popupElement.querySelector(`#popup-donate-${item.id}`);
+      
+      if (viewButton) {
+        viewButton.addEventListener("click", () => {
+          navigate(`/charity/${item.id}`);
+        });
+      }
+      
+      if (donateButton) {
+        donateButton.addEventListener("click", () => {
+          navigate(`/charity/${item.id}#donate`);
+        });
+      }
 
       popupRef.current.on("close", () => {
         setSelectedItem(null);
         popupRef.current = null;
       });
     },
-    [onItemSelect]
+    [onItemSelect, navigate]
   );
 
   // Initialize map
@@ -535,99 +549,6 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
           scopeLabel={getScopeLabel()}
         />
       </div>
-
-      {/* Popup content renderer */}
-      {selectedItem && popupContentRef.current && (
-        <div
-          style={{ display: "none" }}
-          ref={(node) => {
-            if (!node) return;
-            const html = node.innerHTML;
-            popupContentRef.current!.innerHTML = html;
-          }}
-        >
-          <div className="min-w-[260px] max-w-[300px] p-1">
-            <h3 className="font-serif text-base font-semibold text-foreground mb-1 pr-4">{selectedItem.title}</h3>
-
-            {selectedItem.orgName && <p className="text-xs text-muted-foreground mb-2">{selectedItem.orgName}</p>}
-
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full",
-                  selectedItem.verifiedStatus === "verified" && "bg-primary/10 text-primary",
-                  selectedItem.verifiedStatus === "pending" && "bg-accent/10 text-accent-foreground",
-                  selectedItem.verifiedStatus === "unverified" && "bg-muted text-muted-foreground"
-                )}
-              >
-                {selectedItem.verifiedStatus === "verified" ? (
-                  <CheckCircle className="w-3 h-3" />
-                ) : (
-                  <Clock className="w-3 h-3" />
-                )}
-                {getVerifiedLabel(selectedItem.verifiedStatus)}
-              </span>
-
-              {selectedItem.zakatEligible && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-accent/10 text-accent-foreground">
-                  Zakat Eligible
-                </span>
-              )}
-
-              {selectedItem.endorsedBy && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-accent-light text-accent-foreground">
-                  <Award className="w-3 h-3" />
-                  Endorsed
-                </span>
-              )}
-            </div>
-
-            {selectedItem.goal && selectedItem.fundingRaised !== undefined && (
-              <div className="mb-3">
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-foreground font-medium">${selectedItem.fundingRaised.toLocaleString()}</span>
-                  <span className="text-muted-foreground">of ${selectedItem.goal.toLocaleString()}</span>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min((selectedItem.fundingRaised / selectedItem.goal) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-3">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                {selectedItem.privacyLevel === "local_private"
-                  ? selectedItem.locationLabel.split(",")[0] + " Area"
-                  : selectedItem.locationLabel}
-              </span>
-              <span>Updated {selectedItem.lastUpdated}</span>
-            </div>
-
-            <div className="flex gap-2">
-              <Button size="sm" className="flex-1 h-8 text-xs" onClick={() => handleViewDetails(selectedItem)}>
-                View Details
-              </Button>
-
-              {(selectedItem.type === "need" || selectedItem.type === "appeal") && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs"
-                  onClick={() => navigate(`/need/${selectedItem.id}#donate`)}
-                >
-                  Donate
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Legend - positioned above Mapbox attribution */}
       <div className="absolute bottom-10 left-4 z-10 bg-card/95 backdrop-blur-md rounded-lg px-3 py-2 shadow-card border border-border">

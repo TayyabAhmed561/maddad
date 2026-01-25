@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { MapPin, Clock, CheckCircle, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
@@ -14,23 +15,33 @@ interface MapItemCardProps {
 }
 
 export function MapItemCard({ item, onView, onDonate, className, isSelected }: MapItemCardProps) {
+  const navigate = useNavigate();
   const categoryStyle = categoryColors[item.category];
   const hasProgress = item.goal && item.fundingRaised !== undefined;
+  const isPlaceholder = item.isPlaceholder;
   
   const handleView = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Coming soon",
-      description: `Full details for "${item.title}" will be available soon.`,
-    });
+    if (isPlaceholder) {
+      toast({
+        title: "Coming soon",
+        description: "More details for this need will be available soon.",
+      });
+    } else {
+      navigate(`/charity/${item.id}`);
+    }
   };
 
   const handleDonate = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Coming soon",
-      description: `Donations for "${item.title}" will be available soon.`,
-    });
+    if (isPlaceholder) {
+      toast({
+        title: "Coming soon",
+        description: "Donations for this need will be available soon.",
+      });
+    } else {
+      navigate(`/charity/${item.id}#donate`);
+    }
   };
   
   return (
