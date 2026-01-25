@@ -1,0 +1,53 @@
+/* Custom Mapbox Popup Styles for Maddad */
+
+.mapboxgl-popup-content {
+  background: hsl(45, 30%, 98%);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 6px 24px -6px hsl(35 30% 25% / 0.12);
+  border: 1px solid hsl(38, 22%, 85%);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 18px;
+  padding: 4px 8px;
+  color: hsl(28, 18%, 42%);
+  right: 4px;
+  top: 4px;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background: hsl(40, 22%, 90%);
+  border-radius: 4px;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: hsl(45, 30%, 98%);
+}
+
+/* Marker animations */
+.mapboxgl-marker {
+  cursor: pointer;
+}
+
+/* Navigation control styling */
+.mapboxgl-ctrl-group {
+  background: hsl(45, 30%, 98%) !important;
+  border: 1px solid hsl(38, 22%, 85%) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px -2px hsl(35 30% 25% / 0.08) !important;
+}
+
+.mapboxgl-ctrl-group button {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.mapboxgl-ctrl-group button + button {
+  border-top: 1px solid hsl(38, 22%, 85%) !important;
+}
+
+.mapboxgl-ctrl-group button:hover {
+  background-color: hsl(40, 22%, 90%) !important;
+}
