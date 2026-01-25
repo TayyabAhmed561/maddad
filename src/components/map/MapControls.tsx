@@ -1,44 +1,39 @@
-import { Crosshair, RotateCcw, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MapControlsProps {
-  onRecenterOntario: () => void;
-  onResetZoom: () => void;
   onResetView: () => void;
+  scopeLabel?: string;
   className?: string;
 }
 
-export function MapControls({ onRecenterOntario, onResetZoom, onResetView, className }: MapControlsProps) {
+export function MapControls({ onResetView, scopeLabel = "default", className }: MapControlsProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col bg-card/95 backdrop-blur-md rounded-lg border border-border shadow-card overflow-hidden",
-        className
-      )}
-    >
-      <button
-        onClick={onResetView}
-        className="flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
-        title="Reset View"
-      >
-        <Home className="w-4 h-4" />
-      </button>
-      <div className="h-px bg-border" />
-      <button
-        onClick={onRecenterOntario}
-        className="flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
-        title="Recenter Ontario"
-      >
-        <Crosshair className="w-4 h-4" />
-      </button>
-      <div className="h-px bg-border" />
-      <button
-        onClick={onResetZoom}
-        className="flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
-        title="Reset Zoom"
-      >
-        <RotateCcw className="w-4 h-4" />
-      </button>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={onResetView}
+            className={cn(
+              "flex items-center justify-center w-10 h-10 bg-card/95 backdrop-blur-md rounded-lg border border-border shadow-card",
+              "text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300",
+              className
+            )}
+            aria-label="Reset View"
+          >
+            <Home className="w-4 h-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="left" className="bg-card border-border">
+          <p className="text-xs">Reset to {scopeLabel} view</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
