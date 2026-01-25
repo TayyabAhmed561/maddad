@@ -1,9 +1,9 @@
 import { useEffect, useRef, useCallback } from "react";
 import { ChevronRight, ChevronUp, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NeedCard } from "@/components/NeedCard";
+import { MapItemCard } from "./MapItemCard";
 import { NeedCardSkeleton } from "@/components/skeletons/CardSkeleton";
-import { needsData } from "@/data/needsData";
+import { realMapItems, MapItem, isKWItem, isOntarioItem, isCanadaItem, ScopeLevel, getDistanceKm } from "@/data/mapData";
 
 interface ResultsPanelProps {
   isOpen: boolean;
@@ -18,6 +18,8 @@ interface ResultsPanelProps {
   isLoading?: boolean;
   className?: string;
   variant?: "side-panel" | "bottom-sheet";
+  scopeLevel?: ScopeLevel;
+  userLocation?: { lat: number; lng: number } | null;
 }
 
 export function ResultsPanel({
@@ -33,27 +35,46 @@ export function ResultsPanel({
   isLoading = false,
   className,
   variant = "side-panel",
+  scopeLevel = "provincial",
+  userLocation,
 }: ResultsPanelProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Filter needs based on search
-  const filteredNeeds = needsData.filter((need) => {
-    const matchesSearch =
-      need.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      need.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      need.location.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+  // Get map items for card display (only real items, filtered by scope and search)
+  const filteredItems = realMapItems.filter((item) => {
+    // Search filter
+    const matchesSearch = searchQuery === "" || 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.orgName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      item.locationLabel.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+
+    // Scope filter
+    if (scopeLevel === "local") {
+      if (userLocation) {
+        const distance = getDistanceKm(userLocation.lat, userLocation.lng, item.lat, item.lng);
+        return distance <= 50; // 50km radius
+      }
+      return isKWItem(item); // Fallback to KW area
+    } else if (scopeLevel === "provincial") {
+      return isOntarioItem(item);
+    } else if (scopeLevel === "canada") {
+      return isCanadaItem(item);
+    }
+    // global shows all
+    return true;
   });
 
   // Handle card click to focus on map (without navigation)
-  const handleCardClick = useCallback((needId: string, e: React.MouseEvent) => {
+  const handleCardClick = useCallback((itemId: string, e: React.MouseEvent) => {
     // Check if the click originated from a button - don't trigger card focus
     const target = e.target as HTMLElement;
     if (target.closest('button')) {
       return;
     }
-    onCardClick?.(needId);
+    onCardClick?.(itemId);
   }, [onCardClick]);
 
   // Auto-scroll to selected item
@@ -80,7 +101,7 @@ export function ResultsPanel({
           )}
         >
           <ChevronUp className="w-5 h-5" />
-          <span>Show {filteredCount} Needs</span>
+          <span>Show {filteredItems.length} Needs</span>
         </button>
       );
     }
@@ -127,22 +148,22 @@ export function ResultsPanel({
                 <NeedCardSkeleton key={i} />
               ))}
             </>
-          ) : filteredNeeds.length > 0 ? (
-            filteredNeeds.map((need, index) => (
+          ) : filteredItems.length > 0 ? (
+            filteredItems.map((item, index) => (
               <div
-                key={need.id}
+                key={item.id}
                 ref={(el) => {
-                  cardRefs.current[need.id] = el;
+                  cardRefs.current[item.id] = el;
                 }}
-                onClick={(e) => handleCardClick(need.id, e)}
+                onClick={(e) => handleCardClick(item.id, e)}
                 className={cn(
                   "animate-fade-in-up transition-all duration-300 cursor-pointer rounded-xl",
-                  selectedItemId === need.id && "ring-2 ring-primary ring-offset-2 ring-offset-card"
+                  selectedItemId === item.id && "ring-2 ring-primary ring-offset-2 ring-offset-card"
                 )}
-                style={{ animationDelay: `${index * 50}ms` }}
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                <NeedCard
-                  {...need}
+                <MapItemCard
+                  item={item}
                   onView={onView}
                   onDonate={onDonate}
                 />
@@ -172,7 +193,7 @@ export function ResultsPanel({
         )}
       >
         <span>Show List</span>
-        <span className="text-xs text-muted-foreground">({filteredCount})</span>
+        <span className="text-xs text-muted-foreground">({filteredItems.length})</span>
         <ChevronRight className="w-4 h-4 rotate-180" />
       </button>
     );
@@ -191,7 +212,7 @@ export function ResultsPanel({
         <div>
           <h2 className="font-serif text-lg font-semibold text-foreground">Verified Needs</h2>
           <p className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">{filteredNeeds.length}</span> needs found
+            <span className="font-medium text-foreground">{filteredItems.length}</span> needs found
           </p>
         </div>
         <button
@@ -225,22 +246,22 @@ export function ResultsPanel({
               <NeedCardSkeleton key={i} />
             ))}
           </>
-        ) : filteredNeeds.length > 0 ? (
-          filteredNeeds.map((need, index) => (
+        ) : filteredItems.length > 0 ? (
+          filteredItems.map((item, index) => (
             <div
-              key={need.id}
+              key={item.id}
               ref={(el) => {
-                cardRefs.current[need.id] = el;
+                cardRefs.current[item.id] = el;
               }}
-              onClick={(e) => handleCardClick(need.id, e)}
+              onClick={(e) => handleCardClick(item.id, e)}
               className={cn(
                 "animate-fade-in-up transition-all duration-300 cursor-pointer rounded-xl",
-                selectedItemId === need.id && "ring-2 ring-primary ring-offset-2 ring-offset-card"
+                selectedItemId === item.id && "ring-2 ring-primary ring-offset-2 ring-offset-card"
               )}
-              style={{ animationDelay: `${index * 50}ms` }}
+              style={{ animationDelay: `${index * 30}ms` }}
             >
-              <NeedCard
-                {...need}
+              <MapItemCard
+                item={item}
                 onView={onView}
                 onDonate={onDonate}
               />
