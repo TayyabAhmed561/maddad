@@ -72,7 +72,7 @@ export default function NeedDetail() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="bg-card border-b border-border pattern-subtle">
-          <div className="container mx-auto px-4 py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             {/* Breadcrumb */}
             <Link 
               to="/explore" 
@@ -124,7 +124,7 @@ export default function NeedDetail() {
         </section>
 
         {/* Main Content */}
-        <section className="container mx-auto px-4 py-12 md:py-16">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="flex flex-col lg:flex-row gap-10">
             {/* Left Column - Details */}
             <div className="flex-1 space-y-12">

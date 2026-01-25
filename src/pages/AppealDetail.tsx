@@ -73,7 +73,7 @@ export default function AppealDetail() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="section-warm py-12 md:py-16 pattern-subtle">
-          <div className="container max-w-6xl mx-auto px-4 md:px-6">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Breadcrumb */}
             <Link 
               to="/appeals" 
@@ -129,7 +129,7 @@ export default function AppealDetail() {
 
         {/* Main Content */}
         <section className="py-12 md:py-16">
-          <div className="container max-w-6xl mx-auto px-4 md:px-6">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
               {/* Left Column - Details */}
               <div className="lg:col-span-2 space-y-10">
