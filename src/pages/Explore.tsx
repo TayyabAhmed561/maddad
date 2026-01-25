@@ -112,9 +112,9 @@ export default function Explore() {
             <div className="grid lg:grid-cols-2 gap-8">
               {/* Map */}
               <div className="order-2 lg:order-1">
-                <div className="lg:sticky lg:top-32">
+                <div className="h-[400px] lg:h-[600px]">
                   <MapPlaceholder 
-                    height="h-[400px] lg:h-[600px]"
+                    className="h-full"
                     onMarkerClick={handleMarkerClick}
                   />
                 </div>

@@ -10,6 +10,7 @@ import NeedDetail from "./pages/NeedDetail";
 import Verification from "./pages/Verification";
 import Impact from "./pages/Impact";
 import Appeals from "./pages/Appeals";
+import AppealDetail from "./pages/AppealDetail";
 import NotFound from "./pages/NotFound";
 import GivingHub from "./pages/giving/GivingHub";
 import FidyaPage from "./pages/giving/FidyaPage";
@@ -48,6 +49,7 @@ const AppRoutes = () => (
       <Route path="/explore" element={<Explore />} />
       <Route path="/need/:id" element={<NeedDetail />} />
       <Route path="/appeals" element={<Appeals />} />
+      <Route path="/appeal/:id" element={<AppealDetail />} />
       <Route path="/verification" element={<Verification />} />
       <Route path="/impact" element={<Impact />} />
       <Route path="/giving" element={<GivingHub />} />
