@@ -13,6 +13,15 @@ import {
   Sparkles
 } from "lucide-react";
 
+// Partner logos
+import alRahmahLogo from "@/assets/logos/al-rahmah.png";
+import islamicReliefLogo from "@/assets/logos/islamic-relief.jpeg";
+import pennyAppealLogo from "@/assets/logos/penny-appeal.png";
+import hciLogo from "@/assets/logos/hci.png";
+import mercyMissionLogo from "@/assets/logos/mercy-mission.png";
+import grtLogo from "@/assets/logos/grt.png";
+import coldestNightLogo from "@/assets/logos/coldest-night.jpeg";
+
 const features = [
   {
     icon: Shield,
@@ -32,11 +41,13 @@ const features = [
 ];
 
 const partners = [
-  "Al-Rahma Foundation",
-  "Global Relief Trust",
-  "Islamic Relief",
-  "Mercy Mission",
-  "ICNA Relief"
+  { name: "Al-Rahmah Foundation", logo: alRahmahLogo },
+  { name: "Islamic Relief", logo: islamicReliefLogo },
+  { name: "Penny Appeal Canada", logo: pennyAppealLogo },
+  { name: "Human Concern International", logo: hciLogo },
+  { name: "Mercy Mission Madinah", logo: mercyMissionLogo },
+  { name: "Global Relief Trust", logo: grtLogo },
+  { name: "Coldest Night of the Year", logo: coldestNightLogo },
 ];
 
 const stats = [
@@ -199,8 +210,8 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Partners Section */}
-        <section className="section-spacing-sm bg-card border-b border-border">
+        {/* Partners Section - Scrolling Logos */}
+        <section className="section-spacing-sm bg-card border-b border-border overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest mb-3">
@@ -210,16 +221,43 @@ export default function Index() {
                 Working with leading organizations
               </h2>
             </div>
+          </div>
+          
+          {/* Scrolling logo marquee */}
+          <div className="relative">
+            {/* Gradient fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
             
-            <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
-              {partners.map((partner) => (
-                <div 
-                  key={partner}
-                  className="px-8 py-4 bg-background rounded-lg border border-border shadow-soft text-muted-foreground font-medium text-sm"
-                >
-                  {partner}
-                </div>
-              ))}
+            <div className="flex overflow-hidden">
+              <div className="flex animate-scroll-x gap-12 py-4">
+                {/* First set of logos */}
+                {partners.map((partner) => (
+                  <div 
+                    key={partner.name}
+                    className="flex-shrink-0 h-16 md:h-20 px-6 flex items-center justify-center bg-background rounded-xl border border-border shadow-soft hover:shadow-warm transition-shadow duration-300"
+                  >
+                    <img 
+                      src={partner.logo} 
+                      alt={partner.name}
+                      className="h-10 md:h-14 w-auto max-w-[140px] md:max-w-[180px] object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    />
+                  </div>
+                ))}
+                {/* Duplicate set for seamless loop */}
+                {partners.map((partner) => (
+                  <div 
+                    key={`${partner.name}-dup`}
+                    className="flex-shrink-0 h-16 md:h-20 px-6 flex items-center justify-center bg-background rounded-xl border border-border shadow-soft hover:shadow-warm transition-shadow duration-300"
+                  >
+                    <img 
+                      src={partner.logo} 
+                      alt={partner.name}
+                      className="h-10 md:h-14 w-auto max-w-[140px] md:max-w-[180px] object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
