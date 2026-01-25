@@ -67,6 +67,8 @@ export default function Explore() {
               onCardClick={handleCardClick}
               filteredCount={mapItems.length}
               variant="bottom-sheet"
+              scopeLevel={scopeLevel}
+              userLocation={userLocation}
             />
           </div>
         ) : (
@@ -83,6 +85,8 @@ export default function Explore() {
                 onCardClick={handleCardClick}
                 filteredCount={mapItems.length}
                 variant="side-panel"
+                scopeLevel={scopeLevel}
+                userLocation={userLocation}
               />
             </div>
           </div>
