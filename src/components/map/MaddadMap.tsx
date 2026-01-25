@@ -320,7 +320,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     }
   }, [geojson, filteredItems, selectedItem, closePopup]);
 
-  // Helper function to fly to a location with panel offset
+  // Helper function to fly to a location with panel offset - smooth Apple Maps style
   const flyToWithOffset = useCallback((center: { lat: number; lng: number }, zoom: number) => {
     const map = mapRef.current;
     if (!map) return;
@@ -332,11 +332,13 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       zoom,
       padding,
       essential: true,
-      duration: 1200,
+      duration: 1500, // Smooth 1.5s transition
+      curve: 1.42, // Ease-in-out curve for smooth animation
+      easing: (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, // Cubic ease-in-out
     });
   }, [getCameraPadding]);
 
-  // Fit bounds with padding (for Provincial and Canada views)
+  // Fit bounds with padding (for Provincial and Canada views) - smooth transitions
   const fitBoundsWithPadding = useCallback((bounds: [[number, number], [number, number]], maxZoom?: number) => {
     const map = mapRef.current;
     if (!map) return;
@@ -348,7 +350,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     map.fitBounds(bounds, {
       padding: adjustedPadding,
       maxZoom: maxZoom || 10,
-      duration: 700,
+      duration: 1400, // Smooth 1.4s transition
+      essential: true,
     });
   }, [getCameraPadding]);
 
@@ -450,19 +453,27 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       );
     }
 
-    // Fly to item and open popup
+    // Fly to item and open popup with smooth animation
     if (selectedItemId) {
       const item = mapItems.find((x) => x.id === selectedItemId);
       if (item) {
         const padding = getCameraPadding();
+        const targetZoom = Math.max(map.getZoom(), 11); // Zoom in slightly more for clarity
+        
         map.flyTo({
           center: [item.lng, item.lat],
-          zoom: Math.max(map.getZoom(), 10),
+          zoom: targetZoom,
           padding,
           essential: true,
-          duration: 700,
+          duration: 1200, // Smooth 1.2s transition
+          curve: 1.42,
+          easing: (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
         });
-        openPopupForItem(item, [item.lng, item.lat]);
+        
+        // Open popup after a brief delay to sync with animation
+        setTimeout(() => {
+          openPopupForItem(item, [item.lng, item.lat]);
+        }, 400);
       }
     }
   }, [selectedItemId, openPopupForItem, getCameraPadding]);
