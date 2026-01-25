@@ -13,10 +13,16 @@ import {
   ONTARIO_CENTER,
   ONTARIO_ZOOM,
   GLOBAL_CENTER,
-  GLOBAL_ZOOM
+  GLOBAL_ZOOM,
 } from "@/data/mapData";
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined)?.trim();
+
+// Ontario bounds to restrict panning in Ontario mode (optional but recommended)
+const ONTARIO_BOUNDS: [[number, number], [number, number]] = [
+  [-95.2, 41.7], // SW [lng, lat]
+  [-74.3, 56.9], // NE [lng, lat]
+];
 
 const allCategories: MapCategory[] = ["Food", "Shelter", "Medical", "Education", "Masjid", "Fidya", "Qurbani", "Zakat"];
 
@@ -28,19 +34,21 @@ interface MaddadMapProps {
   isListView?: boolean;
 }
 
-export function MaddadMap({ 
-  className, 
+export function MaddadMap({
+  className,
   onItemSelect,
   showListToggle = false,
   onToggleView,
-  isListView = false
+  isListView = false,
 }: MaddadMapProps) {
   const navigate = useNavigate();
+
   const [viewState, setViewState] = useState({
     latitude: ONTARIO_CENTER.lat,
     longitude: ONTARIO_CENTER.lng,
-    zoom: ONTARIO_ZOOM
+    zoom: ONTARIO_ZOOM,
   });
+
   const [selectedItem, setSelectedItem] = useState<MapItem | null>(null);
   const [regionView, setRegionView] = useState<"ontario" | "global">("ontario");
   const [activeCategory, setActiveCategory] = useState<MapCategory | "All">("All");
@@ -48,7 +56,7 @@ export function MaddadMap({
 
   // Filter items based on region, category, and verification
   const filteredItems = useMemo(() => {
-    return mapItems.filter(item => {
+    return mapItems.filter((item) => {
       // Region filter
       const isOntario = item.locationLabel.includes("ON");
       if (regionView === "ontario" && !isOntario) return false;
@@ -67,59 +75,67 @@ export function MaddadMap({
   const handleRegionChange = useCallback((region: "ontario" | "global") => {
     setRegionView(region);
     setSelectedItem(null);
-    
+
     if (region === "ontario") {
-      setViewState(prev => ({
+      setViewState((prev) => ({
         ...prev,
         latitude: ONTARIO_CENTER.lat,
         longitude: ONTARIO_CENTER.lng,
-        zoom: ONTARIO_ZOOM
+        zoom: ONTARIO_ZOOM,
       }));
     } else {
-      setViewState(prev => ({
+      setViewState((prev) => ({
         ...prev,
         latitude: GLOBAL_CENTER.lat,
         longitude: GLOBAL_CENTER.lng,
-        zoom: GLOBAL_ZOOM
+        zoom: GLOBAL_ZOOM,
       }));
     }
   }, []);
 
   // Handle marker click
-  const handleMarkerClick = useCallback((item: MapItem) => {
-    setSelectedItem(item);
-    onItemSelect?.(item);
-  }, [onItemSelect]);
+  const handleMarkerClick = useCallback(
+    (item: MapItem) => {
+      setSelectedItem(item);
+      onItemSelect?.(item);
+    },
+    [onItemSelect],
+  );
 
   // Handle view details click
-  const handleViewDetails = useCallback((item: MapItem) => {
-    // Route based on item type
-    if (item.type === "appeal") {
-      navigate(`/appeals/${item.id}`);
-    } else if (item.type === "need") {
-      navigate(`/need/${item.id}`);
-    } else {
-      // For organizations and partners, go to explore detail
-      navigate(`/need/${item.id}`);
-    }
-  }, [navigate]);
+  const handleViewDetails = useCallback(
+    (item: MapItem) => {
+      if (item.type === "appeal") {
+        navigate(`/appeals/${item.id}`);
+      } else if (item.type === "need") {
+        navigate(`/need/${item.id}`);
+      } else {
+        navigate(`/need/${item.id}`);
+      }
+    },
+    [navigate],
+  );
 
-  // Render placeholder if no token
-  if (!MAPBOX_TOKEN) {
+  // If token missing or invalid, show placeholder + log
+  if (!MAPBOX_TOKEN || !MAPBOX_TOKEN.startsWith("pk.")) {
+    // This makes the reason obvious in DevTools
+    console.error("Missing/invalid Mapbox token:", MAPBOX_TOKEN);
+
     return (
-      <div className={cn(
-        "relative w-full h-full min-h-[400px] bg-card rounded-2xl border border-border overflow-hidden flex items-center justify-center",
-        className
-      )}>
+      <div
+        className={cn(
+          "relative w-full h-full min-h-[400px] bg-card rounded-2xl border border-border overflow-hidden flex items-center justify-center",
+          className,
+        )}
+      >
         <div className="text-center p-8 max-w-md">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-muted-foreground" />
           </div>
-          <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
-            Map Temporarily Unavailable
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            The interactive map is currently unavailable. Please browse needs using the list view.
+          <h3 className="font-serif text-xl font-semibold text-foreground mb-2">Map Temporarily Unavailable</h3>
+          <p className="text-muted-foreground mb-3">
+            Mapbox token not detected. Make sure <span className="font-mono">VITE_MAPBOX_TOKEN</span> is set (no
+            spaces/newlines), then restart the dev server / preview.
           </p>
           <Button variant="outline" onClick={() => navigate("/explore")}>
             <List className="w-4 h-4 mr-2" />
@@ -131,11 +147,13 @@ export function MaddadMap({
   }
 
   return (
-    <div className={cn(
-      "relative w-full h-full min-h-[400px] bg-background-warm rounded-2xl border border-border overflow-hidden",
-      "shadow-[0_6px_24px_-6px_hsl(35_30%_25%_/_0.08)]",
-      className
-    )}>
+    <div
+      className={cn(
+        "relative w-full h-full min-h-[400px] bg-background-warm rounded-2xl border border-border overflow-hidden",
+        "shadow-[0_6px_24px_-6px_hsl(35_30%_25%_/_0.08)]",
+        className,
+      )}
+    >
       {/* Controls Overlay */}
       <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-3">
         {/* Region Toggle + View Toggle Row */}
@@ -148,7 +166,7 @@ export function MaddadMap({
                 "px-4 py-2 text-sm font-medium rounded-md transition-all duration-300",
                 regionView === "ontario"
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
               )}
             >
               Ontario
@@ -159,7 +177,7 @@ export function MaddadMap({
                 "px-4 py-2 text-sm font-medium rounded-md transition-all duration-300",
                 regionView === "global"
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
               )}
             >
               Global
@@ -195,12 +213,12 @@ export function MaddadMap({
               "flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300",
               activeCategory === "All"
                 ? "bg-primary text-primary-foreground"
-                : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground"
+                : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground",
             )}
           >
             All
           </button>
-          {allCategories.map(category => (
+          {allCategories.map((category) => (
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
@@ -208,7 +226,7 @@ export function MaddadMap({
                 "flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300",
                 activeCategory === category
                   ? "bg-primary text-primary-foreground"
-                  : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground"
+                  : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground",
               )}
             >
               {category}
@@ -224,7 +242,7 @@ export function MaddadMap({
               "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300",
               verifiedOnly
                 ? "bg-primary text-primary-foreground"
-                : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground"
+                : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground",
             )}
           >
             <CheckCircle className="w-3.5 h-3.5" />
@@ -236,16 +254,19 @@ export function MaddadMap({
       {/* Map */}
       <Map
         {...viewState}
-        onMove={evt => setViewState(evt.viewState)}
+        onMove={(evt) => setViewState(evt.viewState)}
         mapStyle="mapbox://styles/mapbox/light-v11"
         mapboxAccessToken={MAPBOX_TOKEN}
         style={{ width: "100%", height: "100%" }}
         reuseMaps
+        // Restrict panning/zoom in Ontario view
+        maxBounds={regionView === "ontario" ? ONTARIO_BOUNDS : undefined}
+        minZoom={regionView === "ontario" ? 4 : 1}
       >
         <NavigationControl position="bottom-right" showCompass={false} />
 
         {/* Markers */}
-        {filteredItems.map(item => (
+        {filteredItems.map((item) => (
           <Marker
             key={item.id}
             latitude={item.lat}
@@ -256,30 +277,27 @@ export function MaddadMap({
               handleMarkerClick(item);
             }}
           >
-            <button
-              className={cn(
-                "relative group transition-all duration-300 hover:scale-125 hover:z-10 cursor-pointer"
-              )}
-            >
+            <button className="relative group transition-all duration-300 hover:scale-125 hover:z-10 cursor-pointer">
               {/* Outer ring for endorsed/zakat eligible */}
               {(item.endorsedBy || item.zakatEligible) && (
-                <div 
+                <div
                   className="absolute inset-[-3px] rounded-full opacity-60"
-                  style={{ 
-                    background: `linear-gradient(135deg, hsl(38, 62%, 42%) 0%, hsl(40, 50%, 55%) 100%)`,
-                    boxShadow: "0 0 8px hsl(38 62% 42% / 0.3)"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(38, 62%, 42%) 0%, hsl(40, 50%, 55%) 100%)",
+                    boxShadow: "0 0 8px hsl(38 62% 42% / 0.3)",
                   }}
                 />
               )}
+
               {/* Main marker */}
               <div
                 className={cn(
                   "relative w-6 h-6 rounded-full flex items-center justify-center",
                   "border-2 border-white shadow-md",
-                  item.verifiedStatus === "verified" && "ring-1 ring-white/50"
+                  item.verifiedStatus === "verified" && "ring-1 ring-white/50",
                 )}
-                style={{ 
-                  backgroundColor: categoryColors[item.category]?.marker || "hsl(160, 45%, 32%)"
+                style={{
+                  backgroundColor: categoryColors[item.category]?.marker || "hsl(160, 45%, 32%)",
                 }}
               >
                 <MapPin className="w-3 h-3 text-white" />
@@ -301,43 +319,37 @@ export function MaddadMap({
             className="maddad-popup"
           >
             <div className="min-w-[260px] max-w-[300px] p-1">
-              {/* Title */}
-              <h3 className="font-serif text-base font-semibold text-foreground mb-1 pr-4">
-                {selectedItem.title}
-              </h3>
-              
-              {/* Organization */}
-              {selectedItem.orgName && (
-                <p className="text-xs text-muted-foreground mb-2">
-                  {selectedItem.orgName}
-                </p>
-              )}
+              <h3 className="font-serif text-base font-semibold text-foreground mb-1 pr-4">{selectedItem.title}</h3>
 
-              {/* Badges */}
+              {selectedItem.orgName && <p className="text-xs text-muted-foreground mb-2">{selectedItem.orgName}</p>}
+
               <div className="flex flex-wrap gap-1.5 mb-3">
-                {/* Verification Badge */}
-                <span className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full",
-                  selectedItem.verifiedStatus === "verified" && "bg-primary/10 text-primary",
-                  selectedItem.verifiedStatus === "pending" && "bg-accent/10 text-accent-foreground",
-                  selectedItem.verifiedStatus === "unverified" && "bg-muted text-muted-foreground"
-                )}>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full",
+                    selectedItem.verifiedStatus === "verified" && "bg-primary/10 text-primary",
+                    selectedItem.verifiedStatus === "pending" && "bg-accent/10 text-accent-foreground",
+                    selectedItem.verifiedStatus === "unverified" && "bg-muted text-muted-foreground",
+                  )}
+                >
                   {selectedItem.verifiedStatus === "verified" ? (
                     <CheckCircle className="w-3 h-3" />
                   ) : (
                     <Clock className="w-3 h-3" />
                   )}
-                  {selectedItem.verifiedStatus === "verified" ? "Verified" : selectedItem.verifiedStatus === "pending" ? "Pending" : "Unverified"}
+                  {selectedItem.verifiedStatus === "verified"
+                    ? "Verified"
+                    : selectedItem.verifiedStatus === "pending"
+                      ? "Pending"
+                      : "Unverified"}
                 </span>
 
-                {/* Zakat Eligible */}
                 {selectedItem.zakatEligible && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-accent/10 text-accent-foreground">
                     Zakat Eligible
                   </span>
                 )}
 
-                {/* Endorsed */}
                 {selectedItem.endorsedBy && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full bg-accent-light text-accent-foreground">
                     <Award className="w-3 h-3" />
@@ -346,47 +358,38 @@ export function MaddadMap({
                 )}
               </div>
 
-              {/* Progress (if applicable) */}
               {selectedItem.goal && selectedItem.fundingRaised !== undefined && (
                 <div className="mb-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-foreground font-medium">
-                      ${selectedItem.fundingRaised.toLocaleString()}
-                    </span>
-                    <span className="text-muted-foreground">
-                      of ${selectedItem.goal.toLocaleString()}
-                    </span>
+                    <span className="text-foreground font-medium">${selectedItem.fundingRaised.toLocaleString()}</span>
+                    <span className="text-muted-foreground">of ${selectedItem.goal.toLocaleString()}</span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-primary rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min((selectedItem.fundingRaised / selectedItem.goal) * 100, 100)}%` }}
+                      style={{
+                        width: `${Math.min((selectedItem.fundingRaised / selectedItem.goal) * 100, 100)}%`,
+                      }}
                     />
                   </div>
                 </div>
               )}
 
-              {/* Location & Update */}
               <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-3">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
-                  {selectedItem.privacyLevel === "local_private" 
+                  {selectedItem.privacyLevel === "local_private"
                     ? selectedItem.locationLabel.split(",")[0] + " Area"
-                    : selectedItem.locationLabel
-                  }
+                    : selectedItem.locationLabel}
                 </span>
                 <span>Updated {selectedItem.lastUpdated}</span>
               </div>
 
-              {/* Actions */}
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="flex-1 h-8 text-xs"
-                  onClick={() => handleViewDetails(selectedItem)}
-                >
+                <Button size="sm" className="flex-1 h-8 text-xs" onClick={() => handleViewDetails(selectedItem)}>
                   View Details
                 </Button>
+
                 {(selectedItem.type === "need" || selectedItem.type === "appeal") && (
                   <Button
                     size="sm"
@@ -406,12 +409,9 @@ export function MaddadMap({
       {/* Legend */}
       <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-card border border-border">
         <div className="flex flex-wrap gap-3 text-xs">
-          {allCategories.slice(0, 5).map(category => (
+          {allCategories.slice(0, 5).map((category) => (
             <div key={category} className="flex items-center gap-1.5">
-              <div 
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: categoryColors[category]?.marker }}
-              />
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: categoryColors[category]?.marker }} />
               <span className="text-muted-foreground">{category}</span>
             </div>
           ))}
