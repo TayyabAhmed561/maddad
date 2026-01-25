@@ -288,7 +288,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         const clickedId = feature.properties?.id as string | undefined;
         if (!clickedId) return;
 
-        const item = filteredItems.find((x) => x.id === clickedId);
+        // Use mapItems (full dataset) to avoid stale closure issues with filtered array
+        const item = mapItems.find((x) => x.id === clickedId);
         if (!item) return;
 
         openPopupForItem(item, e.lngLat);
