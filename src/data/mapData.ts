@@ -1890,6 +1890,209 @@ const globalPlaceholders: MapItem[] = globalPlaceholderLocations.flatMap((loc, i
 });
 
 // ============================================
+// LEBANON RELIEF - Canadian organizations supporting Lebanon
+// ============================================
+
+const lebanonReliefItems: MapItem[] = [
+  // Beirut
+  {
+    id: "lb-1",
+    type: "appeal",
+    title: "Beirut Emergency Relief Fund",
+    orgName: "Islamic Relief Canada",
+    category: "Medical",
+    verifiedStatus: "verified",
+    endorsedBy: "CRA Registered Charity",
+    zakatEligible: true,
+    locationLabel: "Beirut, Lebanon",
+    lat: 33.8938,
+    lng: 35.5018,
+    lastUpdated: "2 hours ago",
+    fundingRaised: 425000,
+    goal: 800000,
+    privacyLevel: "global_ok",
+    description: "Canadian-led emergency medical relief and humanitarian aid for families affected by the crisis in Beirut.",
+    countryCode: "LB"
+  },
+  {
+    id: "lb-2",
+    type: "need",
+    title: "Lebanon Food Security Program",
+    orgName: "Human Concern International",
+    category: "Food",
+    verifiedStatus: "verified",
+    endorsedBy: "HCI Canada",
+    zakatEligible: true,
+    locationLabel: "Beirut, Lebanon",
+    lat: 33.8886,
+    lng: 35.4955,
+    lastUpdated: "3 hours ago",
+    fundingRaised: 195000,
+    goal: 400000,
+    privacyLevel: "global_ok",
+    description: "Monthly food packages and essential supplies for 2,500+ vulnerable families across Beirut.",
+    countryCode: "LB"
+  },
+  // Tripoli
+  {
+    id: "lb-3",
+    type: "appeal",
+    title: "Tripoli Shelter Reconstruction",
+    orgName: "Penny Appeal Canada",
+    category: "Shelter",
+    verifiedStatus: "verified",
+    endorsedBy: "CRA Registered Charity",
+    zakatEligible: true,
+    locationLabel: "Tripoli, Lebanon",
+    lat: 34.4367,
+    lng: 35.8497,
+    lastUpdated: "4 hours ago",
+    fundingRaised: 312000,
+    goal: 600000,
+    privacyLevel: "global_ok",
+    description: "Rebuilding homes and providing temporary shelter for displaced families in Tripoli and northern Lebanon.",
+    countryCode: "LB"
+  },
+  {
+    id: "lb-4",
+    type: "need",
+    title: "North Lebanon Medical Clinic",
+    orgName: "Muslim Welfare Centre",
+    category: "Medical",
+    verifiedStatus: "verified",
+    zakatEligible: true,
+    locationLabel: "Tripoli, Lebanon",
+    lat: 34.4420,
+    lng: 35.8320,
+    lastUpdated: "5 hours ago",
+    fundingRaised: 87000,
+    goal: 200000,
+    privacyLevel: "global_ok",
+    description: "Operating a free medical clinic providing essential healthcare to underserved communities in Tripoli.",
+    countryCode: "LB"
+  },
+  // Sidon
+  {
+    id: "lb-5",
+    type: "appeal",
+    title: "Sidon Orphan Care Program",
+    orgName: "Islamic Relief Canada",
+    category: "Education",
+    verifiedStatus: "verified",
+    endorsedBy: "CRA Registered Charity",
+    zakatEligible: true,
+    locationLabel: "Sidon, Lebanon",
+    lat: 33.5633,
+    lng: 35.3719,
+    lastUpdated: "1 hour ago",
+    fundingRaised: 156000,
+    goal: 300000,
+    privacyLevel: "global_ok",
+    description: "Comprehensive orphan sponsorship including education, healthcare, and family support in Sidon.",
+    countryCode: "LB"
+  },
+  // Tyre
+  {
+    id: "lb-6",
+    type: "need",
+    title: "Tyre Community Kitchen",
+    orgName: "Human Concern International",
+    category: "Food",
+    verifiedStatus: "verified",
+    endorsedBy: "HCI Canada",
+    zakatEligible: true,
+    locationLabel: "Tyre, Lebanon",
+    lat: 33.2705,
+    lng: 35.2038,
+    lastUpdated: "6 hours ago",
+    fundingRaised: 62000,
+    goal: 150000,
+    privacyLevel: "global_ok",
+    description: "Daily hot meals for 800+ families and elderly residents in Tyre and surrounding villages.",
+    countryCode: "LB"
+  },
+  // Baalbek
+  {
+    id: "lb-7",
+    type: "appeal",
+    title: "Baalbek Winter Relief",
+    orgName: "Penny Appeal Canada",
+    category: "Shelter",
+    verifiedStatus: "verified",
+    zakatEligible: true,
+    locationLabel: "Baalbek, Lebanon",
+    lat: 34.0047,
+    lng: 36.2110,
+    lastUpdated: "2 hours ago",
+    fundingRaised: 98000,
+    goal: 250000,
+    privacyLevel: "global_ok",
+    description: "Winter heating fuel, blankets, and warm clothing for families in the Bekaa Valley.",
+    countryCode: "LB"
+  },
+  // Zahle
+  {
+    id: "lb-8",
+    type: "need",
+    title: "Zahle Refugee Support",
+    orgName: "National Zakat Foundation Canada",
+    category: "Zakat",
+    verifiedStatus: "verified",
+    endorsedBy: "NZF Canada",
+    zakatEligible: true,
+    locationLabel: "Zahle, Lebanon",
+    lat: 33.8463,
+    lng: 35.9020,
+    lastUpdated: "4 hours ago",
+    fundingRaised: 234000,
+    goal: 500000,
+    privacyLevel: "global_ok",
+    description: "Zakat-eligible support for Syrian and Palestinian refugees in the Bekaa Valley region.",
+    countryCode: "LB"
+  },
+  // Beirut - Additional
+  {
+    id: "lb-9",
+    type: "organization",
+    title: "Lebanon Masjid Restoration",
+    orgName: "MAC Lebanon Relief",
+    category: "Masjid",
+    verifiedStatus: "verified",
+    endorsedBy: "Muslim Association of Canada",
+    zakatEligible: false,
+    locationLabel: "Beirut, Lebanon",
+    lat: 33.9010,
+    lng: 35.4780,
+    lastUpdated: "1 day ago",
+    fundingRaised: 145000,
+    goal: 350000,
+    privacyLevel: "global_ok",
+    description: "Restoring damaged masajid and community centres across Beirut following the port explosion.",
+    countryCode: "LB"
+  },
+  // Sidon - Education
+  {
+    id: "lb-10",
+    type: "need",
+    title: "Lebanon School Supplies Drive",
+    orgName: "ISNA Canada",
+    category: "Education",
+    verifiedStatus: "verified",
+    endorsedBy: "ISNA Canada",
+    zakatEligible: false,
+    locationLabel: "Sidon, Lebanon",
+    lat: 33.5580,
+    lng: 35.3850,
+    lastUpdated: "3 hours ago",
+    fundingRaised: 42000,
+    goal: 100000,
+    privacyLevel: "global_ok",
+    description: "School supplies, uniforms, and tuition support for 1,200 students in South Lebanon.",
+    countryCode: "LB"
+  }
+];
+
+// ============================================
 // COMBINED EXPORTS
 // ============================================
 
@@ -1899,7 +2102,8 @@ export const realMapItems: MapItem[] = [
   ...palestineFundraisersOntario,
   ...ontarioRealItems,
   ...canadaRealItems,
-  ...globalRealItems
+  ...globalRealItems,
+  ...lebanonReliefItems
 ];
 
 // All placeholder items (map only)
