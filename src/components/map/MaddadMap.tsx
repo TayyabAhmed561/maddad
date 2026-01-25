@@ -15,8 +15,11 @@ import {
   categoryColors,
   ONTARIO_CENTER,
   ONTARIO_ZOOM,
+  ONTARIO_BOUNDS,
+  ONTARIO_MAX_ZOOM,
   CANADA_CENTER,
   CANADA_ZOOM,
+  CANADA_BOUNDS,
   GLOBAL_CENTER,
   GLOBAL_ZOOM,
   LOCAL_ZOOM,
@@ -52,9 +55,10 @@ interface MaddadMapProps {
   onItemSelect?: (item: MapItem) => void;
   selectedItemId?: string | null;
   isPanelOpen?: boolean;
+  onFocusItem?: (itemId: string) => void;
 }
 
-export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen = true }: MaddadMapProps) {
+export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen = true, onFocusItem }: MaddadMapProps) {
   const navigate = useNavigate();
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -160,7 +164,6 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     if (mapRef.current || !mapContainerRef.current) return;
 
     const initialCenter: [number, number] = [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat];
-    const padding = getCameraPadding();
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -174,9 +177,11 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
 
     map.on("load", () => {
-      // Apply initial padding
-      map.easeTo({
-        padding,
+      // Fit to Ontario bounds on initial load with padding
+      const padding = getCameraPadding();
+      map.fitBounds(ONTARIO_BOUNDS, {
+        padding: { ...padding, top: 120, bottom: 90 },
+        maxZoom: ONTARIO_MAX_ZOOM,
         duration: 0,
       });
 
@@ -184,6 +189,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         map.addSource("maddad-items", { type: "geojson", data: geojson });
       }
 
+      if (map.getLayer("maddad-items-selected-ring")) map.removeLayer("maddad-items-selected-ring");
       if (map.getLayer("maddad-items-ring")) map.removeLayer("maddad-items-ring");
       if (map.getLayer("maddad-items-layer")) map.removeLayer("maddad-items-layer");
 
@@ -235,6 +241,21 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
           "circle-stroke-color": "white",
           "circle-stroke-width": 2,
         },
+      });
+
+      // Selected marker highlight ring (pulsing effect via CSS animation)
+      map.addLayer({
+        id: "maddad-items-selected-ring",
+        type: "circle",
+        source: "maddad-items",
+        paint: {
+          "circle-radius": 18,
+          "circle-color": "rgba(0,0,0,0)",
+          "circle-stroke-color": "hsl(160, 45%, 32%)",
+          "circle-stroke-width": 3,
+          "circle-stroke-opacity": 0.8,
+        },
+        filter: ["==", ["get", "id"], ""], // Initially no selection
       });
 
       map.on("mouseenter", "maddad-items-layer", () => {
@@ -315,6 +336,22 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     });
   }, [getCameraPadding]);
 
+  // Fit bounds with padding (for Provincial and Canada views)
+  const fitBoundsWithPadding = useCallback((bounds: [[number, number], [number, number]], maxZoom?: number) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const padding = getCameraPadding();
+    // Add extra top padding to account for controls overlay
+    const adjustedPadding = { ...padding, top: 120, bottom: 90 };
+    
+    map.fitBounds(bounds, {
+      padding: adjustedPadding,
+      maxZoom: maxZoom || 10,
+      duration: 700,
+    });
+  }, [getCameraPadding]);
+
   // Handle scope level change
   const handleScopeChange = useCallback(
     (scope: ScopeLevel) => {
@@ -346,7 +383,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
             });
             // Fallback to provincial
             setScopeLevel("provincial");
-            flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
+            fitBoundsWithPadding(ONTARIO_BOUNDS, ONTARIO_MAX_ZOOM);
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
@@ -355,53 +392,40 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         closePopup();
 
         if (scope === "provincial") {
-          flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
+          fitBoundsWithPadding(ONTARIO_BOUNDS, ONTARIO_MAX_ZOOM);
         } else if (scope === "canada") {
-          flyToWithOffset(CANADA_CENTER, CANADA_ZOOM);
+          fitBoundsWithPadding(CANADA_BOUNDS, CANADA_ZOOM + 0.5);
         } else if (scope === "global") {
           flyToWithOffset(GLOBAL_CENTER, GLOBAL_ZOOM);
         }
       }
     },
-    [closePopup, flyToWithOffset]
+    [closePopup, flyToWithOffset, fitBoundsWithPadding]
   );
 
-  // Recenter to Ontario
-  const handleRecenterOntario = useCallback(() => {
-    setScopeLevel("provincial");
-    closePopup();
-    flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
-  }, [closePopup, flyToWithOffset]);
-
-  // Reset zoom based on current scope
-  const handleResetZoom = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    let targetZoom = ONTARIO_ZOOM;
-    if (scopeLevel === "local" && userLocation) {
-      targetZoom = LOCAL_ZOOM;
-    } else if (scopeLevel === "canada") {
-      targetZoom = CANADA_ZOOM;
-    } else if (scopeLevel === "global") {
-      targetZoom = GLOBAL_ZOOM;
+  // Get scope label for tooltip
+  const getScopeLabel = useCallback(() => {
+    switch (scopeLevel) {
+      case "local": return "Local";
+      case "provincial": return "Ontario";
+      case "canada": return "Canada";
+      case "global": return "Global";
+      default: return "default";
     }
+  }, [scopeLevel]);
 
-    map.zoomTo(targetZoom, { duration: 500 });
-  }, [scopeLevel, userLocation]);
-
-  // Reset view to current scope's default
+  // Reset view to current scope's default (context-aware single button)
   const handleResetView = useCallback(() => {
     if (scopeLevel === "local" && userLocation) {
       flyToWithOffset(userLocation, LOCAL_ZOOM);
     } else if (scopeLevel === "provincial") {
-      flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
+      fitBoundsWithPadding(ONTARIO_BOUNDS, ONTARIO_MAX_ZOOM);
     } else if (scopeLevel === "canada") {
-      flyToWithOffset(CANADA_CENTER, CANADA_ZOOM);
+      fitBoundsWithPadding(CANADA_BOUNDS, CANADA_ZOOM + 0.5);
     } else if (scopeLevel === "global") {
       flyToWithOffset(GLOBAL_CENTER, GLOBAL_ZOOM);
     }
-  }, [scopeLevel, userLocation, flyToWithOffset]);
+  }, [scopeLevel, userLocation, flyToWithOffset, fitBoundsWithPadding]);
 
   const handleViewDetails = useCallback(
     (item: MapItem) => {
@@ -412,17 +436,31 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     [navigate]
   );
 
-  // Focus on selected item from external selection
+  // Focus on selected item from external selection + update selected ring
   useEffect(() => {
-    if (selectedItemId && mapRef.current) {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Update the selected ring filter to highlight the selected marker
+    if (map.getLayer("maddad-items-selected-ring")) {
+      map.setFilter("maddad-items-selected-ring", 
+        selectedItemId 
+          ? ["==", ["get", "id"], selectedItemId]
+          : ["==", ["get", "id"], ""]
+      );
+    }
+
+    // Fly to item and open popup
+    if (selectedItemId) {
       const item = mapItems.find((x) => x.id === selectedItemId);
       if (item) {
         const padding = getCameraPadding();
-        mapRef.current.flyTo({
+        map.flyTo({
           center: [item.lng, item.lat],
-          zoom: Math.max(mapRef.current.getZoom(), 10),
+          zoom: Math.max(map.getZoom(), 10),
           padding,
           essential: true,
+          duration: 700,
         });
         openPopupForItem(item, [item.lng, item.lat]);
       }
@@ -482,9 +520,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         )}
       >
         <MapControls
-          onRecenterOntario={handleRecenterOntario}
-          onResetZoom={handleResetZoom}
           onResetView={handleResetView}
+          scopeLabel={getScopeLabel()}
         />
       </div>
 

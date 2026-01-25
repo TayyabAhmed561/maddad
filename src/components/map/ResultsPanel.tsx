@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { X, ChevronRight, ChevronUp, ChevronDown, Search } from "lucide-react";
+import { useEffect, useRef, useCallback } from "react";
+import { ChevronRight, ChevronUp, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NeedCard } from "@/components/NeedCard";
 import { NeedCardSkeleton } from "@/components/skeletons/CardSkeleton";
@@ -13,6 +13,7 @@ interface ResultsPanelProps {
   selectedItemId: string | null;
   onView: (id: string) => void;
   onDonate: (id: string) => void;
+  onCardClick?: (id: string) => void;
   filteredCount: number;
   isLoading?: boolean;
   className?: string;
@@ -27,6 +28,7 @@ export function ResultsPanel({
   selectedItemId,
   onView,
   onDonate,
+  onCardClick,
   filteredCount,
   isLoading = false,
   className,
@@ -44,17 +46,22 @@ export function ResultsPanel({
     return matchesSearch;
   });
 
+  // Handle card click to focus on map (without navigation)
+  const handleCardClick = useCallback((needId: string, e: React.MouseEvent) => {
+    // Check if the click originated from a button - don't trigger card focus
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) {
+      return;
+    }
+    onCardClick?.(needId);
+  }, [onCardClick]);
+
   // Auto-scroll to selected item
   useEffect(() => {
     if (selectedItemId && cardRefs.current[selectedItemId] && scrollContainerRef.current) {
       const card = cardRefs.current[selectedItemId];
       if (card) {
         card.scrollIntoView({ behavior: "smooth", block: "center" });
-        // Add highlight effect
-        card.classList.add("ring-2", "ring-primary", "ring-offset-2");
-        setTimeout(() => {
-          card.classList.remove("ring-2", "ring-primary", "ring-offset-2");
-        }, 2000);
       }
     }
   }, [selectedItemId]);
@@ -127,7 +134,11 @@ export function ResultsPanel({
                 ref={(el) => {
                   cardRefs.current[need.id] = el;
                 }}
-                className="animate-fade-in-up transition-all duration-300"
+                onClick={(e) => handleCardClick(need.id, e)}
+                className={cn(
+                  "animate-fade-in-up transition-all duration-300 cursor-pointer rounded-xl",
+                  selectedItemId === need.id && "ring-2 ring-primary ring-offset-2 ring-offset-card"
+                )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <NeedCard
@@ -221,7 +232,11 @@ export function ResultsPanel({
               ref={(el) => {
                 cardRefs.current[need.id] = el;
               }}
-              className="animate-fade-in-up transition-all duration-300"
+              onClick={(e) => handleCardClick(need.id, e)}
+              className={cn(
+                "animate-fade-in-up transition-all duration-300 cursor-pointer rounded-xl",
+                selectedItemId === need.id && "ring-2 ring-primary ring-offset-2 ring-offset-card"
+              )}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <NeedCard

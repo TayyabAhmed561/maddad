@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { MaddadMap } from "@/components/map/MaddadMap";
@@ -7,12 +7,20 @@ import "@/components/map/MapPopupStyles.css";
 import { MapItem, mapItems } from "@/data/mapData";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Map reference type for controlling map externally
+interface MapRef {
+  focusOnItem: (itemId: string) => void;
+}
+
 export default function Explore() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [selectedMapItemId, setSelectedMapItemId] = useState<string | null>(null);
+  
+  // Reference to programmatically control the map
+  const mapFocusRef = useRef<((itemId: string) => void) | null>(null);
 
   // Navigate to detail page
   const handleView = useCallback((id: string) => {
@@ -24,7 +32,7 @@ export default function Explore() {
     navigate(`/need/${id}#donate`);
   }, [navigate]);
 
-  // Handle map item selection - highlight in panel
+  // Handle map item selection - highlight in panel (from map marker click)
   const handleMapItemSelect = useCallback((item: MapItem) => {
     setSelectedMapItemId(item.id);
     // Ensure panel is open when marker is clicked
@@ -32,6 +40,20 @@ export default function Explore() {
       setIsPanelOpen(true);
     }
   }, [isPanelOpen]);
+
+  // Handle card click - focus map on item (from panel card click)
+  const handleCardClick = useCallback((id: string) => {
+    setSelectedMapItemId(id);
+    // Trigger map focus via the callback stored in ref
+    if (mapFocusRef.current) {
+      mapFocusRef.current(id);
+    }
+  }, []);
+
+  // Store the focus function from MaddadMap
+  const handleFocusItem = useCallback((focusFn: (itemId: string) => void) => {
+    mapFocusRef.current = focusFn;
+  }, []);
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -59,6 +81,7 @@ export default function Explore() {
               selectedItemId={selectedMapItemId}
               onView={handleView}
               onDonate={handleDonate}
+              onCardClick={handleCardClick}
               filteredCount={mapItems.length}
               variant="bottom-sheet"
             />
@@ -74,6 +97,7 @@ export default function Explore() {
                 selectedItemId={selectedMapItemId}
                 onView={handleView}
                 onDonate={handleDonate}
+                onCardClick={handleCardClick}
                 filteredCount={mapItems.length}
                 variant="side-panel"
               />

@@ -308,18 +308,20 @@ export const categoryColors: Record<MapCategory, { bg: string; text: string; mar
   Zakat: { bg: "hsl(160, 40%, 93%)", text: "hsl(160, 40%, 22%)", marker: "hsl(160, 50%, 28%)" }
 };
 
-// Ontario bounds for focused view
-export const ONTARIO_CENTER = { lat: 43.65, lng: -79.38 };
-export const ONTARIO_ZOOM = 6;
-export const ONTARIO_BOUNDS: [number, number, number, number] = [-95.2, 41.7, -74.3, 56.9];
+// Ontario bounds for focused view [west, south, east, north] in [lng, lat] order
+export const ONTARIO_BOUNDS: [[number, number], [number, number]] = [[-95.2, 41.7], [-74.3, 56.9]];
+export const ONTARIO_CENTER = { lat: 49.3, lng: -84.75 }; // Fallback center (geometric center of Ontario)
+export const ONTARIO_ZOOM = 5.5;
+export const ONTARIO_MAX_ZOOM = 6.2;
 
-// Canada center
+// Canada bounds for focused view
+export const CANADA_BOUNDS: [[number, number], [number, number]] = [[-141, 41.7], [-52, 83.1]];
 export const CANADA_CENTER = { lat: 56.13, lng: -106.35 };
-export const CANADA_ZOOM = 3.5;
+export const CANADA_ZOOM = 3.2;
 
 // Global view settings
 export const GLOBAL_CENTER = { lat: 30, lng: 20 };
-export const GLOBAL_ZOOM = 2;
+export const GLOBAL_ZOOM = 1.8;
 
 // Local view settings
 export const LOCAL_ZOOM = 12;
