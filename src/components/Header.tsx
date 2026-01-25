@@ -26,7 +26,7 @@ export function Header() {
             <img 
               src={maddadLogo} 
               alt="Maddad logo" 
-              className="h-8 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
             <span className="text-xl font-serif font-semibold text-foreground">Maddad</span>
           </Link>
