@@ -15,7 +15,6 @@ import {
   categoryColors,
   ONTARIO_CENTER,
   ONTARIO_ZOOM,
-  ONTARIO_BOUNDS,
   CANADA_CENTER,
   CANADA_ZOOM,
   GLOBAL_CENTER,
@@ -29,6 +28,10 @@ import {
 mapboxgl.accessToken = "pk.eyJ1IjoibWluaW9uc2EwMCIsImEiOiJjbWt0eTF1MzUxa3dxM3FwcHJuYjhiNXlvIn0.U9u4rqrM2m5yWiqYE5bv2Q";
 
 const allCategories: MapCategory[] = ["Food", "Shelter", "Medical", "Education", "Masjid", "Fidya", "Qurbani", "Zakat"];
+
+// Panel width for offset calculations (in pixels)
+const PANEL_WIDTH = 420;
+const PANEL_MARGIN = 24;
 
 function isOntarioItem(item: MapItem) {
   return item.locationLabel.includes("ON");
@@ -48,9 +51,10 @@ interface MaddadMapProps {
   className?: string;
   onItemSelect?: (item: MapItem) => void;
   selectedItemId?: string | null;
+  isPanelOpen?: boolean;
 }
 
-export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMapProps) {
+export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen = true }: MaddadMapProps) {
   const navigate = useNavigate();
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -65,6 +69,19 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+
+  // Calculate padding for camera to account for right panel
+  const getCameraPadding = useCallback(() => {
+    if (!isPanelOpen) {
+      return { top: 80, bottom: 60, left: 24, right: 24 };
+    }
+    return { 
+      top: 80, 
+      bottom: 60, 
+      left: 24, 
+      right: PANEL_WIDTH + PANEL_MARGIN + 24 
+    };
+  }, [isPanelOpen]);
 
   // Filter items based on scope, category, verified, and user location
   const filteredItems = useMemo(() => {
@@ -143,19 +160,26 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
     if (mapRef.current || !mapContainerRef.current) return;
 
     const initialCenter: [number, number] = [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat];
+    const padding = getCameraPadding();
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/light-v11",
       center: initialCenter,
       zoom: ONTARIO_ZOOM,
-      minZoom: 2,
+      minZoom: 1.5,
       attributionControl: true,
     });
 
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
 
     map.on("load", () => {
+      // Apply initial padding
+      map.easeTo({
+        padding,
+        duration: 0,
+      });
+
       if (!map.getSource("maddad-items")) {
         map.addSource("maddad-items", { type: "geojson", data: geojson });
       }
@@ -250,6 +274,18 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update camera padding when panel state changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const padding = getCameraPadding();
+    map.easeTo({
+      padding,
+      duration: 300,
+    });
+  }, [isPanelOpen, getCameraPadding]);
+
   // Update GeoJSON data when filters change
   useEffect(() => {
     const map = mapRef.current;
@@ -262,6 +298,22 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
       closePopup();
     }
   }, [geojson, filteredItems, selectedItem, closePopup]);
+
+  // Helper function to fly to a location with panel offset
+  const flyToWithOffset = useCallback((center: { lat: number; lng: number }, zoom: number) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const padding = getCameraPadding();
+    
+    map.flyTo({
+      center: [center.lng, center.lat],
+      zoom,
+      padding,
+      essential: true,
+      duration: 1200,
+    });
+  }, [getCameraPadding]);
 
   // Handle scope level change
   const handleScopeChange = useCallback(
@@ -278,11 +330,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
             setScopeLevel("local");
             setIsLocating(false);
 
-            map.flyTo({
-              center: [longitude, latitude],
-              zoom: LOCAL_ZOOM,
-              essential: true,
-            });
+            flyToWithOffset({ lat: latitude, lng: longitude }, LOCAL_ZOOM);
 
             toast({
               title: "Location found",
@@ -298,11 +346,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
             });
             // Fallback to provincial
             setScopeLevel("provincial");
-            map.flyTo({
-              center: [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat],
-              zoom: ONTARIO_ZOOM,
-              essential: true,
-            });
+            flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
           },
           { enableHighAccuracy: true, timeout: 10000 }
         );
@@ -311,42 +355,23 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
         closePopup();
 
         if (scope === "provincial") {
-          map.flyTo({
-            center: [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat],
-            zoom: ONTARIO_ZOOM,
-            essential: true,
-          });
+          flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
         } else if (scope === "canada") {
-          map.flyTo({
-            center: [CANADA_CENTER.lng, CANADA_CENTER.lat],
-            zoom: CANADA_ZOOM,
-            essential: true,
-          });
+          flyToWithOffset(CANADA_CENTER, CANADA_ZOOM);
         } else if (scope === "global") {
-          map.flyTo({
-            center: [GLOBAL_CENTER.lng, GLOBAL_CENTER.lat],
-            zoom: GLOBAL_ZOOM,
-            essential: true,
-          });
+          flyToWithOffset(GLOBAL_CENTER, GLOBAL_ZOOM);
         }
       }
     },
-    [closePopup]
+    [closePopup, flyToWithOffset]
   );
 
   // Recenter to Ontario
   const handleRecenterOntario = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
     setScopeLevel("provincial");
     closePopup();
-    map.flyTo({
-      center: [ONTARIO_CENTER.lng, ONTARIO_CENTER.lat],
-      zoom: ONTARIO_ZOOM,
-      essential: true,
-    });
-  }, [closePopup]);
+    flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
+  }, [closePopup, flyToWithOffset]);
 
   // Reset zoom based on current scope
   const handleResetZoom = useCallback(() => {
@@ -365,6 +390,19 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
     map.zoomTo(targetZoom, { duration: 500 });
   }, [scopeLevel, userLocation]);
 
+  // Reset view to current scope's default
+  const handleResetView = useCallback(() => {
+    if (scopeLevel === "local" && userLocation) {
+      flyToWithOffset(userLocation, LOCAL_ZOOM);
+    } else if (scopeLevel === "provincial") {
+      flyToWithOffset(ONTARIO_CENTER, ONTARIO_ZOOM);
+    } else if (scopeLevel === "canada") {
+      flyToWithOffset(CANADA_CENTER, CANADA_ZOOM);
+    } else if (scopeLevel === "global") {
+      flyToWithOffset(GLOBAL_CENTER, GLOBAL_ZOOM);
+    }
+  }, [scopeLevel, userLocation, flyToWithOffset]);
+
   const handleViewDetails = useCallback(
     (item: MapItem) => {
       if (item.type === "appeal") navigate(`/appeals/${item.id}`);
@@ -379,15 +417,17 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
     if (selectedItemId && mapRef.current) {
       const item = mapItems.find((x) => x.id === selectedItemId);
       if (item) {
+        const padding = getCameraPadding();
         mapRef.current.flyTo({
           center: [item.lng, item.lat],
           zoom: Math.max(mapRef.current.getZoom(), 10),
+          padding,
           essential: true,
         });
         openPopupForItem(item, [item.lng, item.lat]);
       }
     }
-  }, [selectedItemId, openPopupForItem]);
+  }, [selectedItemId, openPopupForItem, getCameraPadding]);
 
   // Token check
   if (!mapboxgl.accessToken || !mapboxgl.accessToken.startsWith("pk.")) {
@@ -430,14 +470,21 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
           onCategoryChange={setActiveCategory}
           verifiedOnly={verifiedOnly}
           onVerifiedChange={setVerifiedOnly}
+          isPanelOpen={isPanelOpen}
         />
       </div>
 
-      {/* Top-Right Map Controls */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Top-Right Map Controls - positioned left of the panel */}
+      <div 
+        className={cn(
+          "absolute top-4 z-10 transition-all duration-300",
+          isPanelOpen ? "right-[460px] lg:right-[480px] xl:right-[500px]" : "right-4"
+        )}
+      >
         <MapControls
           onRecenterOntario={handleRecenterOntario}
           onResetZoom={handleResetZoom}
+          onResetView={handleResetView}
         />
       </div>
 
@@ -534,8 +581,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
         </div>
       )}
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-card border border-border">
+      {/* Legend - positioned above Mapbox attribution */}
+      <div className="absolute bottom-10 left-4 z-10 bg-card/95 backdrop-blur-md rounded-lg px-3 py-2 shadow-card border border-border">
         <div className="flex flex-wrap gap-3 text-xs">
           {allCategories.slice(0, 5).map((category) => (
             <div key={category} className="flex items-center gap-1.5">
@@ -546,8 +593,13 @@ export function MaddadMap({ className, onItemSelect, selectedItemId }: MaddadMap
         </div>
       </div>
 
-      {/* Results count */}
-      <div className="absolute bottom-4 right-16 bg-card/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-card border border-border">
+      {/* Results count - positioned above navigation controls, left of panel */}
+      <div 
+        className={cn(
+          "absolute bottom-4 z-10 bg-card/95 backdrop-blur-md rounded-lg px-3 py-2 shadow-card border border-border transition-all duration-300",
+          isPanelOpen ? "right-[460px] lg:right-[480px] xl:right-[500px]" : "right-16"
+        )}
+      >
         <span className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">{filteredItems.length}</span> locations
         </span>

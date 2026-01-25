@@ -63,9 +63,15 @@
   background-color: hsl(40, 22%, 90%) !important;
 }
 
-/* Attribution control - less prominent */
+/* Attribution control - positioned to not overlap legend */
+.mapboxgl-ctrl-bottom-left {
+  bottom: 4px !important;
+  left: 4px !important;
+}
+
 .mapboxgl-ctrl-attrib {
-  background: hsl(45, 30%, 98% / 0.8) !important;
+  background: hsl(45, 30%, 98% / 0.85) !important;
+  backdrop-filter: blur(4px);
   border-radius: 4px !important;
   font-size: 10px !important;
 }
