@@ -17,6 +17,7 @@ import {
 } from "@/data/mapData";
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string | undefined)?.trim();
+console.log("VITE_MAPBOX_TOKEN:", import.meta.env.VITE_MAPBOX_TOKEN);
 
 // Ontario bounds to restrict panning in Ontario mode (optional but recommended)
 const ONTARIO_BOUNDS: [[number, number], [number, number]] = [
