@@ -149,7 +149,7 @@ export default function ZakatPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-card rounded-xl border border-border p-6 sticky top-6">
+              <div className="bg-card rounded-xl border border-border p-6">
                 <h3 className="font-serif text-lg font-semibold text-foreground mb-4">Zakat Summary</h3>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Amount</span><span className="font-medium text-foreground">${selectedAmount.toLocaleString()}</span></div>

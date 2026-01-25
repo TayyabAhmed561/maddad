@@ -225,7 +225,7 @@ export default function QurbaniPage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Summary */}
-              <div className="bg-card rounded-xl border border-border p-6 sticky top-6">
+              <div className="bg-card rounded-xl border border-border p-6">
                 <h3 className="font-serif text-lg font-semibold text-foreground mb-4">
                   Qurbani Summary
                 </h3>
