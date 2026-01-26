@@ -223,42 +223,20 @@ export default function Index() {
             </div>
           </div>
           
-          {/* Scrolling logo marquee */}
-          <div className="relative group/marquee">
-            {/* Gradient fade edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
-            
-            <div className="flex overflow-hidden">
-              <div className="marquee-track flex gap-12 py-4 group-hover/marquee:[animation-play-state:paused]">
-                {/* First set of logos */}
-                {partners.map((partner) => (
-                  <div 
-                    key={partner.name}
-                    className="flex-shrink-0 h-16 md:h-20 px-6 flex items-center justify-center bg-background rounded-xl border border-border shadow-soft hover:shadow-warm transition-shadow duration-300"
-                  >
-                    <img 
-                      src={partner.logo} 
-                      alt={partner.name}
-                      className="h-10 md:h-14 w-auto max-w-[140px] md:max-w-[180px] object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                    />
-                  </div>
-                ))}
-                {/* Duplicate set for seamless loop */}
-                {partners.map((partner) => (
-                  <div 
-                    key={`${partner.name}-dup`}
-                    className="flex-shrink-0 h-16 md:h-20 px-6 flex items-center justify-center bg-background rounded-xl border border-border shadow-soft hover:shadow-warm transition-shadow duration-300"
-                  >
-                    <img 
-                      src={partner.logo} 
-                      alt={partner.name}
-                      className="h-10 md:h-14 w-auto max-w-[140px] md:max-w-[180px] object-contain grayscale hover:grayscale-0 transition-all duration-300"
-                    />
-                  </div>
-                ))}
+          {/* Static partner logos grid */}
+          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-10 py-6">
+            {partners.map((partner) => (
+              <div 
+                key={partner.name}
+                className="h-14 w-28 md:h-16 md:w-36 flex items-center justify-center"
+              >
+                <img 
+                  src={partner.logo} 
+                  alt={partner.name}
+                  className="max-h-full max-w-full object-contain"
+                />
               </div>
-            </div>
+            ))}
           </div>
         </section>
 

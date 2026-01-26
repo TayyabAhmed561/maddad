@@ -519,27 +519,4 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-
-  /* ========================================
-     Infinite Marquee Animation
-     Seamless horizontal scroll for logo strips
-     ======================================== */
-  
-  @keyframes marquee-scroll {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  .marquee-track {
-    animation: marquee-scroll 40s linear infinite;
-    will-change: transform;
-  }
-
-  .marquee-track:hover {
-    animation-play-state: paused;
-  }
 }
