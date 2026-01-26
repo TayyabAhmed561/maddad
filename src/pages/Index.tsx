@@ -224,13 +224,13 @@ export default function Index() {
           </div>
           
           {/* Scrolling logo marquee */}
-          <div className="relative">
+          <div className="relative group/marquee">
             {/* Gradient fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-card to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-card to-transparent z-10 pointer-events-none" />
             
             <div className="flex overflow-hidden">
-              <div className="flex animate-scroll-x gap-12 py-4">
+              <div className="marquee-track flex gap-12 py-4 group-hover/marquee:[animation-play-state:paused]">
                 {/* First set of logos */}
                 {partners.map((partner) => (
                   <div 
