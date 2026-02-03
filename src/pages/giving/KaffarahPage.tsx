@@ -9,6 +9,7 @@ import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationTo
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { KaffarahCalculator } from "@/components/giving/KaffarahCalculator";
 import { 
   Scale, 
   Heart,
@@ -100,6 +101,10 @@ export default function KaffarahPage() {
     setDuaIntention("");
   };
 
+  const handleCalculatorResult = (calculatedAmount: number) => {
+    setDonationAmount(calculatedAmount.toFixed(2));
+  };
+
   const selectedOption = kaffarahOptions.find(opt => opt.id === selectedType);
 
   return (
@@ -177,7 +182,10 @@ export default function KaffarahPage() {
                 
                 <RadioGroup 
                   value={selectedType || ""} 
-                  onValueChange={(value) => setSelectedType(value as KaffarahType)}
+                  onValueChange={(value) => {
+                    setSelectedType(value as KaffarahType);
+                    setDonationAmount(""); // Reset amount when type changes
+                  }}
                   className="space-y-4"
                 >
                   {kaffarahOptions.map((option) => (
@@ -189,7 +197,10 @@ export default function KaffarahPage() {
                           ? "border-primary bg-primary-light/50" 
                           : "border-border hover:border-primary/50 hover:bg-secondary/50"
                       )}
-                      onClick={() => setSelectedType(option.id)}
+                      onClick={() => {
+                        setSelectedType(option.id);
+                        setDonationAmount("");
+                      }}
                     >
                       <RadioGroupItem value={option.id} id={option.id} className="mt-1" />
                       <div className="flex-1">
@@ -213,14 +224,23 @@ export default function KaffarahPage() {
                 </RadioGroup>
               </div>
 
-              {/* Donation Amount */}
+              {/* Kaffarah Calculator - Only shows after type is selected */}
+              {selectedType && (
+                <KaffarahCalculator 
+                  type={selectedType} 
+                  onCalculate={handleCalculatorResult}
+                />
+              )}
+
+              {/* Manual Donation Amount */}
               <div className="bg-card rounded-xl border border-border p-6 md:p-8">
                 <h2 className="font-serif text-xl font-semibold text-foreground mb-2">
-                  Enter Donation Amount
+                  Donation Amount
                 </h2>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Kaffarah amounts vary based on your situation and scholarly guidance. 
-                  Please consult with a scholar if you're unsure about the appropriate amount.
+                  {selectedType 
+                    ? "Use the calculator above or enter your amount directly."
+                    : "Select an obligation type above, then enter your amount."}
                 </p>
                 
                 <div className="space-y-4">
@@ -238,16 +258,9 @@ export default function KaffarahPage() {
                         value={donationAmount}
                         onChange={(e) => setDonationAmount(e.target.value)}
                         className="pl-8 text-lg font-medium"
+                        disabled={!selectedType}
                       />
                     </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-2 text-sm text-muted-foreground bg-secondary/50 p-3 rounded-lg">
-                    <Info size={14} className="mt-0.5 flex-shrink-0" />
-                    <span>
-                      A calculator will be available soon. For now, please enter the amount 
-                      based on your understanding or consultation with a scholar.
-                    </span>
                   </div>
                 </div>
               </div>
