@@ -6,6 +6,7 @@ import { AllocationBreakdown } from "@/components/giving/AllocationBreakdown";
 import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
+import { ZakatCalculator } from "@/components/giving/ZakatCalculator";
 import { 
   Coins, 
   Heart,
@@ -43,6 +44,11 @@ export default function ZakatPage() {
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsLoading(false);
     setIsSuccess(true);
+  };
+
+  const handleCalculatorResult = (calculatedAmount: number) => {
+    setCustomAmount(calculatedAmount.toFixed(2));
+    setAmount(0); // Clear preset selection
   };
 
   return (
@@ -85,8 +91,15 @@ export default function ZakatPage() {
         <div className="container mx-auto px-4 py-12">
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
+              {/* Zakat Calculator - Collapsible */}
+              <ZakatCalculator onCalculate={handleCalculatorResult} />
+
+              {/* Manual Amount Entry */}
               <div className="bg-card rounded-xl border border-border p-6 md:p-8">
-                <h2 className="font-serif text-xl font-semibold text-foreground mb-6">Zakat Amount</h2>
+                <h2 className="font-serif text-xl font-semibold text-foreground mb-2">Zakat Amount</h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Enter your Zakat amount directly, or use the calculator above.
+                </p>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
                   {zakatConfig.presetAmounts.map((preset) => (
                     <button key={preset} onClick={() => { setAmount(preset); setCustomAmount(""); }}
@@ -149,7 +162,7 @@ export default function ZakatPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-card rounded-xl border border-border p-6">
+              <div className="bg-card rounded-xl border border-border p-6 sticky top-6">
                 <h3 className="font-serif text-lg font-semibold text-foreground mb-4">Zakat Summary</h3>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Amount</span><span className="font-medium text-foreground">${selectedAmount.toLocaleString()}</span></div>
