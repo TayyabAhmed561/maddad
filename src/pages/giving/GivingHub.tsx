@@ -8,6 +8,7 @@ import {
   Coins, 
   Moon,
   Infinity,
+  Scale,
   ArrowRight,
   Shield
 } from "lucide-react";
@@ -20,7 +21,8 @@ const iconMap = {
   Utensils,
   Coins,
   Heart,
-  Infinity
+  Infinity,
+  Scale
 };
 
 export default function GivingHub() {

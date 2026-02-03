@@ -65,6 +65,14 @@ export const givingTypes: GivingTypeConfig[] = [
     href: "/giving/sadaqah-jariyah",
     seasonal: false,
     icon: "Infinity"
+  },
+  {
+    id: "kaffarah",
+    title: "Kaffarah",
+    description: "Fulfill Kaffarah obligations by providing required compensation for broken fasts or oaths through verified feeding programs.",
+    href: "/giving/kaffarah",
+    seasonal: false,
+    icon: "Scale"
   }
 ];
 
@@ -159,6 +167,11 @@ export const allocationRules: Record<string, AllocationRule[]> = {
     { label: "Project delivery", percentage: 90 },
     { label: "Maintenance fund", percentage: 7 },
     { label: "Admin", percentage: 3 }
+  ],
+  kaffarah: [
+    { label: "Meal delivery", percentage: 92 },
+    { label: "Logistics", percentage: 6 },
+    { label: "Platform", percentage: 2 }
   ],
   general: [
     { label: "Direct aid", percentage: 92 },

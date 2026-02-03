@@ -19,6 +19,7 @@ import MealSponsorshipPage from "./pages/giving/MealSponsorshipPage";
 import ZakatPage from "./pages/giving/ZakatPage";
 import QurbaniPage from "./pages/giving/QurbaniPage";
 import SadaqahJariyahPage from "./pages/giving/SadaqahJariyahPage";
+import KaffarahPage from "./pages/giving/KaffarahPage";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,8 @@ const AppRoutes = () => (
       <Route path="/give/qurbani" element={<QurbaniPage />} />
       <Route path="/giving/sadaqah-jariyah" element={<SadaqahJariyahPage />} />
       <Route path="/give/jariyah" element={<SadaqahJariyahPage />} />
+      <Route path="/giving/kaffarah" element={<KaffarahPage />} />
+      <Route path="/give/kaffarah" element={<KaffarahPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </>
