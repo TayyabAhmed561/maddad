@@ -13,12 +13,14 @@ import {
   Hash,
   Bell,
   AlertTriangle,
+  Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MilestoneUpdate, MilestoneStage, EvidenceItem } from "@/types/verification";
 import { getPublicEvidenceByIds } from "@/data/evidenceData";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { MediaViewerDialog } from "@/components/verification/MediaViewerDialog";
 
 interface ImpactTimelineProps {
   /** Ordered milestone updates */
@@ -98,12 +100,14 @@ function MilestoneRow({
   isActive,
   isFuture,
   isLast,
+  onViewMedia,
 }: {
   milestone?: MilestoneUpdate;
   stage: MilestoneStage;
   isActive: boolean;
   isFuture: boolean;
   isLast: boolean;
+  onViewMedia: (item: EvidenceItem) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const stage = milestone?.stage ?? "verified";
@@ -180,34 +184,63 @@ function MilestoneRow({
                 </CollapsibleTrigger>
 
                 <CollapsibleContent className="mt-3 space-y-2">
-                  {evidence.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-3 p-2.5 bg-muted/50 rounded-lg"
-                    >
-                      {/* Thumbnail */}
-                      <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                        {item.media.kind === "image" ? (
-                          <img
-                            src={item.media.url}
-                            alt={item.title}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        ) : (
-                          <MediaKindIcon kind={item.media.kind} />
+                  {evidence.map((item) => {
+                    const isViewable = item.media.kind === "image" || item.media.kind === "video";
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "flex items-center gap-3 p-2.5 bg-muted/50 rounded-lg transition-colors",
+                          isViewable && "cursor-pointer hover:bg-primary/10"
                         )}
+                        onClick={() => isViewable && onViewMedia(item)}
+                        role={isViewable ? "button" : undefined}
+                        tabIndex={isViewable ? 0 : undefined}
+                        onKeyDown={(e) => {
+                          if (isViewable && (e.key === "Enter" || e.key === " ")) {
+                            e.preventDefault();
+                            onViewMedia(item);
+                          }
+                        }}
+                      >
+                        {/* Thumbnail */}
+                        <div className="w-8 h-8 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden relative">
+                          {item.media.kind === "image" ? (
+                            <img
+                              src={item.media.url}
+                              alt={item.title}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          ) : item.media.kind === "video" && item.media.thumbnailUrl ? (
+                            <>
+                              <img
+                                src={item.media.thumbnailUrl}
+                                alt={item.title}
+                                className="w-full h-full object-cover rounded"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded">
+                                <Play size={10} className="text-white" fill="white" />
+                              </div>
+                            </>
+                          ) : (
+                            <MediaKindIcon kind={item.media.kind} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">
+                            {item.title}
+                          </p>
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <MediaKindIcon kind={item.media.kind} />
+                            {item.media.kind.toUpperCase()}
+                            {isViewable && (
+                              <span className="text-primary ml-1">· Click to view</span>
+                            )}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground truncate">
-                          {item.title}
-                        </p>
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <MediaKindIcon kind={item.media.kind} />
-                          {item.media.kind.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CollapsibleContent>
               </>
             )}
@@ -242,6 +275,13 @@ export function ImpactTimeline({
   const isOverdue = nextUpdateDue
     ? new Date(nextUpdateDue) < new Date()
     : false;
+
+  // Media viewer state
+  const [viewerMedia, setViewerMedia] = useState<EvidenceItem | null>(null);
+
+  const handleViewMedia = (item: EvidenceItem) => {
+    setViewerMedia(item);
+  };
 
   return (
     <div id="impact-timeline" className={cn("space-y-0 scroll-mt-24", className)}>
@@ -310,10 +350,19 @@ export function ImpactTimeline({
               isActive={isActive}
               isFuture={isFuture}
               isLast={isLast}
+              onViewMedia={handleViewMedia}
             />
           );
         })}
       </div>
+
+      {/* Media viewer dialog */}
+      <MediaViewerDialog
+        open={!!viewerMedia}
+        onOpenChange={(open) => !open && setViewerMedia(null)}
+        media={viewerMedia?.media ?? null}
+        title={viewerMedia?.title}
+      />
     </div>
   );
 }
