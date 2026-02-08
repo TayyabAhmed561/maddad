@@ -34,7 +34,7 @@ const organizationUrls: Record<string, string> = {
   "Muslim Welfare Centre of Toronto": "https://muslimwelfarecentre.com",
   "Muslim Welfare Centre": "https://muslimwelfarecentre.com",
   "Muslim Association of Canada": "https://macnet.ca",
-  "Ibtikar": "https://ibtikar.ca",
+  "MSA": "https://uwmsa.com",
 };
 
 // Donation amount presets

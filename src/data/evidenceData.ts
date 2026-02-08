@@ -315,7 +315,7 @@ export const evidenceItems: EvidenceItem[] = [
     status: "approved",
   },
 
-  // ========== Ibtikar Iftaar Evidence ==========
+  // ========== MSA Iftaar Evidence ==========
   {
     id: "ev-ibtikar-before-photo",
     type: "campaign_need_photo",
@@ -330,7 +330,7 @@ export const evidenceItems: EvidenceItem[] = [
     id: "ev-ibtikar-before-community",
     type: "campaign_need_photo",
     title: "Community Outreach – Student Volunteers",
-    description: "Ibtikar student volunteers distributing flyers and organizing sign-ups for the Ramadan iftaar program on campus.",
+    description: "MSA student volunteers distributing flyers and organizing sign-ups for the Ramadan iftaar program on campus.",
     media: { kind: "image", url: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800" },
     date: "2026-01-22",
     visibility: "public",
@@ -351,7 +351,7 @@ export const evidenceItems: EvidenceItem[] = [
     type: "milestone_receipt",
     title: "Expense Receipts – Meals, Supplies & Venue",
     description: "Itemized receipts for catering, venue rental, and supplies. Breakdown: 65% meals, 20% supplies, 15% venue.",
-    media: { kind: "pdf", url: "/docs/ibtikar-expense-receipts.pdf" },
+    media: { kind: "pdf", url: "/docs/msa-expense-receipts.pdf" },
     date: "2026-02-03",
     visibility: "public",
     status: "approved",
@@ -371,7 +371,7 @@ export const evidenceItems: EvidenceItem[] = [
     type: "milestone_completion_report",
     title: "Ramadan Iftaar Program – Final Report",
     description: "Summary: 30 nights, 4,500+ meals served, 150+ average nightly attendance. Funds supported community iftaar meals for local students and families.",
-    media: { kind: "pdf", url: "/docs/ibtikar-completion-report.pdf" },
+    media: { kind: "pdf", url: "/docs/msa-completion-report.pdf" },
     date: "2026-02-07",
     visibility: "public",
     status: "approved",

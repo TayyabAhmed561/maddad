@@ -379,15 +379,15 @@ export const needsData: Need[] = [
   },
   {
     id: "kw-17",
-    title: "Ibtikar Iftaar",
-    organization: "Ibtikar",
+    title: "MSA Iftaar",
+    organization: "MSA",
     isVerified: true,
     category: "food",
     location: "Waterloo, ON",
     raised: 950,
     goal: 2500,
     lastUpdated: "1 hour ago",
-    description: "Community iftaar initiative providing hot meals for students and families during Ramadan. Ibtikar brings together students, volunteers, and local businesses to serve nightly iftar meals, fostering community spirit and ensuring no one breaks their fast alone.",
+    description: "Community iftaar initiative providing hot meals for students and families during Ramadan. MSA brings together students, volunteers, and local businesses to serve nightly iftar meals, fostering community spirit and ensuring no one breaks their fast alone.",
     coverageItems: [
       "Hot meals for 150+ attendees per night",
       "Fresh halal ingredients and catering",
@@ -400,7 +400,7 @@ export const needsData: Need[] = [
         id: "u1",
         date: "February 6, 2026",
         content: "Secured venue at the Waterloo Community Centre for the full month of Ramadan. Volunteer sign-ups now open.",
-        author: "Ibtikar Team"
+        author: "MSA Team"
       },
       {
         id: "u2",
@@ -412,13 +412,13 @@ export const needsData: Need[] = [
         id: "u3",
         date: "January 25, 2026",
         content: "Campaign launched with support from UW Muslim Students Association. Initial fundraising target set.",
-        author: "Ibtikar"
+        author: "MSA"
       }
     ],
     verificationChecks: [
       { label: "Organization registered", verified: true, verifier: "University of Waterloo" },
       { label: "Venue confirmed", verified: true, verifier: "Waterloo Community Centre" },
-      { label: "Catering partners verified", verified: true, verifier: "Ibtikar Team" },
+      { label: "Catering partners verified", verified: true, verifier: "MSA Team" },
       { label: "Community endorsement", verified: true, verifier: "UW Muslim Students Association" }
     ],
     transparencyLog: [

@@ -246,11 +246,11 @@ export const givingCampaigns: Record<string, GivingCampaignData> = {
     trackingId: "MDD-WELL-2026-3807",
   },
 
-  "ibtikar-iftaar": {
-    id: "giving-ibtikar-iftaar",
-    givingCategory: "ibtikar-iftaar",
-    title: "Ibtikar Iftaar – Community Meals Program",
-    partner: "Ibtikar",
+  "msa-iftaar": {
+    id: "giving-msa-iftaar",
+    givingCategory: "msa-iftaar",
+    title: "MSA Iftaar – Community Meals Program",
+    partner: "MSA",
     checklist: {
       requiredEvidenceTypes: ["org_registration", "campaign_need_photo", "milestone_progress_photo", "milestone_receipt", "milestone_completion_report"],
       approvedEvidenceTypes: ["org_registration", "campaign_need_photo", "milestone_progress_photo", "milestone_receipt", "milestone_completion_report"],
@@ -262,7 +262,7 @@ export const givingCampaigns: Record<string, GivingCampaignData> = {
       {
         stage: "verified",
         date: "2026-01-20",
-        summary: "Ibtikar organization verified. Venue, catering partners, and volunteer team confirmed by UW MSA.",
+        summary: "MSA organization verified. Venue, catering partners, and volunteer team confirmed by UW MSA.",
         evidenceIds: ["ev-giving-partner-verify", "ev-ibtikar-before-photo", "ev-ibtikar-before-community"],
       },
       {
