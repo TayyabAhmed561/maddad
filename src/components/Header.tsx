@@ -58,9 +58,16 @@ export function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" size="sm">
-              Sign In
-            </Button>
+            <Link to="/my-giving">
+              <Button variant="ghost" size="sm">
+                My Giving
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="ghost" size="sm">
+                Sign In
+              </Button>
+            </Link>
             <Link to="/explore">
               <Button size="sm">Donate Now</Button>
             </Link>
@@ -99,13 +106,22 @@ export function Header() {
                 );
               })}
             </nav>
-            <div className="flex gap-3 mt-5 px-4">
-              <Button variant="outline" className="flex-1">
-                Sign In
-              </Button>
+            <div className="flex flex-col gap-2 mt-5 px-4">
+              <Link to="/my-giving" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="ghost" className="w-full">
+                  My Giving
+                </Button>
+              </Link>
+              <div className="flex gap-3">
+              <Link to="/login" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full">
+                  Sign In
+                </Button>
+              </Link>
               <Link to="/explore" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
                 <Button className="w-full">Donate Now</Button>
               </Link>
+              </div>
             </div>
           </div>
         )}

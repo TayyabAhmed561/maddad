@@ -7,6 +7,8 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { AnimatedDonateButton } from "@/components/AnimatedDonateButton";
 import { ProofPack } from "@/components/verification/ProofPack";
+import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
+import { createReceipt, type DonationReceipt } from "@/types/receipt";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -43,6 +45,8 @@ export default function CharityDetail() {
   const location = useLocation();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100);
   const [customAmount, setCustomAmount] = useState<string>("");
+  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   
   // Find the charity by ID from the real items
   const charity = realMapItems.find(item => item.id === id);
@@ -396,9 +400,23 @@ export default function CharityDetail() {
                       ? `Donate $${currentAmount.toLocaleString()} on Maddad`
                       : "Select an Amount"
                     }
-                    showToast={true}
-                    toastMessage="Demo mode: full payment integration coming soon"
+                    showToast={false}
                     navigateAfter={false}
+                    onComplete={() => {
+                      if (!charity || currentAmount <= 0) return;
+                      const receipt = createReceipt({
+                        amount: currentAmount,
+                        campaignId: charity.id,
+                        campaignTitle: charity.title,
+                        organizationName: charity.orgName || "Maddad Partner",
+                        donationType: charity.zakatEligible ? "zakat" : "sadaqah",
+                        frequency: "one-time",
+                        isAnonymous: false,
+                        hideAmount: false,
+                      });
+                      setLastReceipt(receipt);
+                      setShowConfirmDialog(true);
+                    }}
                   />
                   
                   {/* Secondary CTA - Visit Website */}
@@ -486,6 +504,14 @@ export default function CharityDetail() {
       </main>
       
       <Footer />
+
+      {/* Donation Confirmation Dialog */}
+      <DonationConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        receipt={lastReceipt}
+        trackingPath={`/charity/${id}`}
+      />
     </div>
   );
 }
