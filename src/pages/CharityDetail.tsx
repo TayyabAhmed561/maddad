@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { AnimatedDonateButton } from "@/components/AnimatedDonateButton";
+import { ProofPack } from "@/components/verification/ProofPack";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -18,6 +19,7 @@ import {
   Info
 } from "lucide-react";
 import { realMapItems, MapItem, categoryColors } from "@/data/mapData";
+import { orgChecklist, orgEvidenceIds } from "@/data/verificationRules";
 import { cn } from "@/lib/utils";
 
 // External URLs for known organizations
@@ -291,6 +293,14 @@ export default function CharityDetail() {
                         </a>
                       )}
                     </div>
+                  )}
+
+                  {/* Organization Proof & Verification */}
+                  {charity.verifiedStatus === "verified" && (
+                    <ProofPack
+                      evidenceIds={orgEvidenceIds}
+                      checklist={orgChecklist}
+                    />
                   )}
 
                   {/* Impact Section */}
