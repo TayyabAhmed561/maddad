@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 // Map need IDs to giving campaign keys for After You Give integration
 const needCampaignMap: Record<string, string> = {
-  "kw-17": "ibtikar-iftaar",
+  "kw-17": "msa-iftaar",
 };
 
 export default function NeedDetail() {
