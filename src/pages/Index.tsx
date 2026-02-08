@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 // Brand + Partner logos
-import maddadLogo from "@/assets/maddad-logo.png";
+
 import alRahmahLogo from "@/assets/logos/al-rahmah.png";
 import islamicReliefLogo from "@/assets/logos/islamic-relief.jpeg";
 import pennyAppealLogo from "@/assets/logos/penny-appeal.png";
@@ -75,20 +75,6 @@ export default function Index() {
                 <span className="text-accent-foreground">Trusted by 150+ masjids worldwide</span>
               </div>
               
-              {/* Maddad logo mark */}
-              <div className="flex justify-center mb-6 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
-                <div className="relative inline-flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-2xl bg-primary/8 blur-lg scale-110" />
-                  <div className="relative bg-card/80 backdrop-blur-sm border border-primary/15 rounded-2xl p-3 shadow-sm">
-                    <img 
-                      src={maddadLogo} 
-                      alt="Maddad logo" 
-                      className="h-14 md:h-16 w-auto"
-                    />
-                  </div>
-                </div>
-              </div>
-
               <h1 className="heading-display text-4xl md:text-5xl lg:text-6xl text-foreground mb-8 animate-fade-in-up" style={{ animationDelay: "150ms" }}>
                 Know where your charity is needed most, and give with{" "}
                 <span className="text-primary">confidence</span>
