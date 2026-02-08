@@ -13,11 +13,14 @@ import { DetailPageSkeleton } from "@/components/skeletons/CardSkeleton";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { ProofPack } from "@/components/verification/ProofPack";
 import { ImpactTimeline } from "@/components/verification/ImpactTimeline";
+import { UpdatesSubscriptionDialog } from "@/components/verification/UpdatesSubscriptionDialog";
+import { useScrollToHash } from "@/hooks/useScrollToHash";
 import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
 import { getAppealById, categoryLabels } from "@/data/appealsData";
 import { allocationRules } from "@/data/givingData";
 import { appealChecklists, appealTimelines, appealEvidenceIds } from "@/data/verificationRules";
 import { computeVerificationLevel } from "@/types/verification";
+import { getPublicEvidenceByIds } from "@/data/evidenceData";
 import { createReceipt, type DonationReceipt } from "@/types/receipt";
 import { 
   ArrowLeft, 
@@ -35,9 +38,11 @@ import { cn } from "@/lib/utils";
 export default function AppealDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  useScrollToHash();
   const appeal = id ? getAppealById(id) : undefined;
   const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
   
   const effectiveAmountRef = { current: 0 };
 
@@ -95,6 +100,8 @@ export default function AppealDetail() {
   const checklist = appealChecklists[appeal.id];
   const milestones = appealTimelines[appeal.id] || [];
   const evidenceIds = appealEvidenceIds[appeal.id] || [];
+  const publicEvidence = getPublicEvidenceByIds(evidenceIds);
+  const approvedCount = publicEvidence.filter((e) => e.status === "approved").length;
   const verificationLevel = checklist
     ? computeVerificationLevel(checklist, evidenceIds.length)
     : "pending";
@@ -227,6 +234,10 @@ export default function AppealDetail() {
                   <ImpactTimeline
                     milestones={milestones}
                     trackingId={trackingId}
+                    approvedEvidenceCount={approvedCount}
+                    totalEvidenceCount={publicEvidence.length}
+                    nextUpdateDue="2026-02-10"
+                    onSubscribeUpdates={() => setShowSubscribeDialog(true)}
                   />
                 )}
 
@@ -460,6 +471,14 @@ export default function AppealDetail() {
         onOpenChange={setShowConfirmDialog}
         receipt={lastReceipt}
         trackingPath={`/appeals/${appeal.id}`}
+      />
+
+      {/* Updates Subscription Dialog */}
+      <UpdatesSubscriptionDialog
+        open={showSubscribeDialog}
+        onOpenChange={setShowSubscribeDialog}
+        campaignId={appeal.id}
+        campaignTitle={appeal.title}
       />
     </div>
   );

@@ -11,11 +11,14 @@ import {
   FileText,
   ExternalLink,
   Hash,
+  Bell,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { MilestoneUpdate, MilestoneStage, EvidenceItem } from "@/types/verification";
 import { getPublicEvidenceByIds } from "@/data/evidenceData";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 interface ImpactTimelineProps {
   /** Ordered milestone updates */
@@ -24,6 +27,14 @@ interface ImpactTimelineProps {
   trackingId: string;
   /** Optional class name */
   className?: string;
+  /** Total approved evidence count (for completeness display) */
+  approvedEvidenceCount?: number;
+  /** Total required evidence count */
+  totalEvidenceCount?: number;
+  /** Next expected update date (ISO string) — if overdue, shows "Update pending" badge */
+  nextUpdateDue?: string;
+  /** Callback when user clicks "Get updates" */
+  onSubscribeUpdates?: () => void;
 }
 
 /** Visual config for each stage */
@@ -213,6 +224,10 @@ export function ImpactTimeline({
   milestones,
   trackingId,
   className,
+  approvedEvidenceCount,
+  totalEvidenceCount,
+  nextUpdateDue,
+  onSubscribeUpdates,
 }: ImpactTimelineProps) {
   // Build a map of stage → milestone
   const milestoneMap = new Map<MilestoneStage, MilestoneUpdate>();
@@ -223,10 +238,15 @@ export function ImpactTimeline({
     return milestoneMap.has(stage) ? index : latest;
   }, -1);
 
+  // Check if update is overdue
+  const isOverdue = nextUpdateDue
+    ? new Date(nextUpdateDue) < new Date()
+    : false;
+
   return (
-    <div className={cn("space-y-0", className)}>
+    <div id="impact-timeline" className={cn("space-y-0 scroll-mt-24", className)}>
       {/* Header with tracking ID */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Package size={20} className="text-primary" />
           <h3 className="font-serif text-xl font-semibold text-foreground">
@@ -237,6 +257,41 @@ export function ImpactTimeline({
           <Hash size={12} />
           {trackingId}
         </div>
+      </div>
+
+      {/* Metadata bar: proof completeness + update status */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        {approvedEvidenceCount !== undefined && totalEvidenceCount !== undefined && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+            <CheckCircle size={12} />
+            {approvedEvidenceCount} of {totalEvidenceCount} evidence approved
+          </span>
+        )}
+
+        {nextUpdateDue && (
+          isOverdue ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-destructive/10 text-destructive">
+              <AlertTriangle size={12} />
+              Update pending
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-muted text-muted-foreground">
+              Next update due {new Date(nextUpdateDue).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </span>
+          )
+        )}
+
+        {onSubscribeUpdates && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSubscribeUpdates}
+            className="text-xs h-7 gap-1"
+          >
+            <Bell size={12} />
+            Get updates
+          </Button>
+        )}
       </div>
 
       {/* Timeline */}
