@@ -7,6 +7,7 @@ import { CategoryTag } from "@/components/CategoryTag";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { AllocationBreakdown } from "@/components/giving/AllocationBreakdown";
+import { GivingProofSection } from "@/components/giving/GivingProofSection";
 import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
@@ -26,6 +27,11 @@ import {
   AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Map need IDs to giving campaign keys for After You Give integration
+const needCampaignMap: Record<string, string> = {
+  "kw-17": "ibtikar-iftaar",
+};
 
 export default function NeedDetail() {
   const { id } = useParams();
@@ -243,6 +249,39 @@ export default function NeedDetail() {
                   </div>
                 </div>
               </div>
+              {/* After You Give – Proof & Impact Tracking */}
+              {id && needCampaignMap[id] && (
+                <div className="space-y-8">
+                  <div className="divider-subtle" />
+
+                  {/* Expense Breakdown */}
+                  {allocationRules[needCampaignMap[id]] && (
+                    <div>
+                      <h2 className="heading-section text-xl text-foreground mb-5">Expense Breakdown</h2>
+                      <AllocationBreakdown
+                        items={allocationRules[needCampaignMap[id]]}
+                      />
+                    </div>
+                  )}
+
+                  <div className="divider-subtle" />
+
+                  {/* Impact Summary */}
+                  <div className="bg-primary/5 border border-primary/10 rounded-xl p-6">
+                    <h3 className="font-serif text-lg font-semibold text-foreground mb-2">Impact Summary</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Funds supported community iftaar meals for local students and families.
+                      This demo shows how Maddad helps local organizations promote their initiatives 
+                      with full transparency and tracked impact.
+                    </p>
+                  </div>
+
+                  {/* Proof & Timeline Section */}
+                  <GivingProofSection
+                    givingCategory={needCampaignMap[id]}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Right Column - Donation Module (Sticky) */}
@@ -367,7 +406,9 @@ export default function NeedDetail() {
 
                     {/* Allocation Breakdown */}
                     <AllocationBreakdown
-                      items={allocationRules["general"]}
+                      items={id && needCampaignMap[id] && allocationRules[needCampaignMap[id]] 
+                        ? allocationRules[needCampaignMap[id]] 
+                        : allocationRules["general"]}
                       className="mb-6"
                     />
 

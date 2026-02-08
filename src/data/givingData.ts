@@ -173,6 +173,11 @@ export const allocationRules: Record<string, AllocationRule[]> = {
     { label: "Logistics", percentage: 6 },
     { label: "Platform", percentage: 2 }
   ],
+  "ibtikar-iftaar": [
+    { label: "Meals & catering", percentage: 65 },
+    { label: "Supplies & materials", percentage: 20 },
+    { label: "Venue & logistics", percentage: 15 }
+  ],
   general: [
     { label: "Direct aid", percentage: 92 },
     { label: "Operations", percentage: 6 },

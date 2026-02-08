@@ -246,6 +246,56 @@ export const givingCampaigns: Record<string, GivingCampaignData> = {
     trackingId: "MDD-WELL-2026-3807",
   },
 
+  "ibtikar-iftaar": {
+    id: "giving-ibtikar-iftaar",
+    givingCategory: "ibtikar-iftaar",
+    title: "Ibtikar Iftaar – Community Meals Program",
+    partner: "Ibtikar",
+    checklist: {
+      requiredEvidenceTypes: ["org_registration", "campaign_need_photo", "milestone_progress_photo", "milestone_receipt", "milestone_completion_report"],
+      approvedEvidenceTypes: ["org_registration", "campaign_need_photo", "milestone_progress_photo", "milestone_receipt", "milestone_completion_report"],
+      completionPercent: 38,
+      lastVerifiedDate: "2026-02-06",
+      verifierDisplayName: "Maddad Community Verification",
+    },
+    milestones: [
+      {
+        stage: "verified",
+        date: "2026-01-20",
+        summary: "Ibtikar organization verified. Venue, catering partners, and volunteer team confirmed by UW MSA.",
+        evidenceIds: ["ev-giving-partner-verify", "ev-ibtikar-before-photo", "ev-ibtikar-before-community"],
+      },
+      {
+        stage: "funds_allocated",
+        date: "2026-02-02",
+        summary: "Initial funds released for venue deposit, catering agreements, and supplies procurement.",
+        evidenceIds: ["ev-ibtikar-expense-receipt"],
+      },
+      {
+        stage: "in_progress",
+        date: "2026-02-05",
+        summary: "Iftaar meals being served nightly. 120+ average attendance. Community engagement growing each night.",
+        evidenceIds: ["ev-ibtikar-progress-photo"],
+      },
+      {
+        stage: "completed",
+        date: "2026-02-07",
+        summary: "Ramadan iftaar program complete. 30 nights, 4,500+ meals served. Funds supported community iftaar meals for local students and families.",
+        evidenceIds: ["ev-ibtikar-completion-photo", "ev-ibtikar-completion-report"],
+      },
+    ],
+    evidenceIds: [
+      "ev-giving-partner-verify",
+      "ev-ibtikar-before-photo",
+      "ev-ibtikar-before-community",
+      "ev-ibtikar-progress-photo",
+      "ev-ibtikar-expense-receipt",
+      "ev-ibtikar-completion-photo",
+      "ev-ibtikar-completion-report",
+    ],
+    trackingId: "MDD-IFTR-2026-0017",
+  },
+
   kaffarah: {
     id: "giving-kaffarah",
     givingCategory: "kaffarah",
