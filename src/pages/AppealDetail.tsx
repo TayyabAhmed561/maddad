@@ -8,9 +8,14 @@ import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { DetailPageSkeleton } from "@/components/skeletons/CardSkeleton";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { ProofPack } from "@/components/verification/ProofPack";
+import { ImpactTimeline } from "@/components/verification/ImpactTimeline";
 import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
 import { getAppealById, categoryLabels } from "@/data/appealsData";
 import { allocationRules } from "@/data/givingData";
+import { appealChecklists, appealTimelines, appealEvidenceIds } from "@/data/verificationRules";
+import { computeVerificationLevel } from "@/types/verification";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -66,6 +71,15 @@ export default function AppealDetail() {
   const presetAmounts = [25, 50, 100, 250, 500];
   const effectiveAmount = getEffectiveAmount(donationState);
 
+  // Verification data for this appeal
+  const checklist = appealChecklists[appeal.id];
+  const milestones = appealTimelines[appeal.id] || [];
+  const evidenceIds = appealEvidenceIds[appeal.id] || [];
+  const verificationLevel = checklist
+    ? computeVerificationLevel(checklist, evidenceIds.length)
+    : "pending";
+  const trackingId = `MDD-${appeal.category.toUpperCase().slice(0, 4)}-2026-${appeal.id.padStart(4, "0")}`;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
@@ -106,6 +120,7 @@ export default function AppealDetail() {
                   Zakat Eligible
                 </span>
               )}
+              <VerificationBadge status={verificationLevel === "enhanced" ? "verified" : verificationLevel} />
             </div>
 
             {/* Meta Info */}
@@ -179,7 +194,23 @@ export default function AppealDetail() {
                   </div>
                 </div>
 
-                {/* Verification & Transparency */}
+                {/* ProofPack - Evidence & Verification */}
+                {checklist && (
+                  <ProofPack
+                    evidenceIds={evidenceIds}
+                    checklist={checklist}
+                  />
+                )}
+
+                {/* Impact Timeline */}
+                {milestones.length > 0 && (
+                  <ImpactTimeline
+                    milestones={milestones}
+                    trackingId={trackingId}
+                  />
+                )}
+
+                {/* Verification & Transparency (legacy) */}
                 <div>
                   <h2 className="font-serif text-2xl font-semibold text-foreground mb-6">
                     Verification & Transparency
