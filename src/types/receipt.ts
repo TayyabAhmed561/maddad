@@ -11,6 +11,8 @@ export interface DonationReceipt {
   isAnonymous: boolean;
   hideAmount: boolean;
   duaIntention?: string;
+  givingCategory?: string;
+  givingCampaignId?: string;
 }
 
 const STORAGE_KEY = "maddad_receipts";

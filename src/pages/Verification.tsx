@@ -93,13 +93,13 @@ export default function Verification() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative bg-gradient-to-br from-primary-light/40 via-background to-accent-light/30 py-20 md:py-24 pattern-subtle">
+        <section className="relative bg-gradient-to-br from-primary-light/40 via-background to-accent-light/30 py-14 md:py-18 pattern-subtle">
           <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="inline-flex items-center justify-center w-18 h-18 rounded-2xl bg-primary text-primary-foreground mb-8 shadow-warm">
+              <div className="inline-flex items-center justify-center w-18 h-18 rounded-2xl bg-primary text-primary-foreground mb-6 shadow-warm">
                 <Shield size={36} />
               </div>
-              <h1 className="heading-display text-4xl md:text-5xl text-foreground mb-5">
+              <h1 className="heading-display text-4xl md:text-5xl text-foreground mb-4">
                 Verification Hub
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-body">

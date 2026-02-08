@@ -182,6 +182,58 @@ export const evidenceItems: EvidenceItem[] = [
     visibility: "public",
     status: "pending",
   },
+
+  // ========== Giving Program Evidence ==========
+  {
+    id: "ev-giving-partner-verify",
+    type: "org_registration",
+    title: "Partner Network Verification",
+    description: "Verification of all distribution partners in the giving network, including compliance audits and operational reviews.",
+    media: { kind: "pdf", url: "/docs/partner-network-verification.pdf" },
+    date: "2025-10-15",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-giving-distribution-001",
+    type: "milestone_delivery_confirmation",
+    title: "Distribution Confirmation – Q4 2025",
+    description: "Aggregate confirmation of distributions completed across all giving programs in Q4 2025.",
+    media: { kind: "pdf", url: "/docs/q4-distribution-report.pdf" },
+    date: "2026-01-05",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-giving-audit-001",
+    type: "org_financial_audit",
+    title: "Giving Programs Financial Audit 2025",
+    description: "Independent audit of all giving program fund flows confirming proper allocation and distribution.",
+    media: { kind: "pdf", url: "/docs/giving-audit-2025.pdf" },
+    date: "2025-12-20",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-giving-impact-photo",
+    type: "milestone_progress_photo",
+    title: "Distribution Impact – Field Photos",
+    description: "Aggregate field documentation from distribution events across multiple partner locations.",
+    media: { kind: "image", url: "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=800" },
+    date: "2026-01-18",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-giving-completion-001",
+    type: "milestone_completion_report",
+    title: "Program Completion Summary – Batch 2026-Q1",
+    description: "Completion report for giving programs processed in Q1 2026 with aggregate beneficiary data.",
+    media: { kind: "pdf", url: "/docs/giving-completion-q1-2026.pdf" },
+    date: "2026-02-01",
+    visibility: "public",
+    status: "approved",
+  },
 ];
 
 /**
