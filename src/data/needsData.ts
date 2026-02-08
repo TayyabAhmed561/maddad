@@ -376,6 +376,56 @@ export const needsData: Need[] = [
       { id: "t1", date: "Jan 22", action: "Disbursed $15,000 for staff salaries", verifier: "Finance Director" },
       { id: "t2", date: "Jan 15", action: "Final payment to contractors", verifier: "Project Manager" }
     ]
+  },
+  {
+    id: "kw-17",
+    title: "Ibtikar Iftaar",
+    organization: "Ibtikar",
+    isVerified: true,
+    category: "food",
+    location: "Waterloo, ON",
+    raised: 950,
+    goal: 2500,
+    lastUpdated: "1 hour ago",
+    description: "Community iftaar initiative providing hot meals for students and families during Ramadan. Ibtikar brings together students, volunteers, and local businesses to serve nightly iftar meals, fostering community spirit and ensuring no one breaks their fast alone.",
+    coverageItems: [
+      "Hot meals for 150+ attendees per night",
+      "Fresh halal ingredients and catering",
+      "Venue rental and event setup",
+      "Volunteer coordination and supplies"
+    ],
+    zakatEligible: false,
+    updates: [
+      {
+        id: "u1",
+        date: "February 6, 2026",
+        content: "Secured venue at the Waterloo Community Centre for the full month of Ramadan. Volunteer sign-ups now open.",
+        author: "Ibtikar Team"
+      },
+      {
+        id: "u2",
+        date: "February 2, 2026",
+        content: "Partnered with 3 local halal restaurants for nightly meal preparation. Menu rotation finalized.",
+        author: "Program Coordinator"
+      },
+      {
+        id: "u3",
+        date: "January 25, 2026",
+        content: "Campaign launched with support from UW Muslim Students Association. Initial fundraising target set.",
+        author: "Ibtikar"
+      }
+    ],
+    verificationChecks: [
+      { label: "Organization registered", verified: true, verifier: "University of Waterloo" },
+      { label: "Venue confirmed", verified: true, verifier: "Waterloo Community Centre" },
+      { label: "Catering partners verified", verified: true, verifier: "Ibtikar Team" },
+      { label: "Community endorsement", verified: true, verifier: "UW Muslim Students Association" }
+    ],
+    transparencyLog: [
+      { id: "t1", date: "Feb 6", action: "Released $400 for venue deposit", verifier: "Finance Lead" },
+      { id: "t2", date: "Feb 2", action: "Signed catering agreements with 3 partners", verifier: "Program Coordinator" },
+      { id: "t3", date: "Jan 25", action: "Campaign approved and published on Maddad", verifier: "Maddad Verification" }
+    ]
   }
 ];
 

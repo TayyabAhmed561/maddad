@@ -323,8 +323,8 @@ const kitchenerWaterlooItems: MapItem[] = [
   },
   {
     id: "kw-17",
-    type: "need",
-    title: "Ibtikar Iftar Sponsorship",
+    type: "appeal",
+    title: "Ibtikar Iftaar",
     orgName: "Ibtikar",
     category: "Food",
     verifiedStatus: "verified",
@@ -334,10 +334,10 @@ const kitchenerWaterlooItems: MapItem[] = [
     lat: 43.4668,
     lng: -80.5164,
     lastUpdated: "1 hour ago",
-    fundingRaised: 4200,
-    goal: 10000,
+    fundingRaised: 950,
+    goal: 2500,
     privacyLevel: "global_ok",
-    description: "Sponsoring nightly iftar meals for students and community members in the Waterloo region during Ramadan. Ibtikar brings innovation and community together.",
+    description: "Community iftaar initiative providing hot meals for students and families during Ramadan.",
     countryCode: "CA"
   }
 ];
