@@ -24,6 +24,9 @@ import ReceiptDetail from "./pages/ReceiptDetail";
 import MyGiving from "./pages/MyGiving";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import OrgVerificationForm from "./pages/verification/OrgVerificationForm";
+import CampaignVerificationForm from "./pages/verification/CampaignVerificationForm";
+import VerifierDashboard from "./pages/verification/VerifierDashboard";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +63,9 @@ const AppRoutes = () => (
       <Route path="/appeals/:id" element={<AppealDetail />} />
       <Route path="/charity/:id" element={<CharityDetail />} />
       <Route path="/verification" element={<Verification />} />
+      <Route path="/verify/organization" element={<OrgVerificationForm />} />
+      <Route path="/verify/campaign" element={<CampaignVerificationForm />} />
+      <Route path="/verifier" element={<VerifierDashboard />} />
       <Route path="/impact" element={<Impact />} />
       <Route path="/giving" element={<GivingHub />} />
       <Route path="/give" element={<GivingHub />} />
@@ -79,7 +85,6 @@ const AppRoutes = () => (
       <Route path="/my-giving" element={<MyGiving />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="*" element={<NotFound />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </>
