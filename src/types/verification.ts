@@ -15,6 +15,11 @@ export type EvidenceType =
   | "campaign_budget_breakdown"
   | "campaign_endorsement_letter"
   | "campaign_beneficiary_consent"
+  // Private campaign verification supports
+  | "campaign_referral_attestation"
+  | "campaign_document_proof"
+  | "campaign_budget_quote"
+  | "campaign_verifier_interview"
   // Milestone/completion evidence
   | "milestone_progress_photo"
   | "milestone_progress_video"

@@ -8,6 +8,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormField,
@@ -25,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
   ArrowRight,
@@ -35,6 +38,11 @@ import {
   Plus,
   Trash2,
   Shield,
+  User,
+  Building,
+  UserCheck,
+  Lock,
+  AlertCircle,
 } from "lucide-react";
 import {
   addEvidenceOverride,
@@ -47,14 +55,52 @@ import type { EvidenceItem, EvidenceType, MilestoneUpdate } from "@/types/verifi
 
 // ---------- Schemas ----------
 
-const campaignBasicsSchema = z.object({
-  organizationId: z.string().min(1, "Select an organization"),
-  title: z.string().trim().min(3, "Campaign title is required").max(200),
-  category: z.string().min(1, "Select a category"),
-  goal: z.coerce.number().min(100, "Minimum goal is $100"),
-  location: z.string().trim().min(2, "Location scope is required").max(200),
-  description: z.string().trim().min(10, "Description is required").max(2000),
-});
+const campaignBasicsSchema = z
+  .object({
+    submitterType: z.enum(["organization", "private"]),
+    organizationId: z.string().optional(),
+    contactName: z.string().optional(),
+    contactEmail: z.string().optional(),
+    contactPhone: z.string().optional(),
+    title: z.string().trim().min(3, "Campaign title is required").max(200),
+    category: z.string().min(1, "Select a category"),
+    categoryLabel: z.string().optional(),
+    goal: z.coerce.number().min(100, "Minimum goal is $100"),
+    location: z.string().trim().min(2, "Location scope is required").max(200),
+    description: z.string().trim().min(10, "Description is required").max(2000),
+  })
+  .superRefine((data, ctx) => {
+    if (data.submitterType === "organization" && !data.organizationId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Select an organization",
+        path: ["organizationId"],
+      });
+    }
+    if (data.submitterType === "private") {
+      if (!data.contactName?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Contact name is required",
+          path: ["contactName"],
+        });
+      }
+      if (!data.contactEmail?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Contact email is required",
+          path: ["contactEmail"],
+        });
+      }
+    }
+    if (data.category === "other" && !data.categoryLabel?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please describe your category",
+        path: ["categoryLabel"],
+      });
+    }
+  });
 
 const useOfFundsSchema = z.object({
   items: z
@@ -68,10 +114,20 @@ const useOfFundsSchema = z.object({
 });
 
 const evidenceSchema = z.object({
-  needProof: z.string().trim().min(1, "Need photo/video URL required"),
-  budgetBreakdown: z.string().trim().min(1, "Budget breakdown URL required"),
+  // Organization campaign fields
+  needProof: z.string().trim().optional(),
+  budgetBreakdown: z.string().trim().optional(),
   supplierQuote: z.string().trim().optional(),
   supplierQuotePublic: z.boolean().optional(),
+  // Private campaign fields
+  referralName: z.string().trim().optional(),
+  referralRole: z.string().trim().optional(),
+  referralContact: z.string().trim().optional(),
+  documentProof: z.string().trim().optional(),
+  documentRedactedNote: z.string().trim().optional(),
+  budgetQuote: z.string().trim().optional(),
+  budgetQuotePublic: z.boolean().optional(),
+  verifierInterview: z.boolean().optional(),
 });
 
 type CampaignBasics = z.infer<typeof campaignBasicsSchema>;
@@ -87,9 +143,9 @@ const CATEGORIES = [
   { value: "housing", label: "Housing" },
   { value: "food", label: "Food Security" },
   { value: "masjid", label: "Masjid / Community" },
+  { value: "other", label: "Other (describe)" },
 ];
 
-// Known orgs from the map data + any localStorage submissions
 const KNOWN_ORGS = [
   { id: "org-kw-muslim", name: "K-W Muslim Community" },
   { id: "org-islamic-relief", name: "Islamic Relief Canada" },
@@ -106,28 +162,34 @@ export default function CampaignVerificationForm() {
   const [evidence, setEvidence] = useState<EvidenceForm | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState("");
+  const [evidenceError, setEvidenceError] = useState("");
 
-  // Merge localStorage org submissions
   const localOrgs = getOrgSubmissions().map((o) => ({ id: o.id, name: o.name }));
   const allOrgs = [...KNOWN_ORGS, ...localOrgs];
 
   const basicsForm = useForm<CampaignBasics>({
     resolver: zodResolver(campaignBasicsSchema),
     defaultValues: {
+      submitterType: "organization",
       organizationId: "",
+      contactName: "",
+      contactEmail: "",
+      contactPhone: "",
       title: "",
       category: "",
+      categoryLabel: "",
       goal: 0,
       location: "",
       description: "",
     },
   });
 
+  const submitterType = basicsForm.watch("submitterType");
+  const selectedCategory = basicsForm.watch("category");
+
   const fundsForm = useForm<UseOfFundsForm>({
     resolver: zodResolver(useOfFundsSchema),
-    defaultValues: {
-      items: [{ item: "", amount: 0 }],
-    },
+    defaultValues: { items: [{ item: "", amount: 0 }] },
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -142,6 +204,14 @@ export default function CampaignVerificationForm() {
       budgetBreakdown: "",
       supplierQuote: "",
       supplierQuotePublic: false,
+      referralName: "",
+      referralRole: "",
+      referralContact: "",
+      documentProof: "",
+      documentRedactedNote: "",
+      budgetQuote: "",
+      budgetQuotePublic: false,
+      verifierInterview: false,
     },
   });
 
@@ -155,19 +225,42 @@ export default function CampaignVerificationForm() {
     setStep(2);
   });
 
-  const handleEvidenceNext = evidenceForm.handleSubmit((data) => {
+  const handleEvidenceNext = (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = evidenceForm.getValues();
+
+    if (basics?.submitterType === "private") {
+      let count = 0;
+      if (data.referralName?.trim()) count++;
+      if (data.documentProof?.trim()) count++;
+      if (data.budgetQuote?.trim()) count++;
+      if (data.verifierInterview) count++;
+      if (count < 2) {
+        setEvidenceError("Please provide at least 2 verification supports.");
+        return;
+      }
+    } else {
+      if (!data.budgetBreakdown?.trim()) {
+        setEvidenceError("Budget breakdown is required for organization campaigns.");
+        return;
+      }
+    }
+
+    setEvidenceError("");
     setEvidence(data);
     setStep(3);
-  });
+  };
 
   const handleSubmit = () => {
     if (!basics || !evidence) return;
 
+    const isPrivate = basics.submitterType === "private";
     const campaignId = `camp-${Date.now()}`;
     const now = new Date().toISOString();
-    const orgName = allOrgs.find((o) => o.id === basics.organizationId)?.name || "Unknown Org";
+    const orgName = isPrivate
+      ? "Private Individual"
+      : allOrgs.find((o) => o.id === basics.organizationId)?.name || "Unknown Org";
 
-    // Create evidence items
     const evidenceItems: EvidenceItem[] = [];
 
     const addEvidence = (
@@ -176,8 +269,9 @@ export default function CampaignVerificationForm() {
       description: string,
       url: string,
       visibility: "public" | "private",
-      kind: "image" | "pdf" = "image"
+      kind: "image" | "pdf" | "link" = "image"
     ) => {
+      if (!url.trim()) return;
       const item: EvidenceItem = {
         id: `ev-sub-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         type,
@@ -192,35 +286,83 @@ export default function CampaignVerificationForm() {
       addEvidenceOverride(item);
     };
 
-    addEvidence(
-      "campaign_need_photo",
-      `Need Documentation – ${basics.title}`,
-      `Photo/video evidence of need for this campaign`,
-      evidence.needProof,
-      "public"
-    );
+    if (isPrivate) {
+      // Private campaign evidence
+      if (evidence.referralName?.trim()) {
+        addEvidence(
+          "campaign_referral_attestation",
+          `Referral Attestation – ${basics.title}`,
+          `Referral from ${evidence.referralName} (${evidence.referralRole || "Community member"})`,
+          `referral://${evidence.referralContact || "contact-provided"}`,
+          "private",
+          "link"
+        );
+      }
+      if (evidence.documentProof?.trim()) {
+        addEvidence(
+          "campaign_document_proof",
+          `Document Proof – ${basics.title}`,
+          evidence.documentRedactedNote
+            ? `Document proof (${evidence.documentRedactedNote})`
+            : "Supporting document proof",
+          evidence.documentProof,
+          "private",
+          "pdf"
+        );
+      }
+      if (evidence.budgetQuote?.trim()) {
+        addEvidence(
+          "campaign_budget_quote",
+          `Budget Estimate – ${basics.title}`,
+          "Budget quote or estimate for the campaign",
+          evidence.budgetQuote,
+          evidence.budgetQuotePublic ? "public" : "private",
+          "pdf"
+        );
+      }
+      if (evidence.verifierInterview) {
+        addEvidence(
+          "campaign_verifier_interview",
+          `Verifier Interview – ${basics.title}`,
+          "Submitter has confirmed availability for verification interview",
+          `interview://confirmed-${campaignId}`,
+          "private",
+          "link"
+        );
+      }
+    } else {
+      // Organization campaign evidence
+      if (evidence.needProof?.trim()) {
+        addEvidence(
+          "campaign_need_photo",
+          `Need Documentation – ${basics.title}`,
+          "Photo/video evidence of need for this campaign",
+          evidence.needProof,
+          "public"
+        );
+      }
 
-    addEvidence(
-      "campaign_budget_breakdown",
-      `Budget Breakdown – ${basics.title}`,
-      `Detailed budget for ${basics.title}`,
-      evidence.budgetBreakdown,
-      "public",
-      "pdf"
-    );
-
-    if (evidence.supplierQuote) {
       addEvidence(
-        "campaign_endorsement_letter",
-        `Supplier Quote – ${basics.title}`,
-        `Supplier quote for campaign materials`,
-        evidence.supplierQuote,
-        evidence.supplierQuotePublic ? "public" : "private",
+        "campaign_budget_breakdown",
+        `Budget Breakdown – ${basics.title}`,
+        `Detailed budget for ${basics.title}`,
+        evidence.budgetBreakdown || "",
+        "public",
         "pdf"
       );
+
+      if (evidence.supplierQuote?.trim()) {
+        addEvidence(
+          "campaign_endorsement_letter",
+          `Supplier Quote – ${basics.title}`,
+          "Supplier quote for campaign materials",
+          evidence.supplierQuote,
+          evidence.supplierQuotePublic ? "public" : "private",
+          "pdf"
+        );
+      }
     }
 
-    // Create milestone timeline with verified=pending
     const milestones: MilestoneUpdate[] = [
       {
         stage: "verified",
@@ -230,24 +372,45 @@ export default function CampaignVerificationForm() {
       },
     ];
 
+    const categoryDisplay =
+      basics.category === "other" && basics.categoryLabel
+        ? basics.categoryLabel
+        : basics.category;
+
     const submission: CampaignSubmission = {
       id: campaignId,
-      organizationId: basics.organizationId,
+      organizationId: isPrivate ? "" : basics.organizationId || "",
       organizationName: orgName,
       title: basics.title,
       category: basics.category,
+      categoryLabel: basics.category === "other" ? basics.categoryLabel : undefined,
       goal: basics.goal,
       location: basics.location,
+      description: basics.description,
       useOfFunds: funds,
       status: "pending_verification",
       evidenceIds: evidenceItems.map((e) => e.id),
       milestones,
       submittedAt: now,
+      submitterType: basics.submitterType,
+      visibility: isPrivate ? "private" : "public",
+      contactInfo: isPrivate
+        ? {
+            name: basics.contactName || "",
+            email: basics.contactEmail || "",
+            phone: basics.contactPhone || "",
+          }
+        : undefined,
     };
 
     addCampaignSubmission(submission);
     setSubmissionId(campaignId);
     setSubmitted(true);
+  };
+
+  const categoryDisplay = (cat: string, label?: string) => {
+    if (cat === "other" && label) return label;
+    return CATEGORIES.find((c) => c.value === cat)?.label || cat;
   };
 
   if (submitted) {
@@ -263,7 +426,12 @@ export default function CampaignVerificationForm() {
               Campaign Submitted
             </h1>
             <p className="text-muted-foreground mb-6">
-              Your campaign has been submitted for verification. Our team will review the evidence and budget before publishing.
+              Your campaign has been submitted for verification. Our team will review
+              the evidence
+              {basics?.submitterType === "private"
+                ? " while protecting your privacy"
+                : " and budget"}
+              {" "}before publishing.
             </p>
 
             <div className="bg-card rounded-xl border border-border p-6 text-left mb-8">
@@ -274,12 +442,28 @@ export default function CampaignVerificationForm() {
                   <dd className="font-medium text-foreground">{basics?.title}</dd>
                 </div>
                 <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Submitted as</dt>
+                  <dd className="font-medium text-foreground capitalize">
+                    {basics?.submitterType === "private" ? "Private Individual" : "Organization"}
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Category</dt>
+                  <dd className="font-medium text-foreground">
+                    {categoryDisplay(basics?.category || "", basics?.categoryLabel)}
+                  </dd>
+                </div>
+                <div className="flex justify-between">
                   <dt className="text-muted-foreground">Goal</dt>
-                  <dd className="font-medium text-foreground">${basics?.goal?.toLocaleString()}</dd>
+                  <dd className="font-medium text-foreground">
+                    ${basics?.goal?.toLocaleString()}
+                  </dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Status</dt>
-                  <dd className="badge-pending text-xs">Pending Verification</dd>
+                  <dd className="text-xs px-2 py-1 rounded-full bg-pending/10 text-pending font-medium">
+                    Pending Verification
+                  </dd>
                 </div>
               </dl>
             </div>
@@ -326,11 +510,12 @@ export default function CampaignVerificationForm() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              Step {step + 1} of {STEPS.length}: <span className="font-medium text-foreground">{STEPS[step]}</span>
+              Step {step + 1} of {STEPS.length}:{" "}
+              <span className="font-medium text-foreground">{STEPS[step]}</span>
             </p>
           </div>
 
-          {/* Step 0: Campaign Basics */}
+          {/* ===================== Step 0: Campaign Basics ===================== */}
           {step === 0 && (
             <div>
               <h1 className="font-serif text-2xl font-semibold text-foreground mb-6">
@@ -338,30 +523,134 @@ export default function CampaignVerificationForm() {
               </h1>
               <Form {...basicsForm}>
                 <form onSubmit={handleBasicsNext} className="space-y-5">
+                  {/* Submitter Type */}
                   <FormField
                     control={basicsForm.control}
-                    name="organizationId"
+                    name="submitterType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Organization</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select your organization" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {allOrgs.map((org) => (
-                              <SelectItem key={org.id} value={org.id}>
-                                {org.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Submitting as</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="grid grid-cols-2 gap-3"
+                          >
+                            <div
+                              className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                                field.value === "organization"
+                                  ? "border-primary bg-primary-light"
+                                  : "border-border hover:border-primary/40"
+                              }`}
+                              onClick={() => field.onChange("organization")}
+                            >
+                              <RadioGroupItem value="organization" id="org" />
+                              <Label htmlFor="org" className="cursor-pointer flex items-center gap-2">
+                                <Building size={16} className="text-primary" />
+                                Organization
+                              </Label>
+                            </div>
+                            <div
+                              className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
+                                field.value === "private"
+                                  ? "border-primary bg-primary-light"
+                                  : "border-border hover:border-primary/40"
+                              }`}
+                              onClick={() => field.onChange("private")}
+                            >
+                              <RadioGroupItem value="private" id="priv" />
+                              <Label htmlFor="priv" className="cursor-pointer flex items-center gap-2">
+                                <User size={16} className="text-primary" />
+                                Individual / Family
+                              </Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Organization dropdown (only for org submitter) */}
+                  {submitterType === "organization" && (
+                    <FormField
+                      control={basicsForm.control}
+                      name="organizationId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Organization</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select your organization" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {allOrgs.map((org) => (
+                                <SelectItem key={org.id} value={org.id}>
+                                  {org.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Private contact info */}
+                  {submitterType === "private" && (
+                    <div className="bg-muted/50 rounded-lg border border-border p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                        <Lock size={14} className="text-muted-foreground" />
+                        Private Contact Info
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        This information is kept private and only used for verification purposes.
+                      </p>
+                      <FormField
+                        control={basicsForm.control}
+                        name="contactName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Your Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Full name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={basicsForm.control}
+                        name="contactEmail"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="your@email.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={basicsForm.control}
+                        name="contactPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone (optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="+1 (555) 000-0000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
                   <FormField
                     control={basicsForm.control}
                     name="title"
@@ -375,6 +664,8 @@ export default function CampaignVerificationForm() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Category with "Other" support */}
                   <FormField
                     control={basicsForm.control}
                     name="category"
@@ -399,6 +690,23 @@ export default function CampaignVerificationForm() {
                       </FormItem>
                     )}
                   />
+
+                  {selectedCategory === "other" && (
+                    <FormField
+                      control={basicsForm.control}
+                      name="categoryLabel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Describe Category</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. Refugee resettlement" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
                   <FormField
                     control={basicsForm.control}
                     name="goal"
@@ -451,7 +759,7 @@ export default function CampaignVerificationForm() {
             </div>
           )}
 
-          {/* Step 1: Use of Funds */}
+          {/* ===================== Step 1: Use of Funds ===================== */}
           {step === 1 && (
             <div>
               <div className="flex items-center gap-3 mb-6">
@@ -482,7 +790,9 @@ export default function CampaignVerificationForm() {
                         <Input
                           type="number"
                           placeholder="Amount"
-                          {...fundsForm.register(`items.${index}.amount`, { valueAsNumber: true })}
+                          {...fundsForm.register(`items.${index}.amount`, {
+                            valueAsNumber: true,
+                          })}
                         />
                       </div>
                       {fields.length > 1 && (
@@ -524,7 +834,7 @@ export default function CampaignVerificationForm() {
             </div>
           )}
 
-          {/* Step 2: Evidence Upload */}
+          {/* ===================== Step 2: Evidence Upload ===================== */}
           {step === 2 && (
             <div>
               <div className="flex items-center gap-3 mb-6">
@@ -535,75 +845,223 @@ export default function CampaignVerificationForm() {
                   <h1 className="font-serif text-2xl font-semibold text-foreground">
                     Campaign Evidence
                   </h1>
-                  <p className="text-sm text-muted-foreground">Upload proof of need and budget</p>
+                  <p className="text-sm text-muted-foreground">
+                    {basics?.submitterType === "private"
+                      ? "Provide verification supports (no hardship media required)"
+                      : "Upload proof of need and budget"}
+                  </p>
                 </div>
               </div>
 
-              <Form {...evidenceForm}>
-                <form onSubmit={handleEvidenceNext} className="space-y-5">
-                  <FormField
-                    control={evidenceForm.control}
-                    name="needProof"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Need Photo / Video (Public)</FormLabel>
-                        <FormDescription>URL to photos or video documenting the need</FormDescription>
-                        <FormControl>
-                          <Input placeholder="https://..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={evidenceForm.control}
-                    name="budgetBreakdown"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Budget Breakdown (Public)</FormLabel>
-                        <FormDescription>Detailed budget document URL</FormDescription>
-                        <FormControl>
-                          <Input placeholder="https://..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {evidenceError && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm mb-6">
+                  <AlertCircle size={16} />
+                  {evidenceError}
+                </div>
+              )}
 
-                  <div className="border-t border-border pt-4">
-                    <h3 className="text-sm font-medium text-foreground mb-3">Optional</h3>
-                    <FormField
-                      control={evidenceForm.control}
-                      name="supplierQuote"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Supplier Quote</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://... (optional)" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex items-center gap-3 mt-3">
-                      <Switch
-                        checked={evidenceForm.watch("supplierQuotePublic")}
-                        onCheckedChange={(v) => evidenceForm.setValue("supplierQuotePublic", v)}
-                      />
-                      <span className="text-sm text-muted-foreground">Make supplier quote public</span>
+              <form onSubmit={handleEvidenceNext} className="space-y-5">
+                {basics?.submitterType === "private" ? (
+                  /* ========== Private Campaign Evidence ========== */
+                  <div className="space-y-5">
+                    <div className="bg-accent-light/30 rounded-lg p-4">
+                      <div className="flex items-start gap-2">
+                        <Lock size={16} className="text-accent-foreground mt-0.5 shrink-0" />
+                        <div className="text-sm text-muted-foreground">
+                          <strong className="text-foreground">Privacy-first verification:</strong>{" "}
+                          No photos or videos of hardship are required. Provide at least 2 of the
+                          following verification supports.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 1. Referral / Attestation */}
+                    <div className="bg-card rounded-lg border border-border p-5">
+                      <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                        <UserCheck size={16} className="text-primary" />
+                        Referral / Attestation
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Someone who can vouch for the campaign need. Stored privately.
+                      </p>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-foreground mb-1 block">
+                            Referrer Name
+                          </label>
+                          <Input
+                            placeholder="e.g. Imam Ahmed"
+                            {...evidenceForm.register("referralName")}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-foreground mb-1 block">
+                            Role
+                          </label>
+                          <Input
+                            placeholder="e.g. Community leader"
+                            {...evidenceForm.register("referralRole")}
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-medium text-foreground mb-1 block">
+                            Contact
+                          </label>
+                          <Input
+                            placeholder="Email or phone"
+                            {...evidenceForm.register("referralContact")}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Document Proof */}
+                    <div className="bg-card rounded-lg border border-border p-5">
+                      <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                        <FileText size={16} className="text-primary" />
+                        Document Proof
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Supporting documents (e.g. medical reports, eviction notices). Stored
+                        privately.
+                      </p>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-foreground mb-1 block">
+                            Document URL
+                          </label>
+                          <Input
+                            placeholder="https://... (private)"
+                            {...evidenceForm.register("documentProof")}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-foreground mb-1 block">
+                            Redaction Note (optional)
+                          </label>
+                          <Input
+                            placeholder='e.g. "Names redacted for privacy"'
+                            {...evidenceForm.register("documentRedactedNote")}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Budget Quote */}
+                    <div className="bg-card rounded-lg border border-border p-5">
+                      <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                        <DollarSign size={16} className="text-primary" />
+                        Budget Quote / Estimate
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-foreground mb-1 block">
+                            Budget URL
+                          </label>
+                          <Input
+                            placeholder="https://..."
+                            {...evidenceForm.register("budgetQuote")}
+                          />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Switch
+                            checked={evidenceForm.watch("budgetQuotePublic")}
+                            onCheckedChange={(v) =>
+                              evidenceForm.setValue("budgetQuotePublic", v)
+                            }
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            Make budget quote public
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. Verifier Interview */}
+                    <div className="bg-card rounded-lg border border-border p-5">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={evidenceForm.watch("verifierInterview")}
+                          onCheckedChange={(v) =>
+                            evidenceForm.setValue("verifierInterview", v === true)
+                          }
+                          className="mt-0.5"
+                        />
+                        <div>
+                          <h4 className="text-sm font-medium text-foreground">
+                            Verifier Interview Confirmation
+                          </h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            I confirm I am available for a brief verification interview with the
+                            Maddad review team.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                ) : (
+                  /* ========== Organization Campaign Evidence ========== */
+                  <div className="space-y-5">
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">
+                        Need Photo / Video (Public, recommended)
+                      </label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        URL to photos or video documenting the need
+                      </p>
+                      <Input
+                        placeholder="https://... (optional but recommended)"
+                        {...evidenceForm.register("needProof")}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">
+                        Budget Breakdown (Public) *
+                      </label>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Detailed budget document URL
+                      </p>
+                      <Input
+                        placeholder="https://..."
+                        {...evidenceForm.register("budgetBreakdown")}
+                      />
+                    </div>
 
-                  <Button type="submit" className="w-full">
-                    Review & Submit
-                    <ArrowRight size={16} />
-                  </Button>
-                </form>
-              </Form>
+                    <div className="border-t border-border pt-4">
+                      <h3 className="text-sm font-medium text-foreground mb-3">Optional</h3>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-1 block">
+                          Supplier Quote
+                        </label>
+                        <Input
+                          placeholder="https://... (optional)"
+                          {...evidenceForm.register("supplierQuote")}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 mt-3">
+                        <Switch
+                          checked={evidenceForm.watch("supplierQuotePublic")}
+                          onCheckedChange={(v) =>
+                            evidenceForm.setValue("supplierQuotePublic", v)
+                          }
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Make supplier quote public
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full">
+                  Review & Submit
+                  <ArrowRight size={16} />
+                </Button>
+              </form>
             </div>
           )}
 
-          {/* Step 3: Review */}
+          {/* ===================== Step 3: Review ===================== */}
           {step === 3 && basics && (
             <div>
               <h1 className="font-serif text-2xl font-semibold text-foreground mb-6">
@@ -619,23 +1077,37 @@ export default function CampaignVerificationForm() {
                       <dd className="font-medium text-foreground">{basics.title}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Organization</dt>
-                      <dd className="font-medium text-foreground">
-                        {allOrgs.find((o) => o.id === basics.organizationId)?.name}
+                      <dt className="text-muted-foreground">Submitted as</dt>
+                      <dd className="font-medium text-foreground capitalize">
+                        {basics.submitterType === "private"
+                          ? "Private Individual"
+                          : allOrgs.find((o) => o.id === basics.organizationId)?.name}
                       </dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">Category</dt>
-                      <dd className="font-medium text-foreground capitalize">{basics.category}</dd>
+                      <dd className="font-medium text-foreground">
+                        {categoryDisplay(basics.category, basics.categoryLabel)}
+                      </dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">Goal</dt>
-                      <dd className="font-medium text-foreground">${basics.goal.toLocaleString()}</dd>
+                      <dd className="font-medium text-foreground">
+                        ${basics.goal.toLocaleString()}
+                      </dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">Location</dt>
                       <dd className="font-medium text-foreground">{basics.location}</dd>
                     </div>
+                    {basics.submitterType === "private" && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Visibility</dt>
+                        <dd className="font-medium text-foreground flex items-center gap-1">
+                          <Lock size={12} /> Private
+                        </dd>
+                      </div>
+                    )}
                   </dl>
                 </div>
 
@@ -646,7 +1118,9 @@ export default function CampaignVerificationForm() {
                       {funds.map((f, i) => (
                         <li key={i} className="flex justify-between">
                           <span className="text-muted-foreground">{f.item}</span>
-                          <span className="font-medium text-foreground">${f.amount.toLocaleString()}</span>
+                          <span className="font-medium text-foreground">
+                            ${f.amount.toLocaleString()}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -656,19 +1130,59 @@ export default function CampaignVerificationForm() {
                 <div className="bg-card rounded-xl border border-border p-6">
                   <h3 className="font-medium text-foreground mb-3">Evidence</h3>
                   <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle size={14} className="text-primary" />
-                      Need Photo/Video (Public)
-                    </li>
-                    <li className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle size={14} className="text-primary" />
-                      Budget Breakdown (Public)
-                    </li>
-                    {evidence?.supplierQuote && (
-                      <li className="flex items-center gap-2 text-muted-foreground">
-                        <CheckCircle size={14} className="text-accent" />
-                        Supplier Quote ({evidence.supplierQuotePublic ? "Public" : "Private"})
-                      </li>
+                    {basics.submitterType === "private" ? (
+                      <>
+                        {evidence?.referralName && (
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            <CheckCircle size={14} className="text-primary" />
+                            Referral Attestation (Private)
+                          </li>
+                        )}
+                        {evidence?.documentProof && (
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            <CheckCircle size={14} className="text-primary" />
+                            Document Proof (Private)
+                            {evidence.documentRedactedNote && (
+                              <span className="text-xs">
+                                — {evidence.documentRedactedNote}
+                              </span>
+                            )}
+                          </li>
+                        )}
+                        {evidence?.budgetQuote && (
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            <CheckCircle size={14} className="text-primary" />
+                            Budget Quote (
+                            {evidence.budgetQuotePublic ? "Public" : "Private"})
+                          </li>
+                        )}
+                        {evidence?.verifierInterview && (
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            <CheckCircle size={14} className="text-primary" />
+                            Verifier Interview Confirmed
+                          </li>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {evidence?.needProof && (
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            <CheckCircle size={14} className="text-primary" />
+                            Need Photo/Video (Public)
+                          </li>
+                        )}
+                        <li className="flex items-center gap-2 text-muted-foreground">
+                          <CheckCircle size={14} className="text-primary" />
+                          Budget Breakdown (Public)
+                        </li>
+                        {evidence?.supplierQuote && (
+                          <li className="flex items-center gap-2 text-muted-foreground">
+                            <CheckCircle size={14} className="text-accent" />
+                            Supplier Quote (
+                            {evidence.supplierQuotePublic ? "Public" : "Private"})
+                          </li>
+                        )}
+                      </>
                     )}
                   </ul>
                 </div>

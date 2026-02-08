@@ -39,14 +39,19 @@ export interface CampaignSubmission {
   organizationName: string;
   title: string;
   category: string;
+  categoryLabel?: string;
   goal: number;
   location: string;
+  description?: string;
   useOfFunds: UseOfFundsItem[];
   status: "pending_verification" | "verified" | "rejected";
   evidenceIds: string[];
   milestones: MilestoneUpdate[];
   submittedAt: string;
   reviewNotes?: string;
+  submitterType: "organization" | "private";
+  visibility: "public" | "private";
+  contactInfo?: { name: string; email: string; phone: string };
 }
 
 export interface UpdateSubscription {

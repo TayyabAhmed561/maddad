@@ -9,6 +9,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Eye,
+  ListChecks,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EvidenceItem, VerificationChecklist } from "@/types/verification";
@@ -21,6 +22,8 @@ interface ProofPackProps {
   checklist: VerificationChecklist;
   /** Optional class name */
   className?: string;
+  /** Tracking plan to show when no "After You Give" evidence exists yet */
+  trackingPlan?: { stage: string; description: string }[];
 }
 
 /** Icon for each media kind */
@@ -165,7 +168,7 @@ function ChecklistSummary({ checklist }: { checklist: VerificationChecklist }) {
   );
 }
 
-export function ProofPack({ evidenceIds, checklist, className }: ProofPackProps) {
+export function ProofPack({ evidenceIds, checklist, className, trackingPlan }: ProofPackProps) {
   const allPublicEvidence = getPublicEvidenceByIds(evidenceIds);
 
   // Split evidence into "before" (org + campaign) and "after" (milestone) groups
@@ -186,10 +189,6 @@ export function ProofPack({ evidenceIds, checklist, className }: ProofPackProps)
           Proof & Verification
         </h3>
       </div>
-
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-full bg-accent-light text-accent-foreground mb-4">
-        Guided Estimate
-      </span>
 
       <ChecklistSummary checklist={checklist} />
 
@@ -222,6 +221,29 @@ export function ProofPack({ evidenceIds, checklist, className }: ProofPackProps)
             <div className="space-y-3">
               {afterEvidence.map((item) => (
                 <EvidenceCard key={item.id} item={item} />
+              ))}
+            </div>
+          ) : trackingPlan && trackingPlan.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <ListChecks size={16} className="text-primary" />
+                <h4 className="text-sm font-semibold text-foreground">Tracking Plan</h4>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">
+                Here's what proof and updates you'll receive at each stage of this campaign:
+              </p>
+              {trackingPlan.map((item, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-xs font-semibold text-primary">{i + 1}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground capitalize">
+                      {item.stage.replace(/_/g, " ")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

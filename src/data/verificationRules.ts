@@ -14,11 +14,25 @@ export const orgVerifiedRequirements: EvidenceType[] = [
   "org_tax_status",
 ];
 
-/** Required evidence for a campaign to be "Verified" */
+/** Required evidence for an organization campaign to be "Verified" */
 export const campaignVerifiedRequirements: EvidenceType[] = [
   "campaign_need_photo",
   "campaign_budget_breakdown",
   "campaign_endorsement_letter",
+];
+
+/** Required evidence for a private/individual campaign to be "Verified" */
+export const privateCampaignVerifiedRequirements: EvidenceType[] = [
+  "campaign_referral_attestation",
+  "campaign_document_proof",
+];
+
+/** All possible private campaign verification supports (need ≥ 2) */
+export const privateCampaignSupportOptions: EvidenceType[] = [
+  "campaign_referral_attestation",
+  "campaign_document_proof",
+  "campaign_budget_quote",
+  "campaign_verifier_interview",
 ];
 
 /** Required evidence for a campaign to be marked "Completed" */
@@ -27,6 +41,53 @@ export const campaignCompletedRequirements: EvidenceType[] = [
   "milestone_delivery_confirmation",
   "milestone_completion_report",
 ];
+
+/** Default milestone templates for common campaign types (for tracking plan display) */
+export const milestoneTemplates: Record<string, { stage: string; description: string }[]> = {
+  default: [
+    { stage: "verified", description: "Campaign and organization verified by review panel" },
+    { stage: "funds_allocated", description: "Funds released from escrow to implementing partner" },
+    { stage: "procurement", description: "Materials and supplies procured from verified suppliers" },
+    { stage: "in_progress", description: "Implementation underway with progress documentation" },
+    { stage: "completed", description: "Project completed with final report and beneficiary confirmation" },
+  ],
+  fidya: [
+    { stage: "verified", description: "Feeding partner verified and meal program audited" },
+    { stage: "funds_allocated", description: "Funds released to verified feeding partner" },
+    { stage: "in_progress", description: "Meals prepared and distribution begins" },
+    { stage: "completed", description: "Distribution complete, aggregate impact report published" },
+  ],
+  "meal-sponsorship": [
+    { stage: "verified", description: "Distribution partner and beneficiary eligibility verified" },
+    { stage: "funds_allocated", description: "Sponsorship funds allocated to partner kitchen" },
+    { stage: "in_progress", description: "Meal preparation and delivery ongoing" },
+    { stage: "completed", description: "All sponsored meals delivered, impact summary available" },
+  ],
+  zakat: [
+    { stage: "verified", description: "Recipient eligibility verified by scholar and local masjid" },
+    { stage: "funds_allocated", description: "Zakat funds allocated to verified eligible recipients" },
+    { stage: "completed", description: "Distribution confirmed, anonymized impact report available" },
+  ],
+  qurbani: [
+    { stage: "verified", description: "Animal inspected and partner verified for Islamic compliance" },
+    { stage: "procurement", description: "Animal procured from certified supplier" },
+    { stage: "in_progress", description: "Sacrifice performed on Eid days following guidelines" },
+    { stage: "completed", description: "Fresh meat distributed to families, confirmation report sent" },
+  ],
+  "sadaqah-jariyah": [
+    { stage: "verified", description: "Project plan and implementing partner verified" },
+    { stage: "funds_allocated", description: "Endowment funds released for project implementation" },
+    { stage: "procurement", description: "Materials and labor contracted for construction/setup" },
+    { stage: "in_progress", description: "Project construction/implementation underway" },
+    { stage: "completed", description: "Project operational, long-term impact tracking begins" },
+  ],
+  kaffarah: [
+    { stage: "verified", description: "Feeding partner verified for Kaffarah-compliant distribution" },
+    { stage: "funds_allocated", description: "Kaffarah funds released to feeding partner" },
+    { stage: "in_progress", description: "Meals being prepared and distributed to eligible recipients" },
+    { stage: "completed", description: "Kaffarah obligation fulfilled, confirmation report available" },
+  ],
+};
 
 // ============================================
 // Mock Verification Checklists

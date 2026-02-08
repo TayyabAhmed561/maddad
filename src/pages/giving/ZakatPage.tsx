@@ -7,24 +7,16 @@ import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
 import { ZakatCalculator } from "@/components/giving/ZakatCalculator";
-import { 
-  Coins, 
-  Heart,
-  Loader2,
-  Check,
-  ArrowLeft,
-  ShieldCheck,
-  Users,
-  FileCheck,
-  Eye
-} from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { GivingProofSection } from "@/components/giving/GivingProofSection";
+import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
+import { createReceipt, type DonationReceipt } from "@/types/receipt";
+import { Coins, Heart, Loader2, Check, ArrowLeft, ShieldCheck, Users, FileCheck, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { zakatConfig, zakatCases, allocationRules, zakatTransparencyLog } from "@/data/givingData";
 import type { DonationFrequency } from "@/types/giving";
 
 export default function ZakatPage() {
-  const navigate = useNavigate();
   const [amount, setAmount] = useState<number>(250);
   const [customAmount, setCustomAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -34,6 +26,8 @@ export default function ZakatPage() {
   const [duaIntention, setDuaIntention] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const allocation = allocationRules.zakat;
   const selectedAmount = customAmount ? parseFloat(customAmount) || 0 : amount;
@@ -44,41 +38,44 @@ export default function ZakatPage() {
     await new Promise(resolve => setTimeout(resolve, 1500));
     setIsLoading(false);
     setIsSuccess(true);
+    const receipt = createReceipt({
+      amount: selectedAmount,
+      campaignTitle: "Zakat Distribution",
+      organizationName: "Verified Masjid & Scholar Network",
+      donationType: "zakat",
+      frequency,
+      isAnonymous: anonymous,
+      hideAmount,
+      duaIntention: duaIntention || undefined,
+      givingCategory: "zakat",
+    });
+    setLastReceipt(receipt);
+    setShowConfirmDialog(true);
   };
 
   const handleCalculatorResult = (calculatedAmount: number) => {
     setCustomAmount(calculatedAmount.toFixed(2));
-    setAmount(0); // Clear preset selection
+    setAmount(0);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
       <main className="flex-1">
         <div className="border-b border-border bg-card">
           <div className="container mx-auto px-4 py-4">
-            <Link to="/giving" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft size={16} />
-              Back to Giving
-            </Link>
+            <Link to="/giving" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft size={16} />Back to Giving</Link>
           </div>
         </div>
 
         <section className="bg-background border-b border-border">
           <div className="container mx-auto px-4 py-12 md:py-16">
             <div className="max-w-3xl">
-              <div className="w-14 h-14 rounded-xl bg-primary-light flex items-center justify-center mb-6">
-                <Coins size={28} className="text-primary" />
-              </div>
-              
+              <div className="w-14 h-14 rounded-xl bg-primary-light flex items-center justify-center mb-6"><Coins size={28} className="text-primary" /></div>
               <h1 className="heading-display text-3xl md:text-4xl text-foreground mb-4">Zakat Distribution</h1>
-              
               <p className="text-lg text-muted-foreground text-body max-w-2xl">
-                Your Zakat reaches only eligible recipients, verified by local masjids and trusted scholars. 
-                We show anonymized categories and aggregate impact—never individual identities.
+                Your Zakat reaches only eligible recipients, verified by local masjids and trusted scholars. We show anonymized categories and aggregate impact—never individual identities.
               </p>
-
               <div className="flex flex-wrap items-center gap-4 mt-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2"><ShieldCheck size={16} className="text-primary" /><span>Scholar-verified eligibility</span></div>
                 <div className="flex items-center gap-2"><Users size={16} className="text-primary" /><span>Anonymized recipients</span></div>
@@ -91,20 +88,15 @@ export default function ZakatPage() {
         <div className="container mx-auto px-4 py-12">
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
-              {/* Zakat Calculator - Collapsible */}
               <ZakatCalculator onCalculate={handleCalculatorResult} />
 
-              {/* Manual Amount Entry */}
               <div className="bg-card rounded-xl border border-border p-6 md:p-8">
                 <h2 className="font-serif text-xl font-semibold text-foreground mb-2">Zakat Amount</h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Enter your Zakat amount directly, or use the calculator above.
-                </p>
+                <p className="text-sm text-muted-foreground mb-6">Enter your Zakat amount directly, or use the calculator above.</p>
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
                   {zakatConfig.presetAmounts.map((preset) => (
                     <button key={preset} onClick={() => { setAmount(preset); setCustomAmount(""); }}
-                      className={cn("py-3 px-4 rounded-lg text-sm font-medium transition-all",
-                        amount === preset && !customAmount ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-secondary/80")}>
+                      className={cn("py-3 px-4 rounded-lg text-sm font-medium transition-all", amount === preset && !customAmount ? "bg-primary text-primary-foreground shadow-soft" : "bg-secondary text-secondary-foreground hover:bg-secondary/80")}>
                       ${preset}
                     </button>
                   ))}
@@ -123,8 +115,7 @@ export default function ZakatPage() {
                 <div className="space-y-2">
                   {zakatConfig.categories.map((cat) => (
                     <button key={cat.id} onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-                      className={cn("w-full flex items-center justify-between p-4 rounded-lg border transition-all duration-300",
-                        selectedCategory === cat.id ? "border-primary bg-primary-light" : "border-border bg-secondary hover:border-primary/40")}>
+                      className={cn("w-full flex items-center justify-between p-4 rounded-lg border transition-all duration-300", selectedCategory === cat.id ? "border-primary bg-primary-light" : "border-border bg-secondary hover:border-primary/40")}>
                       <span className="font-medium text-foreground">{cat.label}</span>
                       <span className="text-sm text-muted-foreground">{cat.count} active cases</span>
                     </button>
@@ -159,6 +150,8 @@ export default function ZakatPage() {
                 <div className="divider-subtle" />
                 <DuaIntentionField value={duaIntention} onChange={setDuaIntention} />
               </div>
+
+              <GivingProofSection givingCategory="zakat" />
             </div>
 
             <div className="space-y-6">
@@ -174,7 +167,12 @@ export default function ZakatPage() {
                 <Button className="w-full" size="lg" onClick={handleDonate} disabled={selectedAmount <= 0 || isLoading || isSuccess}>
                   {isLoading ? (<><Loader2 size={18} className="animate-spin" />Processing...</>) : isSuccess ? (<><Check size={18} />Zakat Submitted</>) : (<><Heart size={18} />Submit Zakat</>)}
                 </Button>
-                {isSuccess && <p className="text-sm text-center text-muted-foreground mt-4">May Allah accept your Zakat.</p>}
+                {isSuccess && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm text-center text-muted-foreground">May Allah accept your Zakat.</p>
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => setShowConfirmDialog(true)}>View Receipt & Track Impact</Button>
+                  </div>
+                )}
               </div>
 
               <div className="bg-card rounded-xl border border-border p-6">
@@ -194,6 +192,7 @@ export default function ZakatPage() {
         </div>
       </main>
       <Footer />
+      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath="/giving/zakat" />
     </div>
   );
 }
