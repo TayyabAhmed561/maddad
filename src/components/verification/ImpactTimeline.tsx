@@ -300,7 +300,7 @@ export function ImpactTimeline({
       </div>
 
       {/* Metadata bar: proof completeness + update status */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-8">
         {approvedEvidenceCount !== undefined && totalEvidenceCount !== undefined && (
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
             <CheckCircle size={12} />

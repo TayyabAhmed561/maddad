@@ -270,6 +270,50 @@ export const evidenceItems: EvidenceItem[] = [
     visibility: "public",
     status: "approved",
   },
+
+  // ========== Qurbani Evidence ==========
+  {
+    id: "ev-qurbani-before-photo",
+    type: "campaign_need_photo",
+    title: "Qurbani Preparation – Yemen 2024",
+    description: "A Muslim Hands volunteer holds a healthy goat selected for Qurbani distribution in Yemen during Eid al-Adha.",
+    media: { kind: "image", url: "/proof/qurbani/qurbani_1.jpg" },
+    date: "2025-06-10",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-qurbani-completion-photo",
+    type: "milestone_progress_photo",
+    title: "Qurbani Distribution Complete",
+    description: "Fresh Qurbani meat packaged and ready for distribution to families in need across multiple regions.",
+    media: { kind: "image", url: "/proof/qurbani/qurbani_1.jpg" },
+    date: "2026-01-12",
+    visibility: "public",
+    status: "approved",
+  },
+
+  // ========== Zakat Evidence ==========
+  {
+    id: "ev-zakat-before-photo",
+    type: "campaign_need_photo",
+    title: "Zakat Distribution – Community Outreach",
+    description: "Aid workers distributing Zakat vouchers to eligible recipients in East Africa, ensuring dignified and direct assistance.",
+    media: { kind: "image", url: "/proof/zakat/zakat_1.jpg" },
+    date: "2025-08-20",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-zakat-completion-photo",
+    type: "milestone_progress_photo",
+    title: "Zakat Funds Delivered – Verified Recipients",
+    description: "Confirmed distribution of Zakat funds to verified eligible families. Smiles of relief as recipients receive their entitlements.",
+    media: { kind: "image", url: "/proof/zakat/zakat_1.jpg" },
+    date: "2026-01-25",
+    visibility: "public",
+    status: "approved",
+  },
 ];
 
 /**

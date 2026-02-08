@@ -320,6 +320,25 @@ const kitchenerWaterlooItems: MapItem[] = [
     privacyLevel: "global_ok",
     description: "Settlement support and housing deposits for newly arrived immigrant families.",
     countryCode: "CA"
+  },
+  {
+    id: "kw-17",
+    type: "need",
+    title: "Ibtikar Iftar Sponsorship",
+    orgName: "Ibtikar",
+    category: "Food",
+    verifiedStatus: "verified",
+    endorsedBy: "University of Waterloo MSA",
+    zakatEligible: false,
+    locationLabel: "Waterloo, ON",
+    lat: 43.4668,
+    lng: -80.5164,
+    lastUpdated: "1 hour ago",
+    fundingRaised: 4200,
+    goal: 10000,
+    privacyLevel: "global_ok",
+    description: "Sponsoring nightly iftar meals for students and community members in the Waterloo region during Ramadan. Ibtikar brings innovation and community together.",
+    countryCode: "CA"
   }
 ];
 
