@@ -20,6 +20,10 @@ import ZakatPage from "./pages/giving/ZakatPage";
 import QurbaniPage from "./pages/giving/QurbaniPage";
 import SadaqahJariyahPage from "./pages/giving/SadaqahJariyahPage";
 import KaffarahPage from "./pages/giving/KaffarahPage";
+import ReceiptDetail from "./pages/ReceiptDetail";
+import MyGiving from "./pages/MyGiving";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +75,11 @@ const AppRoutes = () => (
       <Route path="/give/jariyah" element={<SadaqahJariyahPage />} />
       <Route path="/giving/kaffarah" element={<KaffarahPage />} />
       <Route path="/give/kaffarah" element={<KaffarahPage />} />
+      <Route path="/receipt/:receiptId" element={<ReceiptDetail />} />
+      <Route path="/my-giving" element={<MyGiving />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="*" element={<NotFound />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </>

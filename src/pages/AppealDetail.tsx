@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { AllocationBreakdown } from "@/components/giving/AllocationBreakdown";
@@ -16,6 +18,7 @@ import { getAppealById, categoryLabels } from "@/data/appealsData";
 import { allocationRules } from "@/data/givingData";
 import { appealChecklists, appealTimelines, appealEvidenceIds } from "@/data/verificationRules";
 import { computeVerificationLevel } from "@/types/verification";
+import { createReceipt, type DonationReceipt } from "@/types/receipt";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -33,12 +36,29 @@ export default function AppealDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const appeal = id ? getAppealById(id) : undefined;
+  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   
+  const effectiveAmountRef = { current: 0 };
+
   const [donationState, donationActions] = useDonation({
     defaultAmount: 50,
     defaultAnonymous: true,
-    onSuccess: () => {
-      // Could integrate with analytics or toast notification
+    onSuccess: (data) => {
+      if (!appeal) return;
+      const receipt = createReceipt({
+        amount: data.amount,
+        campaignId: appeal.id,
+        campaignTitle: appeal.title,
+        organizationName: appeal.endorsedBy.name,
+        donationType: appeal.zakatEligible ? "zakat" : "sadaqah",
+        frequency: data.frequency,
+        isAnonymous: data.anonymous,
+        hideAmount: data.hideAmount,
+        duaIntention: data.duaIntention,
+      });
+      setLastReceipt(receipt);
+      setShowConfirmDialog(true);
     }
   });
 
@@ -277,23 +297,40 @@ export default function AppealDetail() {
                   {donationState.isSuccess ? (
                     /* Success State */
                     <div className="text-center py-8">
-                      <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
+                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                         <Heart size={32} className="text-primary" />
                       </div>
                       <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
                         JazakAllah Khair
                       </h3>
-                      <p className="text-muted-foreground text-sm mb-6">
+                      <p className="text-muted-foreground text-sm mb-4">
                         Your support of ${effectiveAmount.toLocaleString()} has been processed.
                         {donationState.anonymous && " Your donation will remain anonymous."}
                       </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={donationActions.reset}
-                        className="w-full"
-                      >
-                        Make Another Contribution
-                      </Button>
+                      {lastReceipt && (
+                        <p className="text-xs text-muted-foreground font-mono mb-6">
+                          Receipt: {lastReceipt.receiptId}
+                        </p>
+                      )}
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          variant="default"
+                          onClick={() => setShowConfirmDialog(true)}
+                          className="w-full"
+                        >
+                          View Receipt & Track
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            donationActions.reset();
+                            setLastReceipt(null);
+                          }}
+                          className="w-full"
+                        >
+                          Make Another Contribution
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     /* Donation Form */
@@ -416,6 +453,14 @@ export default function AppealDetail() {
       </main>
 
       <Footer />
+
+      {/* Donation Confirmation Dialog */}
+      <DonationConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        receipt={lastReceipt}
+        trackingPath={`/appeals/${appeal.id}`}
+      />
     </div>
   );
 }
