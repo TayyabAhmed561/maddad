@@ -183,6 +183,42 @@ export const evidenceItems: EvidenceItem[] = [
     status: "pending",
   },
 
+  // ========== Sadaqah Jariyah – Well Project Evidence ==========
+  {
+    id: "ev-well-before-photo",
+    type: "campaign_need_photo",
+    title: "Well Site – Community in Need",
+    description: "Children in Punjab, Pakistan gather water from a newly installed hand-pump well, showing the direct impact on daily life.",
+    media: { kind: "image", url: "/proof/well/pakistanWell.jpeg" },
+    date: "2025-06-15",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-well-completion-photo",
+    type: "milestone_progress_photo",
+    title: "Completed Well – Serving Families",
+    description: "The completed hand-pump well (Well No. 3807) in Village Arainwala, Minchanabad, Punjab. Families now have clean water access.",
+    media: { kind: "image", url: "/proof/well/pakistanWell.jpeg" },
+    date: "2026-01-20",
+    visibility: "public",
+    status: "approved",
+  },
+  {
+    id: "ev-well-completion-video",
+    type: "milestone_progress_video",
+    title: "Well Completion Video – Community Celebration",
+    description: "Video showing the completed well in use, with children and families drawing clean water for the first time.",
+    media: {
+      kind: "video",
+      url: "/proof/well/pakistanWellVideo.mp4",
+      thumbnailUrl: "/proof/well/pakistanWell.jpeg",
+    },
+    date: "2026-01-22",
+    visibility: "public",
+    status: "approved",
+  },
+
   // ========== Giving Program Evidence ==========
   {
     id: "ev-giving-partner-verify",

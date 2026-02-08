@@ -10,10 +10,12 @@ import {
   ShieldCheck,
   Eye,
   ListChecks,
+  Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EvidenceItem, VerificationChecklist } from "@/types/verification";
 import { getPublicEvidenceByIds } from "@/data/evidenceData";
+import { MediaViewerDialog } from "@/components/verification/MediaViewerDialog";
 
 interface ProofPackProps {
   /** All evidence IDs related to this entity */
@@ -54,12 +56,34 @@ function StatusDot({ status }: { status: EvidenceItem["status"] }) {
   );
 }
 
-/** Single evidence card */
-function EvidenceCard({ item }: { item: EvidenceItem }) {
+/** Single evidence card — clickable to open media viewer */
+function EvidenceCard({
+  item,
+  onViewMedia,
+}: {
+  item: EvidenceItem;
+  onViewMedia: (item: EvidenceItem) => void;
+}) {
+  const isViewable = item.media.kind === "image" || item.media.kind === "video";
+
   return (
-    <div className="bg-card rounded-lg border border-border p-4 flex gap-4 items-start">
+    <div
+      className={cn(
+        "bg-card rounded-lg border border-border p-4 flex gap-4 items-start transition-colors",
+        isViewable && "cursor-pointer hover:border-primary/40 hover:bg-primary/5"
+      )}
+      onClick={() => onViewMedia(item)}
+      role={isViewable ? "button" : undefined}
+      tabIndex={isViewable ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (isViewable && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onViewMedia(item);
+        }
+      }}
+    >
       {/* Thumbnail / icon area */}
-      <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+      <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden relative">
         {item.media.kind === "image" ? (
           <img
             src={item.media.url}
@@ -67,11 +91,16 @@ function EvidenceCard({ item }: { item: EvidenceItem }) {
             className="w-full h-full object-cover rounded-md"
           />
         ) : item.media.kind === "video" && item.media.thumbnailUrl ? (
-          <img
-            src={item.media.thumbnailUrl}
-            alt={item.title}
-            className="w-full h-full object-cover rounded-md"
-          />
+          <>
+            <img
+              src={item.media.thumbnailUrl}
+              alt={item.title}
+              className="w-full h-full object-cover rounded-md"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-md">
+              <Play size={16} className="text-white" fill="white" />
+            </div>
+          </>
         ) : (
           <MediaIcon kind={item.media.kind} />
         )}
@@ -94,6 +123,9 @@ function EvidenceCard({ item }: { item: EvidenceItem }) {
             {item.media.kind.toUpperCase()}
           </span>
           <span>{new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+          {isViewable && (
+            <span className="text-primary text-[11px] font-medium">Click to view</span>
+          )}
         </div>
       </div>
     </div>
@@ -180,6 +212,11 @@ export function ProofPack({ evidenceIds, checklist, className, trackingPlan }: P
   );
 
   const [activeTab, setActiveTab] = useState("before");
+  const [viewerMedia, setViewerMedia] = useState<EvidenceItem | null>(null);
+
+  const handleViewMedia = (item: EvidenceItem) => {
+    setViewerMedia(item);
+  };
 
   return (
     <div className={cn("space-y-0", className)}>
@@ -206,7 +243,7 @@ export function ProofPack({ evidenceIds, checklist, className, trackingPlan }: P
           {beforeEvidence.length > 0 ? (
             <div className="space-y-3">
               {beforeEvidence.map((item) => (
-                <EvidenceCard key={item.id} item={item} />
+                <EvidenceCard key={item.id} item={item} onViewMedia={handleViewMedia} />
               ))}
             </div>
           ) : (
@@ -220,7 +257,7 @@ export function ProofPack({ evidenceIds, checklist, className, trackingPlan }: P
           {afterEvidence.length > 0 ? (
             <div className="space-y-3">
               {afterEvidence.map((item) => (
-                <EvidenceCard key={item.id} item={item} />
+                <EvidenceCard key={item.id} item={item} onViewMedia={handleViewMedia} />
               ))}
             </div>
           ) : trackingPlan && trackingPlan.length > 0 ? (
@@ -253,6 +290,14 @@ export function ProofPack({ evidenceIds, checklist, className, trackingPlan }: P
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Media viewer dialog */}
+      <MediaViewerDialog
+        open={!!viewerMedia}
+        onOpenChange={(open) => !open && setViewerMedia(null)}
+        media={viewerMedia?.media ?? null}
+        title={viewerMedia?.title}
+      />
     </div>
   );
 }
