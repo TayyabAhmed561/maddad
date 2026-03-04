@@ -1,40 +1,28 @@
 import { cn } from "@/lib/utils";
-import { MapPin, Flame } from "lucide-react";
-
-export type MapLayerMode = "pins" | "heatmap";
+import { Flame } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface MapLayerToggleProps {
-  mode: MapLayerMode;
-  onChange: (mode: MapLayerMode) => void;
+  heatmapEnabled: boolean;
+  onHeatmapToggle: (enabled: boolean) => void;
   className?: string;
 }
 
-const options: { value: MapLayerMode; label: string; icon: React.ElementType }[] = [
-  { value: "pins", label: "Pins", icon: MapPin },
-  { value: "heatmap", label: "Heatmap", icon: Flame },
-];
-
-export function MapLayerToggle({ mode, onChange, className }: MapLayerToggleProps) {
+export function MapLayerToggle({ heatmapEnabled, onHeatmapToggle, className }: MapLayerToggleProps) {
   return (
-    <div className={cn("flex items-center bg-card/95 backdrop-blur-md rounded-lg border border-border shadow-card overflow-hidden", className)}>
-      <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium px-2.5 hidden sm:block">
-        Map View
+    <div className={cn(
+      "flex items-center gap-2 bg-card/95 backdrop-blur-md rounded-lg border border-border shadow-card px-3 py-2",
+      className
+    )}>
+      <Flame className="w-3.5 h-3.5 text-muted-foreground" />
+      <span className="text-[11px] font-medium text-muted-foreground hidden sm:block">
+        Live Crisis Heatmap
       </span>
-      {options.map(({ value, label, icon: Icon }) => (
-        <button
-          key={value}
-          onClick={() => onChange(value)}
-          className={cn(
-            "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium transition-all duration-300",
-            mode === value
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-          )}
-        >
-          <Icon className="w-3 h-3" />
-          <span className="hidden sm:inline">{label}</span>
-        </button>
-      ))}
+      <Switch
+        checked={heatmapEnabled}
+        onCheckedChange={onHeatmapToggle}
+        className="scale-75 origin-center"
+      />
     </div>
   );
 }
