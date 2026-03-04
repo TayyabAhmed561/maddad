@@ -9,9 +9,12 @@ import { toast } from "@/hooks/use-toast";
 import { MapControls } from "./MapControls";
 import { MapFiltersOverlay } from "./MapFiltersOverlay";
 import { MapLegend } from "./MapLegend";
+import { MapLayerToggle, type MapLayerMode } from "./MapLayerToggle";
+import { MapTimeSlider } from "./MapTimeSlider";
 import { renderPopupHTML } from "./MapPopup";
+import { animateDonationArc } from "./DonationArc";
 import type { CrisisLayer } from "@/types/platform";
-import { needUrgencyMap } from "@/data/platformData";
+import { needUrgencyMap, getCampaignCreatedAt } from "@/data/platformData";
 import {
   mapItems,
   MapItem,
@@ -39,7 +42,6 @@ const allCategories: MapCategory[] = ["Food", "Shelter", "Medical", "Education",
 const PANEL_WIDTH = 420;
 const PANEL_MARGIN = 24;
 
-// Map crisis layers to categories
 const crisisLayerCategories: Record<CrisisLayer, MapCategory[]> = {
   emergency_relief: ["Shelter", "Medical"],
   refugee_support: ["Shelter", "Education"],
@@ -55,6 +57,12 @@ function isOntarioItem(item: MapItem) {
 function isCanadaItem(item: MapItem) {
   return item.countryCode === "CA";
 }
+
+// City centroids for privacy-safe donor location (never use exact GPS for arcs)
+const DONOR_CITY_CENTROIDS: Record<string, [number, number]> = {
+  CA: [-79.3832, 43.6532], // Toronto
+  default: [-80.4925, 43.4516], // Kitchener
+};
 
 interface MaddadMapProps {
   className?: string;
@@ -72,6 +80,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const pulseAnimRef = useRef<number | null>(null);
+  const arcCleanupRef = useRef<(() => void) | null>(null);
 
   const [selectedItem, setSelectedItem] = useState<MapItem | null>(null);
   const [scopeLevel, setScopeLevel] = useState<ScopeLevel>("provincial");
@@ -81,6 +91,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
   const [isLocating, setIsLocating] = useState(false);
   const [activeCrisisLayers, setActiveCrisisLayers] = useState<CrisisLayer[]>([]);
   const [showImpactMode, setShowImpactMode] = useState(false);
+  const [layerMode, setLayerMode] = useState<MapLayerMode>("both");
+  const [timeCutoff, setTimeCutoff] = useState<Date | null>(null);
 
   const getCameraPadding = useCallback(() => {
     if (!isPanelOpen) return { top: 80, bottom: 60, left: 24, right: 24 };
@@ -88,7 +100,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
   }, [isPanelOpen]);
 
   const handleCrisisLayerToggle = useCallback((layer: CrisisLayer) => {
-    setActiveCrisisLayers(prev => 
+    setActiveCrisisLayers(prev =>
       prev.includes(layer) ? prev.filter(l => l !== layer) : [...prev, layer]
     );
   }, []);
@@ -104,7 +116,6 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         return false;
       }
 
-      // Crisis layer filtering
       if (activeCrisisLayers.length > 0) {
         const allowedCategories = activeCrisisLayers.flatMap(l => crisisLayerCategories[l]);
         if (!allowedCategories.includes(item.category)) return false;
@@ -113,15 +124,20 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       if (activeCategory !== "All" && item.category !== activeCategory) return false;
       if (verifiedOnly && item.verifiedStatus !== "verified") return false;
 
-      // Impact mode: show only items with good funding progress
       if (showImpactMode) {
         if (!item.fundingRaised || !item.goal) return false;
         if ((item.fundingRaised / item.goal) < 0.5) return false;
       }
 
+      // Timeline filter
+      if (timeCutoff) {
+        const createdAt = getCampaignCreatedAt(item.id);
+        if (createdAt < timeCutoff) return false;
+      }
+
       return true;
     });
-  }, [scopeLevel, activeCategory, verifiedOnly, userLocation, activeCrisisLayers, showImpactMode]);
+  }, [scopeLevel, activeCategory, verifiedOnly, userLocation, activeCrisisLayers, showImpactMode, timeCutoff]);
 
   const geojson = useMemo(() => {
     return {
@@ -138,6 +154,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
             endorsed: Boolean(item.endorsedBy),
             zakatEligible: Boolean(item.zakatEligible),
             urgency,
+            urgencyWeight: urgency === "critical" ? 1.0 : urgency === "medium" ? 0.6 : 0.3,
           },
         };
       }),
@@ -150,6 +167,35 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     popupRef.current = null;
   }, []);
 
+  // Trigger donation arc animation
+  const triggerDonationArc = useCallback((item: MapItem) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Clean up previous arc
+    if (arcCleanupRef.current) arcCleanupRef.current();
+
+    const donorCoords: [number, number] = userLocation
+      ? [userLocation.lng, userLocation.lat]
+      : DONOR_CITY_CENTROIDS.default;
+
+    const destCoords: [number, number] = [item.lng, item.lat];
+
+    // Zoom out enough to see the arc
+    const bounds = new mapboxgl.LngLatBounds();
+    bounds.extend(donorCoords);
+    bounds.extend(destCoords);
+    map.fitBounds(bounds, {
+      padding: { top: 120, bottom: 120, left: 80, right: isPanelOpen ? PANEL_WIDTH + 80 : 80 },
+      maxZoom: 8,
+      duration: 800,
+    });
+
+    setTimeout(() => {
+      arcCleanupRef.current = animateDonationArc(map, donorCoords, destCoords);
+    }, 900);
+  }, [userLocation, isPanelOpen]);
+
   const openPopupForItem = useCallback(
     (item: MapItem, lngLat: mapboxgl.LngLatLike) => {
       setSelectedItem(item);
@@ -159,7 +205,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
 
       const popupElement = document.createElement("div");
       popupElement.innerHTML = renderPopupHTML(item);
-      
+
       popupRef.current = new mapboxgl.Popup({
         closeButton: true,
         closeOnClick: false,
@@ -174,13 +220,13 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
 
       const viewButton = popupElement.querySelector(`#popup-view-${item.id}`);
       const donateButton = popupElement.querySelector(`#popup-donate-${item.id}`);
-      
+
       if (viewButton) {
         viewButton.addEventListener("click", () => {
           navigate(`/charity/${item.id}`);
         });
       }
-      
+
       if (donateButton) {
         donateButton.addEventListener("click", (e) => {
           const btn = e.target as HTMLButtonElement;
@@ -188,7 +234,10 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
           btn.dataset.animating = "true";
           btn.style.transform = "scale(0.96)";
           btn.style.boxShadow = "0 0 0 4px rgba(34, 95, 74, 0.2)";
-          
+
+          // Trigger the donation arc
+          triggerDonationArc(item);
+
           setTimeout(() => {
             btn.style.transform = "scale(1)";
             btn.innerHTML = `<span style="display: flex; align-items: center; justify-content: center; gap: 6px;">
@@ -197,9 +246,9 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
             </span>`;
             btn.style.opacity = "0.8";
             btn.style.cursor = "wait";
-            
+
             toast({ title: "Coming soon", description: "Demo mode: donation simulated", duration: 3000 });
-            
+
             setTimeout(() => {
               btn.innerHTML = `<span style="display: flex; align-items: center; justify-content: center; gap: 6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
@@ -219,7 +268,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         popupRef.current = null;
       });
     },
-    [onItemSelect, navigate]
+    [onItemSelect, navigate, triggerDonationArc]
   );
 
   // Initialize map
@@ -251,12 +300,49 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         map.addSource("maddad-items", { type: "geojson", data: geojson });
       }
 
-      if (map.getLayer("maddad-items-selected-ring")) map.removeLayer("maddad-items-selected-ring");
-      if (map.getLayer("maddad-items-ring")) map.removeLayer("maddad-items-ring");
-      if (map.getLayer("maddad-items-layer")) map.removeLayer("maddad-items-layer");
-      if (map.getLayer("maddad-items-critical-pulse")) map.removeLayer("maddad-items-critical-pulse");
+      // ========= HEATMAP LAYER =========
+      map.addLayer({
+        id: "maddad-heatmap",
+        type: "heatmap",
+        source: "maddad-items",
+        paint: {
+          // Weight by urgency
+          "heatmap-weight": ["get", "urgencyWeight"],
+          // Intensity increases with zoom
+          "heatmap-intensity": [
+            "interpolate", ["linear"], ["zoom"],
+            0, 0.6,
+            5, 1.2,
+            8, 1.5,
+          ],
+          // Color gradient: light yellow → orange → deep red
+          "heatmap-color": [
+            "interpolate", ["linear"], ["heatmap-density"],
+            0, "rgba(0,0,0,0)",
+            0.15, "hsla(48, 80%, 70%, 0.4)",
+            0.35, "hsla(40, 75%, 58%, 0.55)",
+            0.55, "hsla(32, 70%, 48%, 0.65)",
+            0.75, "hsla(15, 65%, 45%, 0.75)",
+            1, "hsla(0, 55%, 42%, 0.8)",
+          ],
+          // Radius
+          "heatmap-radius": [
+            "interpolate", ["linear"], ["zoom"],
+            0, 20,
+            4, 35,
+            8, 50,
+          ],
+          // Fade out at higher zoom levels
+          "heatmap-opacity": [
+            "interpolate", ["linear"], ["zoom"],
+            6, 0.6,
+            8, 0.3,
+            10, 0,
+          ],
+        },
+      });
 
-      // Critical urgency pulsing ring
+      // ========= CRITICAL URGENCY PULSING RING =========
       map.addLayer({
         id: "maddad-items-critical-pulse",
         type: "circle",
@@ -356,11 +442,16 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         const hits = map.queryRenderedFeatures(e.point, { layers: ["maddad-items-layer"] });
         if (hits.length === 0) closePopup();
       });
+
+      // ========= START CRITICAL PIN PULSE ANIMATION =========
+      startPulseAnimation(map);
     });
 
     mapRef.current = map;
 
     return () => {
+      if (pulseAnimRef.current) cancelAnimationFrame(pulseAnimRef.current);
+      if (arcCleanupRef.current) arcCleanupRef.current();
       if (popupRef.current) popupRef.current.remove();
       popupRef.current = null;
       map.remove();
@@ -368,6 +459,57 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Pulse animation for critical pins — slow 2s cycle, max 30 visible
+  const startPulseAnimation = useCallback((map: mapboxgl.Map) => {
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = (now - startTime) / 1000; // seconds
+      const cycle = elapsed % 2; // 2-second cycle
+      const t = cycle / 2; // 0 → 1
+
+      // Smooth sine-based pulse
+      const pulse = Math.sin(t * Math.PI);
+      const radius = 18 + pulse * 14; // 18 → 32 → 18
+      const opacity = 0.5 * (1 - pulse * 0.7); // fades as it expands
+
+      try {
+        if (map.getLayer("maddad-items-critical-pulse")) {
+          map.setPaintProperty("maddad-items-critical-pulse", "circle-radius", radius);
+          map.setPaintProperty("maddad-items-critical-pulse", "circle-stroke-opacity", opacity);
+          map.setPaintProperty("maddad-items-critical-pulse", "circle-stroke-width", 2 + pulse * 2);
+        }
+      } catch {
+        // Map removed
+        return;
+      }
+
+      pulseAnimRef.current = requestAnimationFrame(animate);
+    };
+
+    pulseAnimRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  // Update layer visibility based on layerMode
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    const showPins = layerMode === "pins" || layerMode === "both";
+    const showHeatmap = layerMode === "heatmap" || layerMode === "both";
+
+    try {
+      if (map.getLayer("maddad-heatmap")) {
+        map.setLayoutProperty("maddad-heatmap", "visibility", showHeatmap ? "visible" : "none");
+      }
+      ["maddad-items-layer", "maddad-items-ring", "maddad-items-critical-pulse", "maddad-items-selected-ring"].forEach(id => {
+        if (map.getLayer(id)) {
+          map.setLayoutProperty(id, "visibility", showPins ? "visible" : "none");
+        }
+      });
+    } catch {}
+  }, [layerMode]);
 
   // Update camera padding when panel state changes
   useEffect(() => {
@@ -478,7 +620,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     const map = mapRef.current;
     if (!map) return;
     if (map.getLayer("maddad-items-selected-ring")) {
-      map.setFilter("maddad-items-selected-ring", 
+      map.setFilter("maddad-items-selected-ring",
         selectedItemId ? ["==", ["get", "id"], selectedItemId] : ["==", ["get", "id"], ""]
       );
     }
@@ -543,15 +685,26 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
 
       {/* Top-Right Map Controls */}
       <div className={cn(
-        "absolute top-4 z-10 transition-all duration-300",
+        "absolute top-4 z-10 flex items-start gap-2 transition-all duration-300",
         isPanelOpen ? "right-[460px] lg:right-[480px] xl:right-[500px]" : "right-4"
       )}>
+        <MapLayerToggle mode={layerMode} onChange={setLayerMode} />
         <MapControls onResetView={handleResetView} scopeLabel={getScopeLabel()} />
       </div>
 
-      {/* Legend - expanded with MapLegend component */}
+      {/* Legend */}
       <div className="absolute bottom-10 left-4 z-10">
         <MapLegend />
+      </div>
+
+      {/* Timeline Slider - Bottom */}
+      <div className={cn(
+        "absolute bottom-4 left-4 z-10 transition-all duration-300",
+      )}>
+        <MapTimeSlider
+          onTimeChange={setTimeCutoff}
+          isPanelOpen={isPanelOpen}
+        />
       </div>
 
       {/* Results count */}

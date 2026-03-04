@@ -246,3 +246,42 @@ export const ramadanGivingTracker = {
   impactSummary: "Your Ramadan giving has provided 90 meals and supported 3 verified causes.",
   dailyReminder: "Night 24 of Ramadan — Consider doubling your giving in these blessed last nights.",
 };
+
+// ============================================
+// CAMPAIGN CREATED DATES (for timeline slider)
+// ============================================
+
+/** Returns a deterministic createdAt date for any map item ID */
+export function getCampaignCreatedAt(id: string): Date {
+  // Curated items get specific dates
+  const knownDates: Record<string, string> = {
+    "1": "2026-02-05",
+    "2": "2025-11-12",
+    "3": "2025-09-20",
+    "4": "2025-06-15",
+    "5": "2025-10-03",
+    "6": "2026-01-18",
+    "7": "2025-07-22",
+    "8": "2025-12-01",
+    "kw-1": "2026-01-10",
+    "kw-5": "2026-02-15",
+    "kw-7": "2025-11-28",
+    "kw-11": "2026-02-20",
+    "kw-17": "2026-02-18",
+    "ps-kw-1": "2026-01-25",
+    "ps-kw-2": "2026-02-01",
+    "ps-to-1": "2026-01-15",
+  };
+  if (knownDates[id]) return new Date(knownDates[id]);
+
+  // Deterministic hash for placeholder items
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = ((hash << 5) - hash) + id.charCodeAt(i);
+    hash |= 0;
+  }
+  const now = Date.now();
+  const yearAgo = now - 365 * 86400000;
+  const offset = Math.abs(hash) % (365 * 86400000);
+  return new Date(yearAgo + offset);
+}

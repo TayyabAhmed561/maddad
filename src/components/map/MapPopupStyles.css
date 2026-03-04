@@ -85,3 +85,20 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Donation arc popup */
+.donation-arc-popup .mapboxgl-popup-content {
+  background: hsl(45, 30%, 98%);
+  border-radius: 10px;
+  padding: 0;
+  box-shadow: 0 4px 16px -4px hsl(38 50% 30% / 0.15);
+  border: 1px solid hsl(38, 50%, 78%);
+}
+
+.donation-arc-popup .mapboxgl-popup-tip {
+  border-top-color: hsl(45, 30%, 98%);
+}
+
+.donation-arc-popup .mapboxgl-popup-close-button {
+  display: none;
+}
