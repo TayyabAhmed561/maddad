@@ -12,23 +12,20 @@ import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
+import { CampaignUpdates } from "@/components/CampaignUpdates";
+import { SupporterMessages } from "@/components/SupporterMessages";
+import { TransparencyScore } from "@/components/TransparencyScore";
+import { UrgencyIndicator } from "@/components/map/UrgencyIndicator";
 import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
 import { getNeedById } from "@/data/needsData";
 import { allocationRules } from "@/data/givingData";
+import { campaignUpdatesMap, supporterMessagesMap, needUrgencyMap } from "@/data/platformData";
 import { createReceipt, type DonationReceipt } from "@/types/receipt";
 import { 
-  MapPin, 
-  CheckCircle, 
-  Clock, 
-  FileText,
-  ArrowLeft,
-  Calendar,
-  Heart,
-  AlertCircle
+  MapPin, CheckCircle, Clock, FileText, ArrowLeft, Calendar, Heart, AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Map need IDs to giving campaign keys for After You Give integration
 const needCampaignMap: Record<string, string> = {
   "kw-17": "msa-iftaar",
 };
@@ -61,7 +58,6 @@ export default function NeedDetail() {
     }
   });
 
-  // Show 404 if need not found
   if (!need) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -69,16 +65,9 @@ export default function NeedDetail() {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center px-4">
             <AlertCircle size={64} className="mx-auto text-muted-foreground mb-4" />
-            <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">
-              Need Not Found
-            </h1>
-            <p className="text-muted-foreground mb-6">
-              The need you're looking for doesn't exist or has been removed.
-            </p>
-            <Button onClick={() => navigate("/explore")}>
-              <ArrowLeft size={16} />
-              Back to Explore
-            </Button>
+            <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">Need Not Found</h1>
+            <p className="text-muted-foreground mb-6">The need you're looking for doesn't exist or has been removed.</p>
+            <Button onClick={() => navigate("/explore")}><ArrowLeft size={16} />Back to Explore</Button>
           </div>
         </main>
         <Footer />
@@ -88,6 +77,9 @@ export default function NeedDetail() {
 
   const presetAmounts = [25, 50, 100, 250, 500];
   const effectiveAmount = getEffectiveAmount(donationState);
+  const urgency = id ? needUrgencyMap[id] : undefined;
+  const campaignUpdates = id ? campaignUpdatesMap[id] : undefined;
+  const supporterMessages = id ? supporterMessagesMap[id] : undefined;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -97,45 +89,32 @@ export default function NeedDetail() {
         {/* Hero Section */}
         <section className="bg-card border-b border-border pattern-subtle">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            {/* Breadcrumb */}
-            <Link 
-              to="/explore" 
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mb-8"
-            >
-              <ArrowLeft size={16} />
-              Back to Explore
+            <Link to="/explore" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mb-8">
+              <ArrowLeft size={16} />Back to Explore
             </Link>
             
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <CategoryTag category={need.category} />
                   {need.isVerified && <VerificationBadge status="verified" />}
                   {need.zakatEligible && (
-                    <span className="badge-verified">
-                      <CheckCircle size={14} />
-                      Zakat Eligible
-                    </span>
+                    <span className="badge-verified"><CheckCircle size={14} />Zakat Eligible</span>
                   )}
+                  {urgency && <UrgencyIndicator level={urgency} size="md" />}
                 </div>
                 
-                <h1 className="heading-display text-3xl md:text-4xl text-foreground mb-4">
-                  {need.title}
-                </h1>
-                
+                <h1 className="heading-display text-3xl md:text-4xl text-foreground mb-4">{need.title}</h1>
                 <p className="text-lg text-muted-foreground mb-5">
                   by <span className="text-foreground font-medium">{need.organization}</span>
                 </p>
                 
-                {/* Quick Stats */}
                 <div className="flex flex-wrap gap-5 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin size={16} />
-                    <span>{need.location}</span>
+                    <MapPin size={16} /><span>{need.location}</span>
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock size={16} />
-                    <span>Updated {need.lastUpdated}</span>
+                    <Clock size={16} /><span>Updated {need.lastUpdated}</span>
                   </div>
                 </div>
               </div>
@@ -150,19 +129,15 @@ export default function NeedDetail() {
         {/* Main Content */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="flex flex-col lg:flex-row gap-10">
-            {/* Left Column - Details */}
+            {/* Left Column */}
             <div className="flex-1 space-y-12">
-              {/* Why This Matters */}
               <div>
                 <h2 className="heading-section text-xl text-foreground mb-5">Why this need matters</h2>
-                <p className="text-muted-foreground text-body">
-                  {need.description}
-                </p>
+                <p className="text-muted-foreground text-body">{need.description}</p>
               </div>
 
               <div className="divider-subtle" />
 
-              {/* What Your Donation Covers */}
               <div>
                 <h2 className="heading-section text-xl text-foreground mb-5">What your donation covers</h2>
                 <ul className="space-y-4">
@@ -177,6 +152,14 @@ export default function NeedDetail() {
 
               <div className="divider-subtle" />
 
+              {/* Campaign Updates */}
+              {campaignUpdates && campaignUpdates.length > 0 && (
+                <>
+                  <CampaignUpdates updates={campaignUpdates} />
+                  <div className="divider-subtle" />
+                </>
+              )}
+
               {/* Updates Timeline */}
               <div>
                 <h2 className="heading-section text-xl text-foreground mb-6">Updates</h2>
@@ -185,10 +168,8 @@ export default function NeedDetail() {
                     <div key={update.id} className="relative pl-7 border-l-2 border-border pb-8 last:pb-0">
                       <div className="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-primary shadow-soft" />
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Calendar size={14} />
-                        <span>{update.date}</span>
-                        <span className="text-border">•</span>
-                        <span>{update.author}</span>
+                        <Calendar size={14} /><span>{update.date}</span>
+                        <span className="text-border">•</span><span>{update.author}</span>
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed">{update.content}</p>
                     </div>
@@ -200,18 +181,20 @@ export default function NeedDetail() {
               <div className="bg-card rounded-xl border border-border p-8 shadow-card">
                 <h2 className="heading-section text-xl text-foreground mb-8">Transparency & Verification</h2>
                 
-                {/* Verification Checklist */}
+                {/* Transparency Score */}
+                <TransparencyScore
+                  evidenceComplete={need.isVerified ? 85 : 45}
+                  milestonesUpdated={need.updates.length >= 3 ? 90 : 60}
+                  financialClarity={need.transparencyLog.length >= 3 ? 88 : 65}
+                  size="sm"
+                  className="mb-6"
+                />
+
                 <div className="mb-8">
                   <h3 className="font-semibold text-foreground mb-4">Verification Checklist</h3>
                   <div className="grid sm:grid-cols-2 gap-3">
                     {need.verificationChecks.map((check, index) => (
-                      <div 
-                        key={index}
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-lg",
-                          check.verified ? "bg-primary-light" : "bg-muted"
-                        )}
-                      >
+                      <div key={index} className={cn("flex items-center gap-3 p-3 rounded-lg", check.verified ? "bg-primary-light" : "bg-muted")}>
                         {check.verified ? (
                           <CheckCircle size={16} className="text-primary shrink-0" />
                         ) : (
@@ -219,9 +202,7 @@ export default function NeedDetail() {
                         )}
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{check.label}</p>
-                          {check.verifier && (
-                            <p className="text-xs text-muted-foreground truncate">{check.verifier}</p>
-                          )}
+                          {check.verifier && <p className="text-xs text-muted-foreground truncate">{check.verifier}</p>}
                         </div>
                       </div>
                     ))}
@@ -230,7 +211,6 @@ export default function NeedDetail() {
 
                 <div className="divider-subtle mb-8" />
 
-                {/* Fund Release Log */}
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <FileText size={18} className="text-primary" />
@@ -249,24 +229,26 @@ export default function NeedDetail() {
                   </div>
                 </div>
               </div>
-              {/* After You Give – Proof & Impact Tracking */}
+
+              {/* Supporter Messages */}
+              {supporterMessages && supporterMessages.length > 0 && (
+                <>
+                  <div className="divider-subtle" />
+                  <SupporterMessages messages={supporterMessages} />
+                </>
+              )}
+
+              {/* After You Give */}
               {id && needCampaignMap[id] && (
                 <div className="space-y-8">
                   <div className="divider-subtle" />
-
-                  {/* Expense Breakdown */}
                   {allocationRules[needCampaignMap[id]] && (
                     <div>
                       <h2 className="heading-section text-xl text-foreground mb-5">Expense Breakdown</h2>
-                      <AllocationBreakdown
-                        items={allocationRules[needCampaignMap[id]]}
-                      />
+                      <AllocationBreakdown items={allocationRules[needCampaignMap[id]]} />
                     </div>
                   )}
-
                   <div className="divider-subtle" />
-
-                  {/* Impact Summary */}
                   <div className="bg-primary/5 border border-primary/10 rounded-xl p-6">
                     <h3 className="font-serif text-lg font-semibold text-foreground mb-2">Impact Summary</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">
@@ -275,75 +257,38 @@ export default function NeedDetail() {
                       with full transparency and tracked impact.
                     </p>
                   </div>
-
-                  {/* Proof & Timeline Section */}
-                  <GivingProofSection
-                    givingCategory={needCampaignMap[id]}
-                  />
+                  <GivingProofSection givingCategory={needCampaignMap[id]} />
                 </div>
               )}
             </div>
 
-            {/* Right Column - Donation Module (Sticky) */}
+            {/* Right Column - Donation Module */}
             <div className="lg:w-96">
-              <div 
-                id="donate"
-                className="lg:sticky lg:top-24 bg-card rounded-xl border border-border p-6 shadow-card"
-              >
+              <div id="donate" className="lg:sticky lg:top-24 bg-card rounded-xl border border-border p-6 shadow-card">
                 {donationState.isSuccess ? (
-                  /* Success State */
                   <div className="text-center py-8">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                       <Heart size={32} className="text-primary" />
                     </div>
-                    <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
-                      JazakAllah Khair
-                    </h3>
+                    <h3 className="font-serif text-xl font-semibold text-foreground mb-2">JazakAllah Khair</h3>
                     <p className="text-muted-foreground text-sm mb-4">
                       Your donation of ${effectiveAmount.toLocaleString()} has been processed.
                       {donationState.anonymous && " Your donation will remain anonymous."}
                     </p>
-                    {lastReceipt && (
-                      <p className="text-xs text-muted-foreground font-mono mb-6">
-                        Receipt: {lastReceipt.receiptId}
-                      </p>
-                    )}
+                    {lastReceipt && <p className="text-xs text-muted-foreground font-mono mb-6">Receipt: {lastReceipt.receiptId}</p>}
                     <div className="flex flex-col gap-2">
-                      <Button
-                        variant="default"
-                        onClick={() => setShowConfirmDialog(true)}
-                        className="w-full"
-                      >
-                        View Receipt & Track
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          donationActions.reset();
-                          setLastReceipt(null);
-                        }}
-                        className="w-full"
-                      >
-                        Make Another Donation
-                      </Button>
+                      <Button variant="default" onClick={() => setShowConfirmDialog(true)} className="w-full">View Receipt & Track</Button>
+                      <Button variant="outline" onClick={() => { donationActions.reset(); setLastReceipt(null); }} className="w-full">Make Another Donation</Button>
                     </div>
                   </div>
                 ) : (
-                  /* Donation Form */
                   <>
-                    <h3 className="font-serif text-xl font-semibold text-foreground mb-6">
-                      Support This Need
-                    </h3>
-
-                    {/* Preset Amounts */}
+                    <h3 className="font-serif text-xl font-semibold text-foreground mb-6">Support This Need</h3>
                     <div className="grid grid-cols-3 gap-2 mb-4">
                       {presetAmounts.map((preset) => (
                         <button
                           key={preset}
-                          onClick={() => {
-                            donationActions.setAmount(preset);
-                            donationActions.setCustomAmount("");
-                          }}
+                          onClick={() => { donationActions.setAmount(preset); donationActions.setCustomAmount(""); }}
                           className={cn(
                             "py-3 px-4 rounded-lg text-sm font-medium transition-all",
                             donationState.amount === preset && !donationState.customAmount
@@ -355,12 +300,8 @@ export default function NeedDetail() {
                         </button>
                       ))}
                     </div>
-
-                    {/* Custom Amount */}
                     <div className="mb-6">
-                      <label className="text-sm text-muted-foreground mb-2 block">
-                        Custom amount
-                      </label>
+                      <label className="text-sm text-muted-foreground mb-2 block">Custom amount</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                         <input
@@ -372,75 +313,28 @@ export default function NeedDetail() {
                         />
                       </div>
                     </div>
-
-                    {/* Recurring Toggle */}
-                    <RecurringDonationToggle
-                      value={donationState.frequency}
-                      onChange={donationActions.setFrequency}
-                      className="mb-6"
-                    />
-
-                    {/* Privacy Options */}
-                    <AnonymousDonationToggle
-                      anonymous={donationState.anonymous}
-                      hideAmount={donationState.hideAmount}
-                      onAnonymousChange={donationActions.setAnonymous}
-                      onHideAmountChange={donationActions.setHideAmount}
-                      className="mb-6"
-                    />
-
-                    {/* Zakat Eligibility Notice */}
+                    <RecurringDonationToggle value={donationState.frequency} onChange={donationActions.setFrequency} className="mb-6" />
+                    <AnonymousDonationToggle anonymous={donationState.anonymous} hideAmount={donationState.hideAmount} onAnonymousChange={donationActions.setAnonymous} onHideAmountChange={donationActions.setHideAmount} className="mb-6" />
                     {need.zakatEligible && (
                       <div className="bg-primary-light rounded-lg p-4 mb-6">
                         <div className="flex items-start gap-3">
                           <CheckCircle size={18} className="text-primary shrink-0 mt-0.5" />
                           <div>
                             <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              This need qualifies for Zakat funds as verified by {need.organization}.
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">This need qualifies for Zakat funds as verified by {need.organization}.</p>
                           </div>
                         </div>
                       </div>
                     )}
-
-                    {/* Allocation Breakdown */}
                     <AllocationBreakdown
-                      items={id && needCampaignMap[id] && allocationRules[needCampaignMap[id]] 
-                        ? allocationRules[needCampaignMap[id]] 
-                        : allocationRules["general"]}
+                      items={id && needCampaignMap[id] && allocationRules[needCampaignMap[id]] ? allocationRules[needCampaignMap[id]] : allocationRules["general"]}
                       className="mb-6"
                     />
-
-                    {/* Dua Intention */}
-                    <DuaIntentionField
-                      value={donationState.duaIntention}
-                      onChange={donationActions.setDuaIntention}
-                      className="mb-6"
-                    />
-
-                    {/* Donate Button */}
-                    <Button 
-                      className="w-full py-6 text-base"
-                      onClick={donationActions.processDonation}
-                      disabled={donationState.isLoading || effectiveAmount <= 0}
-                    >
-                      {donationState.isLoading ? (
-                        "Processing..."
-                      ) : (
-                        <>
-                          <Heart size={18} />
-                          Donate ${effectiveAmount.toLocaleString()}
-                          {donationState.frequency !== "one-time" && `/${donationState.frequency.slice(0, 2)}`}
-                        </>
-                      )}
+                    <DuaIntentionField value={donationState.duaIntention} onChange={donationActions.setDuaIntention} className="mb-6" />
+                    <Button className="w-full py-6 text-base" onClick={donationActions.processDonation} disabled={donationState.isLoading || effectiveAmount <= 0}>
+                      {donationState.isLoading ? "Processing..." : (<><Heart size={18} />Donate ${effectiveAmount.toLocaleString()}{donationState.frequency !== "one-time" && `/${donationState.frequency.slice(0, 2)}`}</>)}
                     </Button>
-
-                    {donationState.error && (
-                      <p className="text-sm text-destructive mt-3 text-center">
-                        {donationState.error}
-                      </p>
-                    )}
+                    {donationState.error && <p className="text-sm text-destructive mt-3 text-center">{donationState.error}</p>}
                   </>
                 )}
               </div>
@@ -450,14 +344,7 @@ export default function NeedDetail() {
       </main>
 
       <Footer />
-
-      {/* Donation Confirmation Dialog */}
-      <DonationConfirmDialog
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        receipt={lastReceipt}
-        trackingPath={id ? `/need/${id}` : undefined}
-      />
+      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath={id ? `/need/${id}` : undefined} />
     </div>
   );
 }

@@ -20,6 +20,7 @@ import ZakatPage from "./pages/giving/ZakatPage";
 import QurbaniPage from "./pages/giving/QurbaniPage";
 import SadaqahJariyahPage from "./pages/giving/SadaqahJariyahPage";
 import KaffarahPage from "./pages/giving/KaffarahPage";
+import RamadanPage from "./pages/RamadanPage";
 import ReceiptDetail from "./pages/ReceiptDetail";
 import MyGiving from "./pages/MyGiving";
 import Login from "./pages/Login";
@@ -30,23 +31,15 @@ import VerifierDashboard from "./pages/verification/VerifierDashboard";
 
 const queryClient = new QueryClient();
 
-// Scroll restoration component
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
-
   useEffect(() => {
     if (hash) {
-      // Smooth scroll to hash anchor
       const element = document.getElementById(hash.slice(1));
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-        return;
-      }
+      if (element) { element.scrollIntoView({ behavior: "smooth" }); return; }
     }
-    // Scroll to top on route change
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [pathname, hash]);
-
   return null;
 }
 
@@ -81,6 +74,7 @@ const AppRoutes = () => (
       <Route path="/give/jariyah" element={<SadaqahJariyahPage />} />
       <Route path="/giving/kaffarah" element={<KaffarahPage />} />
       <Route path="/give/kaffarah" element={<KaffarahPage />} />
+      <Route path="/ramadan" element={<RamadanPage />} />
       <Route path="/receipt/:receiptId" element={<ReceiptDetail />} />
       <Route path="/my-giving" element={<MyGiving />} />
       <Route path="/login" element={<Login />} />
