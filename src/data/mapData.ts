@@ -21,7 +21,8 @@ export interface MapItem {
   privacyLevel: PrivacyLevel;
   description?: string;
   countryCode?: string;
-  isPlaceholder?: boolean; // Placeholder pins don't appear in card list
+  isPlaceholder?: boolean;
+  createdAt?: string; // ISO date string for timeline filtering
 }
 
 // ============================================
