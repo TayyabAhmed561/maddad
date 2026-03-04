@@ -12,8 +12,6 @@ import { MapLegend } from "./MapLegend";
 import { MapLayerToggle } from "./MapLayerToggle";
 import { renderPopupHTML } from "./MapPopup";
 import { animateDonationArc } from "./DonationArc";
-import { startConnectionSignals } from "./ConnectionSignals";
-import type { CrisisLayer } from "@/types/platform";
 import { needUrgencyMap } from "@/data/platformData";
 import {
   mapItems,
@@ -37,18 +35,8 @@ import {
 
 mapboxgl.accessToken = "pk.eyJ1IjoibWluaW9uc2EwMCIsImEiOiJjbWt0eTF1MzUxa3dxM3FwcHJuYjhiNXlvIn0.U9u4rqrM2m5yWiqYE5bv2Q";
 
-const allCategories: MapCategory[] = ["Food", "Shelter", "Medical", "Education", "Masjid", "Fidya", "Qurbani", "Zakat"];
-
 const PANEL_WIDTH = 420;
 const PANEL_MARGIN = 24;
-
-const crisisLayerCategories: Record<CrisisLayer, MapCategory[]> = {
-  emergency_relief: ["Shelter", "Medical"],
-  refugee_support: ["Shelter", "Education"],
-  food_security: ["Food", "Fidya"],
-  medical_aid: ["Medical"],
-  education_projects: ["Education"],
-};
 
 function isOntarioItem(item: MapItem) {
   return item.locationLabel.includes("ON");
@@ -80,8 +68,6 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const arcCleanupRef = useRef<(() => void) | null>(null);
-  const signalsCleanupRef = useRef<(() => void) | null>(null);
-  const userInteractedRef = useRef(false);
 
   const [selectedItem, setSelectedItem] = useState<MapItem | null>(null);
   const [scopeLevel, setScopeLevel] = useState<ScopeLevel>("provincial");
@@ -89,31 +75,12 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [activeCrisisLayers, setActiveCrisisLayers] = useState<CrisisLayer[]>([]);
-  const [showImpactMode, setShowImpactMode] = useState(false);
   const [heatmapEnabled, setHeatmapEnabled] = useState(true);
 
   const getCameraPadding = useCallback(() => {
     if (!isPanelOpen) return { top: 80, bottom: 60, left: 24, right: 24 };
     return { top: 80, bottom: 60, left: 24, right: PANEL_WIDTH + PANEL_MARGIN + 24 };
   }, [isPanelOpen]);
-
-  const handleCrisisLayerToggle = useCallback((layer: CrisisLayer) => {
-    setActiveCrisisLayers(prev =>
-      prev.includes(layer) ? prev.filter(l => l !== layer) : [...prev, layer]
-    );
-  }, []);
-
-  // Dismiss connection signals on first interaction
-  const dismissSignals = useCallback(() => {
-    if (!userInteractedRef.current) {
-      userInteractedRef.current = true;
-      if (signalsCleanupRef.current) {
-        signalsCleanupRef.current();
-        signalsCleanupRef.current = null;
-      }
-    }
-  }, []);
 
   const filteredItems = useMemo(() => {
     return mapItems.filter((item) => {
@@ -126,22 +93,12 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         return false;
       }
 
-      if (activeCrisisLayers.length > 0) {
-        const allowedCategories = activeCrisisLayers.flatMap(l => crisisLayerCategories[l]);
-        if (!allowedCategories.includes(item.category)) return false;
-      }
-
       if (activeCategory !== "All" && item.category !== activeCategory) return false;
       if (verifiedOnly && item.verifiedStatus !== "verified") return false;
 
-      if (showImpactMode) {
-        if (!item.fundingRaised || !item.goal) return false;
-        if ((item.fundingRaised / item.goal) < 0.5) return false;
-      }
-
       return true;
     });
-  }, [scopeLevel, activeCategory, verifiedOnly, userLocation, activeCrisisLayers, showImpactMode]);
+  }, [scopeLevel, activeCategory, verifiedOnly, userLocation]);
 
   const geojson = useMemo(() => {
     return {
@@ -271,13 +228,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     [onItemSelect, navigate, triggerDonationArc]
   );
 
-  // Detect dark mode for map style
-  const getMapStyle = useCallback(() => {
-    const isDark = document.documentElement.classList.contains("dark");
-    return isDark ? "mapbox://styles/mapbox/dark-v11" : "mapbox://styles/mapbox/light-v11";
-  }, []);
-
-  // Initialize map
+  // Initialize map — single light style, no theme swapping
   useEffect(() => {
     if (mapRef.current || !mapContainerRef.current) return;
 
@@ -285,7 +236,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: getMapStyle(),
+      style: "mapbox://styles/mapbox/light-v11",
       center: initialCenter,
       zoom: ONTARIO_ZOOM,
       minZoom: 1.5,
@@ -306,7 +257,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         map.addSource("maddad-items", { type: "geojson", data: geojson });
       }
 
-      // ========= HEATMAP LAYER — Green → Yellow → Orange → Red → Burgundy =========
+      // Heatmap layer
       map.addLayer({
         id: "maddad-heatmap",
         type: "heatmap",
@@ -315,35 +266,29 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
           "heatmap-weight": ["get", "urgencyWeight"],
           "heatmap-intensity": [
             "interpolate", ["linear"], ["zoom"],
-            0, 0.6,
-            5, 1.2,
-            8, 1.5,
+            0, 0.6, 5, 1.2, 8, 1.5,
           ],
           "heatmap-color": [
             "interpolate", ["linear"], ["heatmap-density"],
             0, "rgba(0,0,0,0)",
-            0.1, "hsla(120, 35%, 45%, 0.3)",   // Green — low urgency
-            0.25, "hsla(48, 75%, 55%, 0.4)",    // Yellow — moderate
-            0.45, "hsla(32, 70%, 50%, 0.5)",    // Orange — elevated
-            0.7, "hsla(0, 60%, 45%, 0.6)",      // Red — high urgency
-            1, "hsla(340, 50%, 28%, 0.7)",       // Burgundy — critical
+            0.1, "hsla(120, 35%, 45%, 0.3)",
+            0.25, "hsla(48, 75%, 55%, 0.4)",
+            0.45, "hsla(32, 70%, 50%, 0.5)",
+            0.7, "hsla(0, 60%, 45%, 0.6)",
+            1, "hsla(340, 50%, 28%, 0.7)",
           ],
           "heatmap-radius": [
             "interpolate", ["linear"], ["zoom"],
-            0, 25,
-            4, 40,
-            8, 55,
+            0, 25, 4, 40, 8, 55,
           ],
           "heatmap-opacity": [
             "interpolate", ["linear"], ["zoom"],
-            5, 0.5,
-            8, 0.25,
-            11, 0,
+            5, 0.5, 8, 0.25, 11, 0,
           ],
         },
       });
 
-      // Ring for endorsed or zakat eligible
+      // Endorsed/zakat ring
       map.addLayer({
         id: "maddad-items-ring",
         type: "circle",
@@ -360,7 +305,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         },
       });
 
-      // Main static markers — clean, minimal circles
+      // Main pin layer
       map.addLayer({
         id: "maddad-items-layer",
         type: "circle",
@@ -368,8 +313,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         paint: {
           "circle-radius": 8,
           "circle-color": [
-            "match",
-            ["get", "category"],
+            "match", ["get", "category"],
             "Food", categoryColors.Food?.marker ?? "hsl(160, 45%, 32%)",
             "Shelter", categoryColors.Shelter?.marker ?? "hsl(160, 45%, 32%)",
             "Medical", categoryColors.Medical?.marker ?? "hsl(160, 45%, 32%)",
@@ -386,7 +330,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         },
       });
 
-      // Selected marker highlight ring
+      // Selected ring
       map.addLayer({
         id: "maddad-items-selected-ring",
         type: "circle",
@@ -401,7 +345,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         filter: ["==", ["get", "id"], ""],
       });
 
-      // Hover highlight ring
+      // Hover ring
       map.addLayer({
         id: "maddad-items-hover-ring",
         type: "circle",
@@ -419,9 +363,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       map.on("mouseenter", "maddad-items-layer", (e) => {
         map.getCanvas().style.cursor = "pointer";
         const id = e.features?.[0]?.properties?.id;
-        if (id) {
-          map.setFilter("maddad-items-hover-ring", ["==", ["get", "id"], id]);
-        }
+        if (id) map.setFilter("maddad-items-hover-ring", ["==", ["get", "id"], id]);
       });
       map.on("mouseleave", "maddad-items-layer", () => {
         map.getCanvas().style.cursor = "";
@@ -429,7 +371,6 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       });
 
       map.on("click", "maddad-items-layer", (e) => {
-        dismissSignals();
         const feature = e.features?.[0];
         if (!feature) return;
         const clickedId = feature.properties?.id as string | undefined;
@@ -443,24 +384,12 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         const hits = map.queryRenderedFeatures(e.point, { layers: ["maddad-items-layer"] });
         if (hits.length === 0) closePopup();
       });
-
-      // Dismiss signals on user interaction
-      map.on("dragstart", dismissSignals);
-      map.on("zoomstart", dismissSignals);
-
-      // Start ambient connection signals after a brief delay
-      setTimeout(() => {
-        if (!userInteractedRef.current && mapRef.current) {
-          signalsCleanupRef.current = startConnectionSignals(map);
-        }
-      }, 1500);
     });
 
     mapRef.current = map;
 
     return () => {
       if (arcCleanupRef.current) arcCleanupRef.current();
-      if (signalsCleanupRef.current) signalsCleanupRef.current();
       if (popupRef.current) popupRef.current.remove();
       popupRef.current = null;
       map.remove();
@@ -469,11 +398,10 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update heatmap visibility based on toggle
+  // Update heatmap visibility
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
-
     try {
       if (map.getLayer("maddad-heatmap")) {
         map.setLayoutProperty("maddad-heatmap", "visibility", heatmapEnabled ? "visible" : "none");
@@ -500,36 +428,9 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     }
   }, [geojson, filteredItems, selectedItem, closePopup]);
 
-  // Watch for dark mode changes
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const map = mapRef.current;
-      if (!map) return;
-      const newStyle = getMapStyle();
-      const currentStyle = map.getStyle()?.sprite;
-      const isDarkNow = newStyle.includes("dark");
-      const wasDark = currentStyle?.toString().includes("dark");
-      if (isDarkNow !== wasDark) {
-        // Store current data, re-set style, then re-add source/layers
-        const currentGeojson = geojson;
-        map.setStyle(newStyle);
-        map.once("style.load", () => {
-          if (!map.getSource("maddad-items")) {
-            map.addSource("maddad-items", { type: "geojson", data: currentGeojson });
-          }
-          // Re-add all layers (same as init)
-          addMapLayers(map, heatmapEnabled);
-        });
-      }
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, [geojson, heatmapEnabled, getMapStyle]);
-
   const flyToWithOffset = useCallback((center: { lat: number; lng: number }, zoom: number) => {
     const map = mapRef.current;
     if (!map) return;
-    dismissSignals();
     const padding = getCameraPadding();
     map.flyTo({
       center: [center.lng, center.lat],
@@ -540,12 +441,11 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       curve: 1.42,
       easing: (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
     });
-  }, [getCameraPadding, dismissSignals]);
+  }, [getCameraPadding]);
 
   const fitBoundsWithPadding = useCallback((bounds: [[number, number], [number, number]], maxZoom?: number) => {
     const map = mapRef.current;
     if (!map) return;
-    dismissSignals();
     const padding = getCameraPadding();
     const adjustedPadding = { ...padding, top: 120, bottom: 90 };
     map.fitBounds(bounds, {
@@ -554,7 +454,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       duration: 1400,
       essential: true,
     });
-  }, [getCameraPadding, dismissSignals]);
+  }, [getCameraPadding]);
 
   const handleScopeChange = useCallback(
     (scope: ScopeLevel) => {
@@ -613,7 +513,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     else if (scopeLevel === "global") flyToWithOffset(GLOBAL_CENTER, GLOBAL_ZOOM);
   }, [scopeLevel, userLocation, flyToWithOffset, fitBoundsWithPadding]);
 
-  // Focus on selected item from external selection + update selected ring
+  // Focus on selected item from external selection
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -663,7 +563,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
     <div className={cn("relative w-full h-full", className)}>
       <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
 
-      {/* Top-Left Filters Overlay */}
+      {/* Top-Left Filters */}
       <div className="absolute top-4 left-4 z-10">
         <MapFiltersOverlay
           scopeLevel={scopeLevel}
@@ -674,23 +574,19 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
           verifiedOnly={verifiedOnly}
           onVerifiedChange={setVerifiedOnly}
           isPanelOpen={isPanelOpen}
-          activeCrisisLayers={activeCrisisLayers}
-          onCrisisLayerToggle={handleCrisisLayerToggle}
-          showImpactMode={showImpactMode}
-          onImpactModeToggle={() => setShowImpactMode(!showImpactMode)}
         />
       </div>
 
-      {/* Top-Right Map Controls — spaced from panel */}
+      {/* Top-Right Controls */}
       <div className={cn(
-        "absolute top-4 z-10 flex items-start gap-2 transition-all duration-300",
+        "absolute top-4 z-10 flex items-start gap-3 transition-all duration-300",
         isPanelOpen ? "right-[460px] lg:right-[480px] xl:right-[500px]" : "right-4"
       )}>
         <MapLayerToggle heatmapEnabled={heatmapEnabled} onHeatmapToggle={setHeatmapEnabled} />
         <MapControls onResetView={handleResetView} scopeLabel={getScopeLabel()} />
       </div>
 
-      {/* Legend — bottom left, above attribution */}
+      {/* Legend — bottom left */}
       <div className="absolute bottom-10 left-4 z-10">
         <MapLegend heatmapEnabled={heatmapEnabled} />
       </div>
@@ -702,102 +598,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       )}>
         <span className="text-xs text-muted-foreground">
           <span className="font-medium text-foreground">{filteredItems.length}</span> locations
-          {showImpactMode && <span className="ml-1 text-primary">(impact view)</span>}
         </span>
       </div>
     </div>
   );
-}
-
-// Helper to re-add layers after style change (dark/light mode switch)
-function addMapLayers(map: mapboxgl.Map, heatmapEnabled: boolean) {
-  map.addLayer({
-    id: "maddad-heatmap",
-    type: "heatmap",
-    source: "maddad-items",
-    layout: { visibility: heatmapEnabled ? "visible" : "none" },
-    paint: {
-      "heatmap-weight": ["get", "urgencyWeight"],
-      "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.6, 5, 1.2, 8, 1.5],
-      "heatmap-color": [
-        "interpolate", ["linear"], ["heatmap-density"],
-        0, "rgba(0,0,0,0)",
-        0.1, "hsla(120, 35%, 45%, 0.3)",
-        0.25, "hsla(48, 75%, 55%, 0.4)",
-        0.45, "hsla(32, 70%, 50%, 0.5)",
-        0.7, "hsla(0, 60%, 45%, 0.6)",
-        1, "hsla(340, 50%, 28%, 0.7)",
-      ],
-      "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 25, 4, 40, 8, 55],
-      "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 8, 0.25, 11, 0],
-    },
-  });
-
-  map.addLayer({
-    id: "maddad-items-ring",
-    type: "circle",
-    source: "maddad-items",
-    paint: {
-      "circle-radius": 13,
-      "circle-color": [
-        "case",
-        ["any", ["==", ["get", "endorsed"], true], ["==", ["get", "zakatEligible"], true]],
-        "rgba(186, 140, 44, 0.35)",
-        "rgba(0,0,0,0)",
-      ],
-      "circle-blur": 0.2,
-    },
-  });
-
-  map.addLayer({
-    id: "maddad-items-layer",
-    type: "circle",
-    source: "maddad-items",
-    paint: {
-      "circle-radius": 8,
-      "circle-color": [
-        "match", ["get", "category"],
-        "Food", categoryColors.Food?.marker ?? "hsl(160, 45%, 32%)",
-        "Shelter", categoryColors.Shelter?.marker ?? "hsl(160, 45%, 32%)",
-        "Medical", categoryColors.Medical?.marker ?? "hsl(160, 45%, 32%)",
-        "Education", categoryColors.Education?.marker ?? "hsl(160, 45%, 32%)",
-        "Masjid", categoryColors.Masjid?.marker ?? "hsl(160, 45%, 32%)",
-        "Fidya", categoryColors.Fidya?.marker ?? "hsl(160, 45%, 32%)",
-        "Qurbani", categoryColors.Qurbani?.marker ?? "hsl(160, 45%, 32%)",
-        "Zakat", categoryColors.Zakat?.marker ?? "hsl(160, 45%, 32%)",
-        "hsl(160, 45%, 32%)",
-      ],
-      "circle-stroke-color": "white",
-      "circle-stroke-width": 2,
-      "circle-opacity": 0.9,
-    },
-  });
-
-  map.addLayer({
-    id: "maddad-items-selected-ring",
-    type: "circle",
-    source: "maddad-items",
-    paint: {
-      "circle-radius": 14,
-      "circle-color": "rgba(0,0,0,0)",
-      "circle-stroke-color": "hsl(160, 45%, 32%)",
-      "circle-stroke-width": 3,
-      "circle-stroke-opacity": 0.8,
-    },
-    filter: ["==", ["get", "id"], ""],
-  });
-
-  map.addLayer({
-    id: "maddad-items-hover-ring",
-    type: "circle",
-    source: "maddad-items",
-    paint: {
-      "circle-radius": 12,
-      "circle-color": "rgba(0,0,0,0)",
-      "circle-stroke-color": "hsl(160, 45%, 32%)",
-      "circle-stroke-width": 2,
-      "circle-stroke-opacity": 0.4,
-    },
-    filter: ["==", ["get", "id"], ""],
-  });
 }
