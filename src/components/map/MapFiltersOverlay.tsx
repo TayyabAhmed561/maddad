@@ -1,7 +1,9 @@
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MapCategory, ScopeLevel } from "@/data/mapData";
 import { ScopeLevelControl } from "./ScopeLevelControl";
+import { CrisisLayerToggle } from "./CrisisLayerToggle";
+import type { CrisisLayer } from "@/types/platform";
 
 const allCategories: MapCategory[] = ["Food", "Shelter", "Medical", "Education", "Masjid", "Fidya", "Qurbani", "Zakat"];
 
@@ -15,6 +17,10 @@ interface MapFiltersOverlayProps {
   onVerifiedChange: (verified: boolean) => void;
   className?: string;
   isPanelOpen?: boolean;
+  activeCrisisLayers: CrisisLayer[];
+  onCrisisLayerToggle: (layer: CrisisLayer) => void;
+  showImpactMode: boolean;
+  onImpactModeToggle: () => void;
 }
 
 export function MapFiltersOverlay({
@@ -27,9 +33,11 @@ export function MapFiltersOverlay({
   onVerifiedChange,
   className,
   isPanelOpen = true,
+  activeCrisisLayers,
+  onCrisisLayerToggle,
+  showImpactMode,
+  onImpactModeToggle,
 }: MapFiltersOverlayProps) {
-  // Calculate max width to prevent overlap with right panel
-  // Panel is ~420px + 24px margin = ~444px, add some buffer
   const maxWidthClass = isPanelOpen 
     ? "max-w-[calc(100vw-480px)]" 
     : "max-w-[calc(100vw-80px)]";
@@ -72,8 +80,8 @@ export function MapFiltersOverlay({
         ))}
       </div>
 
-      {/* Verified Toggle */}
-      <div className="flex items-center">
+      {/* Action Row: Verified, Crisis Layers, Impact Mode */}
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => onVerifiedChange(!verifiedOnly)}
           className={cn(
@@ -85,6 +93,24 @@ export function MapFiltersOverlay({
         >
           <CheckCircle className="w-3.5 h-3.5" />
           Verified Only
+        </button>
+
+        <CrisisLayerToggle
+          activeLayers={activeCrisisLayers}
+          onToggle={onCrisisLayerToggle}
+        />
+
+        <button
+          onClick={onImpactModeToggle}
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-300",
+            showImpactMode
+              ? "bg-primary text-primary-foreground"
+              : "bg-card/95 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          Show Impact
         </button>
       </div>
     </div>

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { AnimatedDonateButton } from "@/components/AnimatedDonateButton";
+import { TrustScoreBadge } from "@/components/TrustScoreBadge";
+import { trustScoreMap } from "@/data/platformData";
 import { ProofPack } from "@/components/verification/ProofPack";
 import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
 import { createReceipt, type DonationReceipt } from "@/types/receipt";
@@ -298,6 +300,14 @@ export default function CharityDetail() {
                         </a>
                       )}
                     </div>
+                  )}
+
+                  {/* Trust Score */}
+                  {charity.orgName && trustScoreMap[charity.orgName] && (
+                    <TrustScoreBadge 
+                      score={trustScoreMap[charity.orgName]} 
+                      showBreakdown 
+                    />
                   )}
 
                   {/* Organization Proof & Verification */}
