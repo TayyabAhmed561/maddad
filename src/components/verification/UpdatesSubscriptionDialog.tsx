@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bell, CheckCircle, Mail, Phone } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { addUpdateSubscription } from "@/hooks/useVerificationStore";
+import { subscribeToUpdates } from "@/lib/queries/subscriptions";
 
 interface UpdatesSubscriptionDialogProps {
   open: boolean;
@@ -28,17 +28,27 @@ export function UpdatesSubscriptionDialog({
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     if (!email && !whatsapp) return;
 
-    addUpdateSubscription({
-      id: `sub-${Date.now()}`,
+    setIsSubmitting(true);
+    const ok = await subscribeToUpdates({
       campaignId,
-      email: email || undefined,
+      email:    email    || undefined,
       whatsapp: whatsapp || undefined,
-      subscribedAt: new Date().toISOString(),
     });
+    setIsSubmitting(false);
+
+    if (!ok) {
+      toast({
+        title: "Subscription failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSubmitted(true);
     toast({
@@ -123,7 +133,7 @@ export function UpdatesSubscriptionDialog({
 
             <Button
               onClick={handleSubscribe}
-              disabled={!email && !whatsapp}
+              disabled={(!email && !whatsapp) || isSubmitting}
               className="w-full"
             >
               <Bell size={14} />

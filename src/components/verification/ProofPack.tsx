@@ -20,6 +20,8 @@ import { MediaViewerDialog } from "@/components/verification/MediaViewerDialog";
 interface ProofPackProps {
   /** All evidence IDs related to this entity */
   evidenceIds: string[];
+  /** Live evidence items — when provided, takes precedence over evidenceIds lookup */
+  evidence?: EvidenceItem[];
   /** Verification checklist for status summary */
   checklist: VerificationChecklist;
   /** Optional class name */
@@ -200,8 +202,8 @@ function ChecklistSummary({ checklist }: { checklist: VerificationChecklist }) {
   );
 }
 
-export function ProofPack({ evidenceIds, checklist, className, trackingPlan }: ProofPackProps) {
-  const allPublicEvidence = getPublicEvidenceByIds(evidenceIds);
+export function ProofPack({ evidenceIds, evidence: evidenceProp, checklist, className, trackingPlan }: ProofPackProps) {
+  const allPublicEvidence = evidenceProp ?? getPublicEvidenceByIds(evidenceIds);
 
   // Split evidence into "before" (org + campaign) and "after" (milestone) groups
   const beforeEvidence = allPublicEvidence.filter(

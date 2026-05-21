@@ -1,5 +1,5 @@
 // Centralized needs data with full metadata for detail pages
-import type { Category } from "@/components/CategoryTag";
+import type { CampaignCategory } from "@/lib/supabase";
 
 export interface NeedUpdate {
   id: string;
@@ -26,7 +26,7 @@ export interface Need {
   title: string;
   organization: string;
   isVerified: boolean;
-  category: Category;
+  category: CampaignCategory;
   location: string;
   raised: number;
   goal: number;
@@ -37,6 +37,7 @@ export interface Need {
   updates: NeedUpdate[];
   verificationChecks: VerificationCheck[];
   transparencyLog: TransparencyEntry[];
+  urgency?: number; // 0–10 from DB campaigns.urgency
 }
 
 export const needsData: Need[] = [
@@ -435,7 +436,7 @@ export function getNeedById(id: string): Need | undefined {
 }
 
 // Helper function to get needs by category
-export function getNeedsByCategory(category: Category): Need[] {
+export function getNeedsByCategory(category: CampaignCategory): Need[] {
   return needsData.filter(need => need.category === category);
 }
 

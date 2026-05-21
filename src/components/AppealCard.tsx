@@ -2,13 +2,14 @@ import { MapPin, Clock, Heart, Building2, Shield, CheckCircle } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { cn } from "@/lib/utils";
-import { categoryLabels, type AppealCategory } from "@/data/appealsData";
+import { categoryLabels } from "@/data/appealsData";
+import type { CampaignCategory } from "@/lib/supabase";
 
 interface AppealCardProps {
   id: string;
   title: string;
   beneficiary: string;
-  category: AppealCategory;
+  category: CampaignCategory;
   location: string;
   raised: number;
   goal: number;

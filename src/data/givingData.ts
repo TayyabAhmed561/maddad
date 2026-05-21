@@ -1,14 +1,15 @@
 // Centralized data model for Islamic giving
 // All giving pages consume from this source to avoid duplication
 
-import type { 
-  GivingPartner, 
-  MealImpactLog, 
-  ZakatCase, 
-  QurbaniPackage, 
+import type {
+  GivingPartner,
+  MealImpactLog,
+  ZakatCase,
+  QurbaniPackage,
   SadaqahJariyahProject,
-  DonationFrequency
+  DonationFrequency,
 } from "@/types/giving";
+import type { RecurringProgram } from "@/types/platform";
 
 // ============================================
 // GIVING TYPES CONFIGURATION
@@ -563,3 +564,42 @@ export function getImpactLogsByGivingType(givingType: string): MealImpactLog[] {
       return [];
   }
 }
+
+export const recurringPrograms: RecurringProgram[] = [
+  {
+    id: "rp-1",
+    title: "Monthly Sadaqah",
+    description: "Consistent monthly giving distributed to the most urgent verified needs.",
+    suggestedAmount: 25,
+    frequency: "monthly",
+    impactDescription: "$25/month → Provides 50 meals monthly to families in need.",
+    icon: "Heart",
+  },
+  {
+    id: "rp-2",
+    title: "Weekly Giving",
+    description: "Small weekly contributions that compound into significant impact over time.",
+    suggestedAmount: 10,
+    frequency: "weekly",
+    impactDescription: "$10/week → Feeds 2 families per month through verified partners.",
+    icon: "Calendar",
+  },
+  {
+    id: "rp-3",
+    title: "Ramadan Nightly Giving",
+    description: "Automated donations each night of Ramadan to maximize reward during the blessed month.",
+    suggestedAmount: 15,
+    frequency: "monthly",
+    impactDescription: "$15/night × 30 nights → $450 total supporting multiple causes.",
+    icon: "Moon",
+  },
+  {
+    id: "rp-4",
+    title: "Yearly Charity Plan",
+    description: "Annual giving plan covering Zakat, Fidya, and general Sadaqah obligations.",
+    suggestedAmount: 500,
+    frequency: "yearly",
+    impactDescription: "$500/year → Comprehensive coverage of annual Islamic giving obligations.",
+    icon: "Star",
+  },
+];

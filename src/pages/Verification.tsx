@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Link } from "react-router-dom";
 import {
   Shield,
@@ -16,7 +14,7 @@ import {
   Eye,
   ClipboardList,
 } from "lucide-react";
-import { getVerifierMode, setVerifierMode as persistVerifierMode } from "@/hooks/useVerificationStore";
+import { useAuth } from "@/hooks/useAuth";
 
 const verificationSteps = [
   {
@@ -80,12 +78,8 @@ const statusExplanations = [
 ];
 
 export default function Verification() {
-  const [verifierMode, setVerifierModeLocal] = useState(getVerifierMode());
-
-  const toggleVerifierMode = (enabled: boolean) => {
-    persistVerifierMode(enabled);
-    setVerifierModeLocal(enabled);
-  };
+  const { role } = useAuth();
+  const isReviewer = role === "verifier" || role === "platform_admin";
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -157,36 +151,40 @@ export default function Verification() {
                 </Link>
               </div>
 
-              {/* Verifier Dashboard Access */}
-              <div className="bg-muted/50 rounded-xl border border-border p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <Eye size={20} className="text-muted-foreground" />
-                    <div>
-                      <h4 className="text-sm font-medium text-foreground">
-                        Verifier Mode
-                      </h4>
-                      <p className="text-xs text-muted-foreground">
-                        Enable to access the review dashboard for pending submissions
-                      </p>
+              {/* Review dashboard access — only shown to verifier / platform_admin */}
+              {isReviewer && (
+                <div className="bg-muted/50 rounded-xl border border-border p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Eye size={20} className="text-muted-foreground" />
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground">
+                          Review Dashboard
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          Viewing as: <span className="font-medium capitalize">{role?.replace("_", " ")}</span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={verifierMode}
-                      onCheckedChange={toggleVerifierMode}
-                    />
-                    {verifierMode && (
+                    <div className="flex items-center gap-2">
                       <Button asChild size="sm" variant="outline">
                         <Link to="/verifier">
-                          Open Dashboard
+                          Verifier Dashboard
                           <ArrowRight size={14} />
                         </Link>
                       </Button>
-                    )}
+                      {role === "platform_admin" && (
+                        <Button asChild size="sm">
+                          <Link to="/admin">
+                            Admin Panel
+                            <ArrowRight size={14} />
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>

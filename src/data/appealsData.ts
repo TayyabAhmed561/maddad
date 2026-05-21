@@ -1,4 +1,5 @@
 // Centralized community appeals data with full metadata for detail pages
+import type { CampaignCategory } from "@/lib/supabase";
 
 export interface AppealEndorser {
   type: "masjid" | "organization";
@@ -25,13 +26,11 @@ export interface TransparencyEntry {
   verifier: string;
 }
 
-export type AppealCategory = "medical" | "disaster" | "education" | "housing";
-
 export interface CommunityAppeal {
   id: string;
   title: string;
   beneficiary: string;
-  category: AppealCategory;
+  category: CampaignCategory;
   location: string;
   raised: number;
   goal: number;
@@ -45,23 +44,15 @@ export interface CommunityAppeal {
   transparencyLog: TransparencyEntry[];
 }
 
-export const categoryLabels: Record<AppealCategory, { label: string; color: string }> = {
-  medical: { 
-    label: "Medical", 
-    color: "bg-red-50 text-red-700 border-red-200" 
-  },
-  disaster: { 
-    label: "Disaster Relief", 
-    color: "bg-orange-50 text-orange-700 border-orange-200" 
-  },
-  education: { 
-    label: "Education", 
-    color: "bg-purple-50 text-purple-700 border-purple-200" 
-  },
-  housing: { 
-    label: "Housing", 
-    color: "bg-blue-50 text-blue-700 border-blue-200" 
-  }
+export const categoryLabels: Record<CampaignCategory, { label: string; color: string }> = {
+  food:      { label: "Food",      color: "bg-amber-50 text-amber-700 border-amber-200" },
+  shelter:   { label: "Shelter",   color: "bg-blue-50 text-blue-700 border-blue-200" },
+  medical:   { label: "Medical",   color: "bg-red-50 text-red-700 border-red-200" },
+  education: { label: "Education", color: "bg-purple-50 text-purple-700 border-purple-200" },
+  masjid:    { label: "Masjid",    color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  fidya:     { label: "Fidya",     color: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  qurbani:   { label: "Qurbani",   color: "bg-orange-50 text-orange-700 border-orange-200" },
+  zakat:     { label: "Zakat",     color: "bg-teal-50 text-teal-700 border-teal-200" },
 };
 
 export const appealsData: CommunityAppeal[] = [
@@ -119,7 +110,7 @@ export const appealsData: CommunityAppeal[] = [
     id: "2",
     title: "House Fire Recovery - Fatima's Family",
     beneficiary: "Fatima Begum",
-    category: "disaster",
+    category: "shelter",
     location: "Detroit, MI",
     raised: 8200,
     goal: 15000,
@@ -205,7 +196,7 @@ export const appealsData: CommunityAppeal[] = [
     id: "4",
     title: "Emergency Housing Assistance",
     beneficiary: "Al-Rahman Family",
-    category: "housing",
+    category: "shelter",
     location: "Atlanta, GA",
     raised: 3200,
     goal: 8000,
@@ -291,7 +282,7 @@ export const appealsData: CommunityAppeal[] = [
     id: "6",
     title: "Flood Damage Recovery",
     beneficiary: "Ibrahim Jalloh Family",
-    category: "disaster",
+    category: "shelter",
     location: "New Orleans, LA",
     raised: 6800,
     goal: 20000,
@@ -338,7 +329,7 @@ export function getAppealById(id: string): CommunityAppeal | undefined {
 }
 
 // Helper function to get appeals by category
-export function getAppealsByCategory(category: AppealCategory): CommunityAppeal[] {
+export function getAppealsByCategory(category: CampaignCategory): CommunityAppeal[] {
   return appealsData.filter(appeal => appeal.category === category);
 }
 

@@ -16,8 +16,7 @@ import {
   Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { givingTypes, platformStats } from "@/data/givingData";
-import { recurringPrograms } from "@/data/platformData";
+import { givingTypes, platformStats, recurringPrograms } from "@/data/givingData";
 import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, typeof Heart> = { Moon, Utensils, Coins, Heart, Infinity, Scale };

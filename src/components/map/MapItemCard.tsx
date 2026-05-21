@@ -143,7 +143,7 @@ export function MapItemCard({ item, onView, onDonate, className, isSelected }: M
               size="sm"
               variant="card"
               onComplete={handleDonate}
-              showToast={!isPlaceholder}
+              showToast={false}
               navigateAfter={false}
             />
           )}

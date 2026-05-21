@@ -4,8 +4,17 @@ import { Header } from "@/components/Header";
 import { MaddadMap } from "@/components/map/MaddadMap";
 import { ResultsPanel } from "@/components/map/ResultsPanel";
 import "@/components/map/MapPopupStyles.css";
-import { mapItems, ScopeLevel } from "@/data/mapData";
+import { ScopeLevel } from "@/data/mapData";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useMapItems } from "@/hooks/queries/useMapItems";
+import type { MapBounds } from "@/lib/queries/campaigns";
+
+const SCOPE_BOUNDS: Record<ScopeLevel, MapBounds | undefined> = {
+  local:      { north: 43.855, south: 43.580, east: -79.116, west: -79.640 },
+  provincial: { north: 56.860, south: 41.676, east: -74.344, west: -95.156 },
+  canada:     { north: 83.110, south: 41.676, east: -52.620, west: -141.000 },
+  global:     undefined,
+}
 
 export default function Explore() {
   const navigate = useNavigate();
@@ -15,8 +24,10 @@ export default function Explore() {
   const [selectedMapItemId, setSelectedMapItemId] = useState<string | null>(null);
   const [scopeLevel, setScopeLevel] = useState<ScopeLevel>("provincial");
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  
+
   const mapFocusRef = useRef<((itemId: string) => void) | null>(null);
+
+  const { data: mapItems, isLoading } = useMapItems(SCOPE_BOUNDS[scopeLevel])
 
   const handleView = useCallback((id: string) => {
     navigate(`/need/${id}`);
@@ -54,6 +65,7 @@ export default function Explore() {
           isPanelOpen={isPanelOpen}
           onScopeChange={handleScopeChange}
           onUserLocationChange={handleUserLocationChange}
+          items={mapItems}
         />
 
         {isMobile ? (
@@ -68,9 +80,11 @@ export default function Explore() {
               onDonate={handleDonate}
               onCardClick={handleCardClick}
               filteredCount={mapItems.length}
+              isLoading={isLoading}
               variant="bottom-sheet"
               scopeLevel={scopeLevel}
               userLocation={userLocation}
+              items={mapItems}
             />
           </div>
         ) : (
@@ -86,9 +100,11 @@ export default function Explore() {
                 onDonate={handleDonate}
                 onCardClick={handleCardClick}
                 filteredCount={mapItems.length}
+                isLoading={isLoading}
                 variant="side-panel"
                 scopeLevel={scopeLevel}
                 userLocation={userLocation}
+                items={mapItems}
               />
             </div>
           </div>

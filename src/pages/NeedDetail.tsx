@@ -13,16 +13,16 @@ import { RecurringDonationToggle } from "@/components/giving/RecurringDonationTo
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
 import { CampaignUpdates } from "@/components/CampaignUpdates";
-import { SupporterMessages } from "@/components/SupporterMessages";
 import { TransparencyScore } from "@/components/TransparencyScore";
 import { UrgencyIndicator } from "@/components/map/UrgencyIndicator";
 import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
-import { getNeedById } from "@/data/needsData";
+import { useCampaign } from "@/hooks/queries/useCampaigns";
+import { useEvidence } from "@/hooks/queries/useEvidence";
 import { allocationRules } from "@/data/givingData";
-import { campaignUpdatesMap, supporterMessagesMap, needUrgencyMap } from "@/data/platformData";
 import { createReceipt, type DonationReceipt } from "@/types/receipt";
-import { 
-  MapPin, CheckCircle, Clock, FileText, ArrowLeft, Calendar, Heart, AlertCircle
+import type { UrgencyLevel } from "@/types/platform";
+import {
+  MapPin, CheckCircle, Clock, FileText, ArrowLeft, Calendar, Heart, AlertCircle, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,13 +30,19 @@ const needCampaignMap: Record<string, string> = {
   "kw-17": "msa-iftaar",
 };
 
+function toUrgencyLevel(n: number | undefined): UrgencyLevel | undefined {
+  if (n === undefined) return undefined
+  return n >= 8 ? 'critical' : n >= 5 ? 'medium' : 'low'
+}
+
 export default function NeedDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const need = id ? getNeedById(id) : undefined;
+  const { data: need, isLoading } = useCampaign(id);
+  const { data: evidenceItems } = useEvidence({ campaignId: id });
   const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  
+
   const [donationState, donationActions] = useDonation({
     defaultAmount: 50,
     defaultAnonymous: true,
@@ -58,6 +64,18 @@ export default function NeedDetail() {
     }
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 size={40} className="animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!need) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -77,14 +95,21 @@ export default function NeedDetail() {
 
   const presetAmounts = [25, 50, 100, 250, 500];
   const effectiveAmount = getEffectiveAmount(donationState);
-  const urgency = id ? needUrgencyMap[id] : undefined;
-  const campaignUpdates = id ? campaignUpdatesMap[id] : undefined;
-  const supporterMessages = id ? supporterMessagesMap[id] : undefined;
+  const urgency = toUrgencyLevel(need.urgency);
+
+  // Verification checklist: prefer live evidence items, fall back to need.verificationChecks
+  const verificationChecks = evidenceItems.length > 0
+    ? evidenceItems.map(e => ({
+        label: e.title,
+        verified: e.status === 'approved',
+        verifier: e.verifierDisplayName,
+      }))
+    : need.verificationChecks
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <main className="flex-1">
         {/* Hero Section */}
         <section className="bg-card border-b border-border pattern-subtle">
@@ -92,7 +117,7 @@ export default function NeedDetail() {
             <Link to="/explore" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 mb-8">
               <ArrowLeft size={16} />Back to Explore
             </Link>
-            
+
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -103,12 +128,12 @@ export default function NeedDetail() {
                   )}
                   {urgency && <UrgencyIndicator level={urgency} size="md" />}
                 </div>
-                
+
                 <h1 className="heading-display text-3xl md:text-4xl text-foreground mb-4">{need.title}</h1>
                 <p className="text-lg text-muted-foreground mb-5">
                   by <span className="text-foreground font-medium">{need.organization}</span>
                 </p>
-                
+
                 <div className="flex flex-wrap gap-5 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin size={16} /><span>{need.location}</span>
@@ -118,7 +143,7 @@ export default function NeedDetail() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="lg:w-80">
                 <ProgressBar current={need.raised} goal={need.goal} showLabels />
               </div>
@@ -153,35 +178,36 @@ export default function NeedDetail() {
               <div className="divider-subtle" />
 
               {/* Campaign Updates */}
-              {campaignUpdates && campaignUpdates.length > 0 && (
+              {need.updates.length > 0 && (
                 <>
-                  <CampaignUpdates updates={campaignUpdates} />
+                  <CampaignUpdates updates={need.updates} />
                   <div className="divider-subtle" />
                 </>
               )}
 
               {/* Updates Timeline */}
-              <div>
-                <h2 className="heading-section text-xl text-foreground mb-6">Updates</h2>
-                <div className="space-y-8">
-                  {need.updates.map((update) => (
-                    <div key={update.id} className="relative pl-7 border-l-2 border-border pb-8 last:pb-0">
-                      <div className="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-primary shadow-soft" />
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                        <Calendar size={14} /><span>{update.date}</span>
-                        <span className="text-border">•</span><span>{update.author}</span>
+              {need.updates.length > 0 && (
+                <div>
+                  <h2 className="heading-section text-xl text-foreground mb-6">Updates</h2>
+                  <div className="space-y-8">
+                    {need.updates.map((update) => (
+                      <div key={update.id} className="relative pl-7 border-l-2 border-border pb-8 last:pb-0">
+                        <div className="absolute -left-[7px] top-0 w-3 h-3 rounded-full bg-primary shadow-soft" />
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                          <Calendar size={14} /><span>{update.date}</span>
+                          <span className="text-border">•</span><span>{update.author}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{update.content}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{update.content}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Transparency Section */}
               <div className="bg-card rounded-xl border border-border p-8 shadow-card">
                 <h2 className="heading-section text-xl text-foreground mb-8">Transparency & Verification</h2>
-                
-                {/* Transparency Score */}
+
                 <TransparencyScore
                   evidenceComplete={need.isVerified ? 85 : 45}
                   milestonesUpdated={need.updates.length >= 3 ? 90 : 60}
@@ -192,21 +218,25 @@ export default function NeedDetail() {
 
                 <div className="mb-8">
                   <h3 className="font-semibold text-foreground mb-4">Verification Checklist</h3>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {need.verificationChecks.map((check, index) => (
-                      <div key={index} className={cn("flex items-center gap-3 p-3 rounded-lg", check.verified ? "bg-primary-light" : "bg-muted")}>
-                        {check.verified ? (
-                          <CheckCircle size={16} className="text-primary shrink-0" />
-                        ) : (
-                          <Clock size={16} className="text-muted-foreground shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{check.label}</p>
-                          {check.verifier && <p className="text-xs text-muted-foreground truncate">{check.verifier}</p>}
+                  {verificationChecks.length > 0 ? (
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {verificationChecks.map((check, index) => (
+                        <div key={index} className={cn("flex items-center gap-3 p-3 rounded-lg", check.verified ? "bg-primary-light" : "bg-muted")}>
+                          {check.verified ? (
+                            <CheckCircle size={16} className="text-primary shrink-0" />
+                          ) : (
+                            <Clock size={16} className="text-muted-foreground shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{check.label}</p>
+                            {check.verifier && <p className="text-xs text-muted-foreground truncate">{check.verifier}</p>}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No verification checks recorded yet.</p>
+                  )}
                 </div>
 
                 <div className="divider-subtle mb-8" />
@@ -216,27 +246,23 @@ export default function NeedDetail() {
                     <FileText size={18} className="text-primary" />
                     <h3 className="font-semibold text-foreground">Fund Release Log</h3>
                   </div>
-                  <div className="space-y-3">
-                    {need.transparencyLog.map((entry) => (
-                      <div key={entry.id} className="flex items-start gap-3 text-sm">
-                        <span className="text-muted-foreground shrink-0 w-16">{entry.date}</span>
-                        <div className="flex-1">
-                          <p className="text-foreground">{entry.action}</p>
-                          <p className="text-xs text-muted-foreground">{entry.verifier}</p>
+                  {need.transparencyLog.length > 0 ? (
+                    <div className="space-y-3">
+                      {need.transparencyLog.map((entry) => (
+                        <div key={entry.id} className="flex items-start gap-3 text-sm">
+                          <span className="text-muted-foreground shrink-0 w-16">{entry.date}</span>
+                          <div className="flex-1">
+                            <p className="text-foreground">{entry.action}</p>
+                            <p className="text-xs text-muted-foreground">{entry.verifier}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No fund releases recorded yet.</p>
+                  )}
                 </div>
               </div>
-
-              {/* Supporter Messages */}
-              {supporterMessages && supporterMessages.length > 0 && (
-                <>
-                  <div className="divider-subtle" />
-                  <SupporterMessages messages={supporterMessages} />
-                </>
-              )}
 
               {/* After You Give */}
               {id && needCampaignMap[id] && (
@@ -253,7 +279,7 @@ export default function NeedDetail() {
                     <h3 className="font-serif text-lg font-semibold text-foreground mb-2">Impact Summary</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">
                       Funds supported community iftaar meals for local students and families.
-                      This demo shows how Maddad helps local organizations promote their initiatives 
+                      This demo shows how Maddad helps local organizations promote their initiatives
                       with full transparency and tracked impact.
                     </p>
                   </div>

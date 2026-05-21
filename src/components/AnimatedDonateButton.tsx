@@ -26,8 +26,8 @@ export function AnimatedDonateButton({
   size = "sm",
   variant = "card",
   label = "Donate",
-  showToast = true,
-  toastMessage = "Demo mode: donation simulated",
+  showToast = false,
+  toastMessage = "",
   navigateAfter = true,
   disabled = false,
 }: AnimatedDonateButtonProps) {
@@ -46,13 +46,8 @@ export function AnimatedDonateButton({
       setTimeout(() => {
         setState("loading");
 
-        // Show toast if enabled
-        if (showToast) {
-          toast({
-            title: "Coming soon",
-            description: toastMessage,
-            duration: 3000,
-          });
+        if (showToast && toastMessage) {
+          toast({ title: toastMessage, duration: 3000 });
         }
 
         // Simulate loading for 800-1200ms
@@ -157,12 +152,6 @@ export function useAnimatedDonateState() {
 
     setTimeout(() => {
       setButtonStates((prev) => ({ ...prev, [id]: "loading" }));
-
-      toast({
-        title: "Coming soon",
-        description: "Demo mode: donation simulated",
-        duration: 3000,
-      });
 
       const loadingDuration = 800 + Math.random() * 400;
 

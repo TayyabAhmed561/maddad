@@ -26,13 +26,13 @@ import {
   Upload,
   CheckCircle,
   Shield,
+  Loader2,
 } from "lucide-react";
 import {
-  addEvidenceOverride,
-  addOrgSubmission,
-  type OrgSubmission,
-} from "@/hooks/useVerificationStore";
-import type { EvidenceItem, EvidenceType } from "@/types/verification";
+  createOrgSubmission,
+  type EvidenceUpload,
+} from "@/lib/queries/verification";
+import type { EvidenceTypeEnum } from "@/lib/supabase";
 
 // ---------- Schema ----------
 
@@ -64,6 +64,8 @@ export default function OrgVerificationForm() {
   const [evidenceUploads, setEvidenceUploads] = useState<EvidenceUploads | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Step 1: Org basics
   const basicsForm = useForm<OrgBasics>({
@@ -106,85 +108,67 @@ export default function OrgVerificationForm() {
     setStep(3);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!orgBasics || !evidenceUploads) return;
 
-    const orgId = `org-${Date.now()}`;
-    const now = new Date().toISOString();
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    // Create evidence items
-    const evidenceItems: EvidenceItem[] = [];
+    const evidence: EvidenceUpload[] = [
+      {
+        type: "org_registration" as EvidenceTypeEnum,
+        title: `Registration – ${orgBasics.name}`,
+        description: `Official registration document for ${orgBasics.name}`,
+        url: evidenceUploads.orgRegistration,
+        visibility: "public",
+        mediaType: "pdf",
+      },
+      {
+        type: "org_financial_audit" as EvidenceTypeEnum,
+        title: `Bank Verification – ${orgBasics.name}`,
+        description: `Bank account verification for ${orgBasics.name}`,
+        url: evidenceUploads.orgBankVerified,
+        visibility: "private",
+        mediaType: "pdf",
+      },
+      {
+        type: "org_board_resolution" as EvidenceTypeEnum,
+        title: `Leadership – ${orgBasics.name}`,
+        description: `Leadership/trustees documentation for ${orgBasics.name}`,
+        url: evidenceUploads.leadership,
+        visibility: "private",
+        mediaType: "pdf",
+      },
+    ];
 
-    const addEvidence = (
-      type: EvidenceType,
-      title: string,
-      description: string,
-      url: string,
-      visibility: "public" | "private"
-    ) => {
-      const item: EvidenceItem = {
-        id: `ev-sub-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        type,
-        title,
-        description,
-        media: { kind: "pdf", url },
-        date: now.slice(0, 10),
-        visibility,
-        status: "pending",
-      };
-      evidenceItems.push(item);
-      addEvidenceOverride(item);
-    };
-
-    // Required
-    addEvidence(
-      "org_registration",
-      `Registration – ${orgBasics.name}`,
-      `Official registration document for ${orgBasics.name}`,
-      evidenceUploads.orgRegistration,
-      "public"
-    );
-    addEvidence(
-      "org_financial_audit",
-      `Bank Verification – ${orgBasics.name}`,
-      `Bank account verification for ${orgBasics.name}`,
-      evidenceUploads.orgBankVerified,
-      "private"
-    );
-    addEvidence(
-      "org_board_resolution",
-      `Leadership – ${orgBasics.name}`,
-      `Leadership/trustees documentation for ${orgBasics.name}`,
-      evidenceUploads.leadership,
-      "private"
-    );
-
-    // Optional
     if (evidenceUploads.charityStatus) {
-      addEvidence(
-        "org_tax_status",
-        `Charity Status – ${orgBasics.name}`,
-        `Charity/tax-exempt status documentation`,
-        evidenceUploads.charityStatus,
-        "public"
-      );
+      evidence.push({
+        type: "org_tax_status" as EvidenceTypeEnum,
+        title: `Charity Status – ${orgBasics.name}`,
+        description: "Charity/tax-exempt status documentation",
+        url: evidenceUploads.charityStatus,
+        visibility: "public",
+        mediaType: "pdf",
+      });
     }
 
-    // Create org submission
-    const submission: OrgSubmission = {
-      id: orgId,
-      name: orgBasics.name,
-      location: orgBasics.location,
-      website: orgBasics.website || "",
+    const result = await createOrgSubmission({
+      legalName:    orgBasics.name,
+      location:     orgBasics.location,
+      websiteUrl:   orgBasics.website || null,
       contactEmail: orgBasics.contactEmail,
       contactPhone: orgBasics.contactPhone,
-      status: "pending_verification",
-      evidenceIds: evidenceItems.map((e) => e.id),
-      submittedAt: now,
-    };
+      evidence,
+    });
 
-    addOrgSubmission(submission);
-    setSubmissionId(orgId);
+    setIsSubmitting(false);
+
+    if (!result) {
+      setSubmitError("Submission failed. Please check your connection and try again.");
+      return;
+    }
+
+    setSubmissionId(result.id);
     setSubmitted(true);
   };
 
@@ -543,9 +527,15 @@ export default function OrgVerificationForm() {
                   </ul>
                 </div>
 
-                <Button onClick={handleSubmit} className="w-full" size="lg">
-                  <Shield size={18} />
-                  Submit for Verification
+                {submitError && (
+                  <p className="text-sm text-destructive text-center">{submitError}</p>
+                )}
+                <Button onClick={handleSubmit} className="w-full" size="lg" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <><Loader2 size={18} className="animate-spin" /> Submitting…</>
+                  ) : (
+                    <><Shield size={18} /> Submit for Verification</>
+                  )}
                 </Button>
               </div>
             </div>

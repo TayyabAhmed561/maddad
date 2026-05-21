@@ -273,3 +273,67 @@ export const orgEvidenceIds: string[] = [
   "ev-org-board-001",
   "ev-org-tax-001",
 ];
+
+/** Verification checklists for each giving program (keyed by givingCategory string) */
+export const givingProgramChecklists: Record<string, VerificationChecklist> = {
+  fidya: {
+    requiredEvidenceTypes: ["org_registration", "org_financial_audit", "milestone_delivery_confirmation"],
+    approvedEvidenceTypes: ["org_registration", "org_financial_audit", "milestone_delivery_confirmation"],
+    completionPercent: 100,
+    lastVerifiedDate: "2026-01-15",
+    verifierDisplayName: "Maddad Giving Verification",
+  },
+  "meal-sponsorship": {
+    requiredEvidenceTypes: ["org_registration", "org_financial_audit", "milestone_delivery_confirmation"],
+    approvedEvidenceTypes: ["org_registration", "org_financial_audit", "milestone_delivery_confirmation"],
+    completionPercent: 100,
+    lastVerifiedDate: "2026-01-18",
+    verifierDisplayName: "Maddad Giving Verification",
+  },
+  zakat: {
+    requiredEvidenceTypes: ["org_registration", "org_financial_audit", "campaign_need_photo", "milestone_progress_photo"],
+    approvedEvidenceTypes: ["org_registration", "org_financial_audit", "campaign_need_photo", "milestone_progress_photo"],
+    completionPercent: 100,
+    lastVerifiedDate: "2026-01-20",
+    verifierDisplayName: "Scholar Verification Panel",
+  },
+  qurbani: {
+    requiredEvidenceTypes: ["org_registration", "milestone_delivery_confirmation", "campaign_need_photo", "milestone_progress_photo"],
+    approvedEvidenceTypes: ["org_registration", "milestone_delivery_confirmation", "campaign_need_photo", "milestone_progress_photo"],
+    completionPercent: 100,
+    lastVerifiedDate: "2026-01-12",
+    verifierDisplayName: "Maddad Seasonal Verification",
+  },
+  "sadaqah-jariyah": {
+    requiredEvidenceTypes: ["org_registration", "org_financial_audit", "campaign_need_photo", "milestone_progress_photo", "milestone_progress_video"],
+    approvedEvidenceTypes: ["org_registration", "org_financial_audit", "campaign_need_photo", "milestone_progress_photo", "milestone_progress_video"],
+    completionPercent: 100,
+    lastVerifiedDate: "2026-01-25",
+    verifierDisplayName: "Maddad Project Verification",
+  },
+  "msa-iftaar": {
+    requiredEvidenceTypes: ["org_registration", "campaign_need_photo", "milestone_progress_photo", "milestone_receipt", "milestone_completion_report"],
+    approvedEvidenceTypes: ["org_registration", "campaign_need_photo", "milestone_progress_photo", "milestone_receipt", "milestone_completion_report"],
+    completionPercent: 38,
+    lastVerifiedDate: "2026-02-06",
+    verifierDisplayName: "Maddad Community Verification",
+  },
+  kaffarah: {
+    requiredEvidenceTypes: ["org_registration", "org_financial_audit", "milestone_delivery_confirmation"],
+    approvedEvidenceTypes: ["org_registration", "org_financial_audit", "milestone_delivery_confirmation"],
+    completionPercent: 100,
+    lastVerifiedDate: "2026-01-14",
+    verifierDisplayName: "Maddad Giving Verification",
+  },
+};
+
+/** Tracking IDs for each giving program */
+export const givingProgramTrackingIds: Record<string, string> = {
+  fidya: "MDD-FDYA-2026-0001",
+  "meal-sponsorship": "MDD-MEAL-2026-0001",
+  zakat: "MDD-ZKAT-2026-0001",
+  qurbani: "MDD-QRBN-2026-0001",
+  "sadaqah-jariyah": "MDD-WELL-2026-3807",
+  "msa-iftaar": "MDD-IFTR-2026-0017",
+  kaffarah: "MDD-KFFR-2026-0001",
+};

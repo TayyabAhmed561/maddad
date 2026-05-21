@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { getReceipts, type DonationReceipt } from "@/types/receipt";
+import { useMyDonations } from "@/hooks/queries/useMyDonations";
+import type { DonationReceipt } from "@/types/receipt";
 import {
   Receipt,
   TrendingUp,
@@ -11,6 +12,7 @@ import {
   Filter,
   ArrowUpDown,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +32,7 @@ const filterLabels: Record<FilterType, string> = {
 
 export default function MyGiving() {
   const navigate = useNavigate();
-  const allReceipts = getReceipts();
+  const { data: allReceipts, isLoading } = useMyDonations();
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortBy>("date-desc");
 
@@ -62,6 +64,18 @@ export default function MyGiving() {
 
   const totalDonated = allReceipts.reduce((sum, r) => sum + r.amount, 0);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 size={40} className="animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
@@ -74,7 +88,7 @@ export default function MyGiving() {
               My Giving
             </h1>
             <p className="text-muted-foreground text-lg mb-8">
-              Your donation history and receipts — stored locally in this browser.
+              Your donation history and receipts.
             </p>
 
             {/* Summary Stats */}
@@ -158,7 +172,7 @@ export default function MyGiving() {
                 </h2>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {allReceipts.length === 0
-                    ? "When you make a donation on Maddad, your receipts will appear here."
+                    ? "Your donations will appear here once you make your first contribution."
                     : "Try adjusting your filters to see more results."}
                 </p>
                 {allReceipts.length === 0 && (
@@ -179,16 +193,6 @@ export default function MyGiving() {
               </div>
             )}
 
-            {/* Auth teaser */}
-            <div className="mt-10 bg-muted/50 rounded-xl border border-border p-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Currently stored in your browser.{" "}
-                <Link to="/signup" className="text-primary hover:underline font-medium">
-                  Create an account
-                </Link>{" "}
-                to sync your giving history across devices.
-              </p>
-            </div>
           </div>
         </section>
       </main>

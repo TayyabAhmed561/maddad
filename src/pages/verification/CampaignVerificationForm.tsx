@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,15 +43,15 @@ import {
   UserCheck,
   Lock,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import {
-  addEvidenceOverride,
-  addCampaignSubmission,
-  getOrgSubmissions,
-  type CampaignSubmission,
-  type UseOfFundsItem,
-} from "@/hooks/useVerificationStore";
-import type { EvidenceItem, EvidenceType, MilestoneUpdate } from "@/types/verification";
+  createCampaignSubmission,
+  type EvidenceUpload,
+} from "@/lib/queries/verification";
+import { supabase } from "@/lib/supabase";
+import type { EvidenceTypeEnum } from "@/lib/supabase";
+import type { UseOfFundsItem } from "@/hooks/useVerificationStore";
 
 // ---------- Schemas ----------
 
@@ -163,9 +163,21 @@ export default function CampaignVerificationForm() {
   const [submitted, setSubmitted] = useState(false);
   const [submissionId, setSubmissionId] = useState("");
   const [evidenceError, setEvidenceError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const localOrgs = getOrgSubmissions().map((o) => ({ id: o.id, name: o.name }));
-  const allOrgs = [...KNOWN_ORGS, ...localOrgs];
+  // Load real orgs from Supabase
+  const [dbOrgs, setDbOrgs] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    supabase
+      .from("organizations")
+      .select("id, legal_name")
+      .is("deleted_at", null)
+      .then(({ data }) => {
+        if (data) setDbOrgs(data.map(o => ({ id: o.id, name: o.legal_name })));
+      });
+  }, []);
+  const allOrgs = dbOrgs.length > 0 ? dbOrgs : KNOWN_ORGS;
 
   const basicsForm = useForm<CampaignBasics>({
     resolver: zodResolver(campaignBasicsSchema),
@@ -251,43 +263,28 @@ export default function CampaignVerificationForm() {
     setStep(3);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!basics || !evidence) return;
 
-    const isPrivate = basics.submitterType === "private";
-    const campaignId = `camp-${Date.now()}`;
-    const now = new Date().toISOString();
-    const orgName = isPrivate
-      ? "Private Individual"
-      : allOrgs.find((o) => o.id === basics.organizationId)?.name || "Unknown Org";
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    const evidenceItems: EvidenceItem[] = [];
+    const isPrivate = basics.submitterType === "private";
+    const evidenceList: EvidenceUpload[] = [];
 
     const addEvidence = (
-      type: EvidenceType,
+      type: EvidenceTypeEnum,
       title: string,
       description: string,
       url: string,
       visibility: "public" | "private",
-      kind: "image" | "pdf" | "link" = "image"
+      mediaType: "image" | "pdf" | "link" = "image"
     ) => {
       if (!url.trim()) return;
-      const item: EvidenceItem = {
-        id: `ev-sub-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-        type,
-        title,
-        description,
-        media: { kind, url },
-        date: now.slice(0, 10),
-        visibility,
-        status: "pending",
-      };
-      evidenceItems.push(item);
-      addEvidenceOverride(item);
+      evidenceList.push({ type, title, description, url, visibility, mediaType });
     };
 
     if (isPrivate) {
-      // Private campaign evidence
       if (evidence.referralName?.trim()) {
         addEvidence(
           "campaign_referral_attestation",
@@ -325,23 +322,22 @@ export default function CampaignVerificationForm() {
           "campaign_verifier_interview",
           `Verifier Interview – ${basics.title}`,
           "Submitter has confirmed availability for verification interview",
-          `interview://confirmed-${campaignId}`,
+          `interview://confirmed-${Date.now()}`,
           "private",
           "link"
         );
       }
     } else {
-      // Organization campaign evidence
       if (evidence.needProof?.trim()) {
         addEvidence(
           "campaign_need_photo",
           `Need Documentation – ${basics.title}`,
           "Photo/video evidence of need for this campaign",
           evidence.needProof,
-          "public"
+          "public",
+          "image"
         );
       }
-
       addEvidence(
         "campaign_budget_breakdown",
         `Budget Breakdown – ${basics.title}`,
@@ -350,7 +346,6 @@ export default function CampaignVerificationForm() {
         "public",
         "pdf"
       );
-
       if (evidence.supplierQuote?.trim()) {
         addEvidence(
           "campaign_endorsement_letter",
@@ -363,48 +358,25 @@ export default function CampaignVerificationForm() {
       }
     }
 
-    const milestones: MilestoneUpdate[] = [
-      {
-        stage: "verified",
-        date: now.slice(0, 10),
-        summary: "Campaign submitted for verification. Awaiting review.",
-        evidenceIds: evidenceItems.map((e) => e.id),
-      },
-    ];
+    const result = await createCampaignSubmission({
+      title:          basics.title,
+      category:       basics.category,
+      goalAmount:     basics.goal,
+      locationLabel:  basics.location,
+      description:    basics.description,
+      organizationId: isPrivate ? null : (basics.organizationId || null),
+      submitterType:  basics.submitterType,
+      evidence:       evidenceList,
+    });
 
-    const categoryDisplay =
-      basics.category === "other" && basics.categoryLabel
-        ? basics.categoryLabel
-        : basics.category;
+    setIsSubmitting(false);
 
-    const submission: CampaignSubmission = {
-      id: campaignId,
-      organizationId: isPrivate ? "" : basics.organizationId || "",
-      organizationName: orgName,
-      title: basics.title,
-      category: basics.category,
-      categoryLabel: basics.category === "other" ? basics.categoryLabel : undefined,
-      goal: basics.goal,
-      location: basics.location,
-      description: basics.description,
-      useOfFunds: funds,
-      status: "pending_verification",
-      evidenceIds: evidenceItems.map((e) => e.id),
-      milestones,
-      submittedAt: now,
-      submitterType: basics.submitterType,
-      visibility: isPrivate ? "private" : "public",
-      contactInfo: isPrivate
-        ? {
-            name: basics.contactName || "",
-            email: basics.contactEmail || "",
-            phone: basics.contactPhone || "",
-          }
-        : undefined,
-    };
+    if (!result) {
+      setSubmitError("Submission failed. Please check your connection and try again.");
+      return;
+    }
 
-    addCampaignSubmission(submission);
-    setSubmissionId(campaignId);
+    setSubmissionId(result.id);
     setSubmitted(true);
   };
 
@@ -1187,9 +1159,15 @@ export default function CampaignVerificationForm() {
                   </ul>
                 </div>
 
-                <Button onClick={handleSubmit} className="w-full" size="lg">
-                  <Shield size={18} />
-                  Submit Campaign for Verification
+                {submitError && (
+                  <p className="text-sm text-destructive text-center">{submitError}</p>
+                )}
+                <Button onClick={handleSubmit} className="w-full" size="lg" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <><Loader2 size={18} className="animate-spin" /> Submitting…</>
+                  ) : (
+                    <><Shield size={18} /> Submit Campaign for Verification</>
+                  )}
                 </Button>
               </div>
             </div>

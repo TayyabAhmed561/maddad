@@ -46,6 +46,7 @@ export interface EvidenceItem {
   date: string;
   visibility: "public" | "private";
   status: "approved" | "pending" | "rejected";
+  verifierDisplayName?: string;
 }
 
 /** Verification checklist tracking required and approved evidence */

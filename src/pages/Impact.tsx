@@ -1,48 +1,66 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { StatCard } from "@/components/StatCard";
-import { 
-  DollarSign, Users, Clock, Package, TrendingUp, Heart, Calendar, CheckCircle, Globe, BarChart3
+import {
+  DollarSign, Users, Clock, Package, TrendingUp, Heart, CheckCircle, Globe, BarChart3, Loader2
 } from "lucide-react";
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
-import { 
-  impactMetrics, donationsByCategory, monthlyDonationTrend, milestoneCompletionRates 
-} from "@/data/platformData";
+import { usePlatformStats } from "@/hooks/queries/usePlatformStats";
 
-const mainStats = [
-  { icon: DollarSign, label: "Total Funds Raised", value: "$2,456,780", subtext: "Since platform launch" },
-  { icon: Package, label: "Funds Allocated", value: "$2,198,450", subtext: "89% allocation rate" },
-  { icon: Users, label: "Active Donors", value: "89,234", subtext: "Across 45 countries" },
-  { icon: Clock, label: "Volunteer Hours", value: "12,450", subtext: "Pledged this month" },
-];
-
-const categoryBreakdown = [
-  { category: "Food Security", amount: 845000, percentage: 38 },
-  { category: "Shelter & Housing", amount: 534000, percentage: 24 },
-  { category: "Medical Aid", amount: 378000, percentage: 17 },
-  { category: "Education", amount: 267000, percentage: 12 },
-  { category: "Masjid Projects", amount: 174450, percentage: 9 },
-];
-
-const recentTransparencyLog = [
-  { date: "Jan 18, 2024", action: "Funds Released", organization: "Palestine Relief Network", amount: "$25,000", purpose: "Emergency food packages" },
-  { date: "Jan 17, 2024", action: "Funds Released", organization: "Turkish Red Crescent", amount: "$45,000", purpose: "Earthquake shelter materials" },
-  { date: "Jan 16, 2024", action: "Funds Released", organization: "Health Without Borders", amount: "$12,500", purpose: "Medical supplies shipment" },
-  { date: "Jan 15, 2024", action: "Funds Released", organization: "Syrian Relief Initiative", amount: "$18,000", purpose: "Winter food packages" },
-  { date: "Jan 14, 2024", action: "Funds Released", organization: "Al-Noor Foundation", amount: "$32,000", purpose: "Masjid construction phase 2" },
-];
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency', currency: 'USD',
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 export default function Impact() {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
-  };
+  const { stats, donationsByCategory, monthlyTrend, isLoading } = usePlatformStats();
+
+  const mainStats = [
+    {
+      icon: DollarSign,
+      label: "Total Funds Raised",
+      value: stats ? formatCurrency(stats.total_raised_cad) : "—",
+      subtext: "Since platform launch",
+    },
+    {
+      icon: Package,
+      label: "Active Campaigns",
+      value: stats ? stats.active_campaigns.toLocaleString() : "—",
+      subtext: "Currently accepting donations",
+    },
+    {
+      icon: Users,
+      label: "Active Donors",
+      value: stats ? stats.total_donors.toLocaleString() : "—",
+      subtext: `Across ${stats?.regions_covered ?? "—"} regions`,
+    },
+    {
+      icon: Clock,
+      label: "Verified Organizations",
+      value: stats ? stats.verified_organizations.toLocaleString() : "—",
+      subtext: "Reviewed and approved",
+    },
+  ];
+
+  const impactMetrics = stats
+    ? [
+        { label: "Total Donations", value: stats.total_donations, unit: "completed donations" },
+        { label: "Zakat Raised", value: stats.total_zakat_raised_cad, unit: "CAD (ring-fenced)" },
+        { label: "Zakat Donations", value: stats.total_zakat_donations, unit: "dedicated zakat transactions" },
+        { label: "Active Campaigns", value: stats.active_campaigns, unit: "campaigns accepting donations" },
+        { label: "Regions Covered", value: stats.regions_covered, unit: "distinct geographic regions" },
+        { label: "Verified Organizations", value: stats.verified_organizations, unit: "approved organizations" },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <main className="flex-1">
         {/* Hero */}
         <section className="relative bg-gradient-to-br from-primary-light/40 via-background to-accent-light/30 py-20 md:py-24 pattern-subtle">
@@ -62,39 +80,56 @@ export default function Impact() {
         {/* Main Stats */}
         <section className="py-12 border-b border-border section-cream">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-7">
-              {mainStats.map((stat, index) => (
-                <StatCard key={stat.label} {...stat} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` } as React.CSSProperties} />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 size={32} className="animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-7">
+                {mainStats.map((stat, index) => (
+                  <StatCard
+                    key={stat.label}
+                    {...stat}
+                    className="animate-fade-in-up"
+                    style={{ animationDelay: `${index * 100}ms` } as React.CSSProperties}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
         {/* Impact Metrics */}
         <section className="section-spacing-sm bg-card">
           <div className="container mx-auto px-4">
-            <h2 className="heading-section text-2xl text-foreground mb-2">Verified Impact</h2>
-            <p className="text-muted-foreground text-sm mb-8">Concrete outcomes from verified projects.</p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {impactMetrics.map((metric, index) => (
-                <div key={metric.label} className="bg-background rounded-xl border border-border p-5 animate-fade-in-up" style={{ animationDelay: `${index * 80}ms` }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle className="w-4 h-4 text-primary" />
-                    <span className="text-xs text-muted-foreground">{metric.label}</span>
-                  </div>
-                  <p className="text-2xl font-serif font-bold text-foreground">
-                    {metric.value.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">{metric.unit}</p>
-                  {metric.previousValue && (
-                    <p className="text-xs text-primary mt-2 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      +{Math.round(((metric.value - metric.previousValue) / metric.previousValue) * 100)}% from last period
+            <h2 className="heading-section text-2xl text-foreground mb-2">Platform Metrics</h2>
+            <p className="text-muted-foreground text-sm mb-8">Live numbers from the platform database.</p>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 size={28} className="animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {impactMetrics.map((metric, index) => (
+                  <div
+                    key={metric.label}
+                    className="bg-background rounded-xl border border-border p-5 animate-fade-in-up"
+                    style={{ animationDelay: `${index * 80}ms` }}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle className="w-4 h-4 text-primary" />
+                      <span className="text-xs text-muted-foreground">{metric.label}</span>
+                    </div>
+                    <p className="text-2xl font-serif font-bold text-foreground">
+                      {metric.label.includes("Raised")
+                        ? formatCurrency(metric.value)
+                        : metric.value.toLocaleString()}
                     </p>
-                  )}
-                </div>
-              ))}
-            </div>
+                    <p className="text-xs text-muted-foreground mt-1">{metric.unit}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -108,14 +143,20 @@ export default function Impact() {
                   <BarChart3 className="w-5 h-5 text-primary" />
                   <h3 className="font-serif text-lg font-semibold text-foreground">Monthly Donations</h3>
                 </div>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={monthlyDonationTrend}>
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(28, 18%, 42%)" />
-                    <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} stroke="hsl(28, 18%, 42%)" />
-                    <Tooltip formatter={(v: number) => formatCurrency(v)} labelStyle={{ color: "hsl(28, 25%, 12%)" }} />
-                    <Bar dataKey="amount" fill="hsl(160, 45%, 32%)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                {monthlyTrend.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={monthlyTrend}>
+                      <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(28, 18%, 42%)" />
+                      <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 12 }} stroke="hsl(28, 18%, 42%)" />
+                      <Tooltip formatter={(v: number) => formatCurrency(v)} labelStyle={{ color: "hsl(28, 25%, 12%)" }} />
+                      <Bar dataKey="amount" fill="hsl(160, 45%, 32%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground">
+                    No donation data yet.
+                  </div>
+                )}
               </div>
 
               {/* Donations by Category Pie */}
@@ -124,118 +165,86 @@ export default function Impact() {
                   <Globe className="w-5 h-5 text-primary" />
                   <h3 className="font-serif text-lg font-semibold text-foreground">By Category</h3>
                 </div>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={donationsByCategory}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={90}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {donationsByCategory.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                {donationsByCategory.length > 0 ? (
+                  <>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={donationsByCategory}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={3}
+                          dataKey="value"
+                        >
+                          {donationsByCategory.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-wrap gap-3 mt-4 justify-center">
+                      {donationsByCategory.map((cat) => (
+                        <div key={cat.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.fill }} />
+                          {cat.name}
+                        </div>
                       ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-wrap gap-3 mt-4 justify-center">
-                  {donationsByCategory.map((cat) => (
-                    <div key={cat.name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.fill }} />
-                      {cat.name}
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Milestone Completion Rates */}
-        <section className="section-spacing-sm bg-card">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto">
-              <h2 className="heading-section text-2xl text-foreground mb-2">Milestone Completion Rates</h2>
-              <p className="text-muted-foreground text-sm mb-8">How reliably projects reach each stage.</p>
-              <div className="space-y-4">
-                {milestoneCompletionRates.map((item, index) => (
-                  <div key={item.stage} className="animate-fade-in-up" style={{ animationDelay: `${index * 80}ms` }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-foreground">{item.stage}</span>
-                      <span className="text-sm font-serif font-semibold text-primary">{item.rate}%</span>
-                    </div>
-                    <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full" style={{ width: `${item.rate}%`, transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }} />
-                    </div>
+                  </>
+                ) : (
+                  <div className="h-[250px] flex items-center justify-center text-sm text-muted-foreground">
+                    No donation data yet.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Category Breakdown */}
-        <section className="section-spacing-sm section-cream">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="heading-section text-2xl text-foreground mb-10">Funds Allocated by Category</h2>
-              <div className="space-y-7">
-                {categoryBreakdown.map((item, index) => (
-                  <div key={item.category} className="animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-medium text-foreground">{item.category}</span>
-                      <div className="text-right">
-                        <span className="font-serif font-semibold text-foreground">{formatCurrency(item.amount)}</span>
-                        <span className="text-sm text-muted-foreground ml-2">({item.percentage}%)</span>
+        {/* Category Breakdown from donations */}
+        {donationsByCategory.length > 0 && (
+          <section className="section-spacing-sm section-cream">
+            <div className="container mx-auto px-4">
+              <div className="max-w-4xl mx-auto">
+                <h2 className="heading-section text-2xl text-foreground mb-10">Funds Allocated by Category</h2>
+                <div className="space-y-7">
+                  {donationsByCategory.map((item, index) => {
+                    const total = donationsByCategory.reduce((s, c) => s + c.value, 0)
+                    const pct = total > 0 ? Math.round((item.value / total) * 100) : 0
+                    return (
+                      <div
+                        key={item.name}
+                        className="animate-fade-in-up"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-medium text-foreground">{item.name}</span>
+                          <div className="text-right">
+                            <span className="font-serif font-semibold text-foreground">{formatCurrency(item.value)}</span>
+                            <span className="text-sm text-muted-foreground ml-2">({pct}%)</span>
+                          </div>
+                        </div>
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${pct}%`,
+                              backgroundColor: item.fill,
+                              transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="h-3 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full" style={{ width: `${item.percentage}%`, transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)' }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Transparency Log */}
-        <section className="section-spacing-sm bg-card">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="heading-section text-2xl text-foreground mb-3">Recent Transparency Log</h2>
-              <p className="text-muted-foreground mb-10">Every fund release is documented and publicly available.</p>
-              <div className="bg-background rounded-xl border border-border overflow-hidden shadow-card">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="section-cream">
-                      <tr>
-                        <th className="text-left px-7 py-5 text-sm font-medium text-muted-foreground">Date</th>
-                        <th className="text-left px-7 py-5 text-sm font-medium text-muted-foreground">Organization</th>
-                        <th className="text-left px-7 py-5 text-sm font-medium text-muted-foreground">Purpose</th>
-                        <th className="text-right px-7 py-5 text-sm font-medium text-muted-foreground">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {recentTransparencyLog.map((entry, index) => (
-                        <tr key={index} className="hover:bg-muted/30 transition-colors duration-200 animate-fade-in-up" style={{ animationDelay: `${index * 60}ms` }}>
-                          <td className="px-7 py-5 text-sm text-muted-foreground whitespace-nowrap">{entry.date}</td>
-                          <td className="px-7 py-5 text-sm font-medium text-foreground">{entry.organization}</td>
-                          <td className="px-7 py-5 text-sm text-muted-foreground">{entry.purpose}</td>
-                          <td className="px-7 py-5 text-sm font-serif font-semibold text-primary text-right whitespace-nowrap">{entry.amount}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    )
+                  })}
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Trust Statement */}
         <section className="section-spacing-sm section-cream">

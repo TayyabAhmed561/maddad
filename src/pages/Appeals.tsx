@@ -5,12 +5,14 @@ import { Footer } from "@/components/Footer";
 import { AppealCard } from "@/components/AppealCard";
 import { AppealCardSkeleton } from "@/components/skeletons/CardSkeleton";
 import { Button } from "@/components/ui/button";
-import { appealsData, categoryLabels, type AppealCategory } from "@/data/appealsData";
-import { 
-  Shield, 
-  Users, 
-  Building2, 
-  CheckCircle, 
+import { categoryLabels } from "@/data/appealsData";
+import { useAppeals } from "@/hooks/queries/useAppeals";
+import type { CampaignCategory } from "@/lib/supabase";
+import {
+  Shield,
+  Users,
+  Building2,
+  CheckCircle,
   ArrowRight,
   Heart,
   FileText,
@@ -22,18 +24,16 @@ import { Link } from "react-router-dom";
 export default function Appeals() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: appeals, isLoading } = useAppeals();
 
-  const filteredAppeals = filter === "all" 
-    ? appealsData 
-    : appealsData.filter(appeal => appeal.category === filter);
+  const filteredAppeals = filter === "all"
+    ? appeals
+    : appeals.filter(appeal => appeal.category === filter);
 
-  // Navigate to detail page
   const handleView = (id: string) => {
     navigate(`/appeals/${id}`);
   };
 
-  // Navigate to detail page with donate anchor
   const handleSupport = (id: string) => {
     navigate(`/appeals/${id}#donate`);
   };
@@ -41,7 +41,7 @@ export default function Appeals() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      
+
       <main className="flex-1">
         {/* Hero Section */}
         <section className="section-warm py-16 md:py-20 pattern-subtle">
@@ -53,8 +53,7 @@ export default function Appeals() {
               <p className="text-lg text-muted-foreground leading-relaxed mb-8">
                 Support members of our community facing urgent hardships. Every appeal is endorsed by a verified masjid or trusted organization to ensure legitimacy and accountability.
               </p>
-              
-              {/* Trust Indicator */}
+
               <div className="endorsement-badge inline-flex">
                 <Shield size={16} className="gold-icon" />
                 <span>All appeals require masjid or organization endorsement</span>
@@ -82,11 +81,11 @@ export default function Appeals() {
                 <div className="flex items-center gap-4 md:ml-auto">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Building2 size={16} className="gold-icon" />
-                    <span>{appealsData.filter(a => a.endorsedBy.type === "masjid").length} Masjid Endorsed</span>
+                    <span>{appeals.filter(a => a.endorsedBy.type === "masjid").length} Masjid Endorsed</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Shield size={16} className="gold-icon" />
-                    <span>{appealsData.filter(a => a.endorsedBy.type === "organization").length} Org Endorsed</span>
+                    <span>{appeals.filter(a => a.endorsedBy.type === "organization").length} Org Endorsed</span>
                   </div>
                 </div>
               </div>
@@ -109,7 +108,7 @@ export default function Appeals() {
               >
                 All Appeals
               </button>
-              {(Object.entries(categoryLabels) as [AppealCategory, { label: string; color: string }][]).map(([key, value]) => (
+              {(Object.entries(categoryLabels) as [CampaignCategory, { label: string; color: string }][]).map(([key, value]) => (
                 <button
                   key={key}
                   onClick={() => setFilter(key)}
@@ -139,7 +138,7 @@ export default function Appeals() {
             ) : filteredAppeals.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-6">
                 {filteredAppeals.map((appeal, index) => (
-                  <div 
+                  <div
                     key={appeal.id}
                     className="animate-fade-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
@@ -153,7 +152,6 @@ export default function Appeals() {
                 ))}
               </div>
             ) : (
-              /* Empty State */
               <div className="text-center py-16 bg-card rounded-xl border border-border">
                 <AlertTriangle size={48} className="mx-auto text-muted-foreground mb-4" />
                 <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
@@ -162,7 +160,7 @@ export default function Appeals() {
                 <p className="text-muted-foreground mb-6">
                   There are no appeals in this category at the moment.
                 </p>
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => setFilter("all")}
                 >
@@ -179,7 +177,7 @@ export default function Appeals() {
             <h2 className="font-serif text-2xl md:text-3xl font-semibold text-foreground mb-10 text-center">
               How Community Appeals Work
             </h2>
-            
+
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="w-14 h-14 rounded-xl bg-primary-light flex items-center justify-center mx-auto mb-5">
@@ -190,7 +188,7 @@ export default function Appeals() {
                   Community members facing hardship submit their appeal with supporting documentation.
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-14 h-14 rounded-xl bg-primary-light flex items-center justify-center mx-auto mb-5">
                   <Building2 size={24} className="text-primary" />
@@ -200,7 +198,7 @@ export default function Appeals() {
                   A local masjid or trusted organization reviews and endorses the appeal after verification.
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-14 h-14 rounded-xl bg-primary-light flex items-center justify-center mx-auto mb-5">
                   <Heart size={24} className="text-primary" />
@@ -221,7 +219,7 @@ export default function Appeals() {
               <h2 className="font-serif text-2xl md:text-3xl font-semibold text-foreground mb-8 text-center">
                 Appeal Guidelines
               </h2>
-              
+
               <div className="bg-card rounded-xl border border-border p-8">
                 <div className="space-y-5">
                   <div className="flex items-start gap-4">

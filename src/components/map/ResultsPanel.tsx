@@ -20,6 +20,7 @@ interface ResultsPanelProps {
   variant?: "side-panel" | "bottom-sheet";
   scopeLevel?: ScopeLevel;
   userLocation?: { lat: number; lng: number } | null;
+  items?: MapItem[];
 }
 
 export function ResultsPanel({
@@ -37,33 +38,35 @@ export function ResultsPanel({
   variant = "side-panel",
   scopeLevel = "provincial",
   userLocation,
+  items: itemsProp,
 }: ResultsPanelProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Get map items for card display (only real items, filtered by scope and search)
-  const filteredItems = realMapItems.filter((item) => {
-    // Search filter
-    const matchesSearch = searchQuery === "" || 
+  // When itemsProp is provided, items are already scope-filtered by the query hook;
+  // only apply search. Otherwise fall back to realMapItems with scope + search.
+  const filteredItems = (itemsProp ?? realMapItems).filter((item) => {
+    const matchesSearch = searchQuery === "" ||
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.orgName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
       item.locationLabel.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     if (!matchesSearch) return false;
 
-    // Scope filter
+    // Scope filter only applied when using static fallback data.
+    if (itemsProp) return true;
+
     if (scopeLevel === "local") {
       if (userLocation) {
         const distance = getDistanceKm(userLocation.lat, userLocation.lng, item.lat, item.lng);
-        return distance <= 50; // 50km radius
+        return distance <= 50;
       }
-      return isKWItem(item); // Fallback to KW area
+      return isKWItem(item);
     } else if (scopeLevel === "provincial") {
       return isOntarioItem(item);
     } else if (scopeLevel === "canada") {
       return isCanadaItem(item);
     }
-    // global shows all
     return true;
   });
 

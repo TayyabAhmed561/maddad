@@ -12,7 +12,6 @@ import { MapLegend } from "./MapLegend";
 import { MapLayerToggle } from "./MapLayerToggle";
 import { renderPopupHTML } from "./MapPopup";
 import { animateDonationArc } from "./DonationArc";
-import { needUrgencyMap } from "@/data/platformData";
 import {
   mapItems,
   MapItem,
@@ -59,9 +58,10 @@ interface MaddadMapProps {
   onFocusItem?: (itemId: string) => void;
   onScopeChange?: (scope: ScopeLevel) => void;
   onUserLocationChange?: (location: { lat: number; lng: number } | null) => void;
+  items?: MapItem[];
 }
 
-export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen = true, onFocusItem, onScopeChange, onUserLocationChange }: MaddadMapProps) {
+export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen = true, onFocusItem, onScopeChange, onUserLocationChange, items: itemsProp }: MaddadMapProps) {
   const navigate = useNavigate();
 
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -77,13 +77,19 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
   const [isLocating, setIsLocating] = useState(false);
   const [heatmapEnabled, setHeatmapEnabled] = useState(true);
 
+  // Keep a ref to the current items so the map click handler (registered once
+  // on mount) can look up items without stale closure issues.
+  const allItemsRef = useRef<MapItem[]>(itemsProp ?? mapItems)
+  allItemsRef.current = itemsProp ?? mapItems
+
   const getCameraPadding = useCallback(() => {
     if (!isPanelOpen) return { top: 80, bottom: 60, left: 24, right: 24 };
     return { top: 80, bottom: 60, left: 24, right: PANEL_WIDTH + PANEL_MARGIN + 24 };
   }, [isPanelOpen]);
 
   const filteredItems = useMemo(() => {
-    return mapItems.filter((item) => {
+    const source = itemsProp ?? mapItems
+    return source.filter((item) => {
       if (scopeLevel === "local" && userLocation) {
         const distance = getDistanceKm(userLocation.lat, userLocation.lng, item.lat, item.lng);
         if (distance > LOCAL_RADIUS_KM) return false;
@@ -98,13 +104,13 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
 
       return true;
     });
-  }, [scopeLevel, activeCategory, verifiedOnly, userLocation]);
+  }, [itemsProp, scopeLevel, activeCategory, verifiedOnly, userLocation]);
 
   const geojson = useMemo(() => {
     return {
       type: "FeatureCollection",
       features: filteredItems.map((item) => {
-        const urgency = needUrgencyMap[item.id] || "low";
+        const urgencyNumeric = item.urgency ?? 3  // default 3/10 → 'low' weight
         return {
           type: "Feature",
           geometry: { type: "Point", coordinates: [item.lng, item.lat] },
@@ -114,8 +120,8 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
             verifiedStatus: item.verifiedStatus,
             endorsed: Boolean(item.endorsedBy),
             zakatEligible: Boolean(item.zakatEligible),
-            urgency,
-            urgencyWeight: urgency === "critical" ? 1.0 : urgency === "medium" ? 0.6 : 0.3,
+            urgency: urgencyNumeric >= 8 ? "critical" : urgencyNumeric >= 5 ? "medium" : "low",
+            urgencyWeight: urgencyNumeric / 10,
           },
         };
       }),
@@ -203,8 +209,6 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
             </span>`;
             btn.style.opacity = "0.8";
             btn.style.cursor = "wait";
-
-            toast({ title: "Coming soon", description: "Demo mode: donation simulated", duration: 3000 });
 
             setTimeout(() => {
               btn.innerHTML = `<span style="display: flex; align-items: center; justify-content: center; gap: 6px;">
@@ -375,7 +379,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
         if (!feature) return;
         const clickedId = feature.properties?.id as string | undefined;
         if (!clickedId) return;
-        const item = mapItems.find((x) => x.id === clickedId);
+        const item = allItemsRef.current.find((x) => x.id === clickedId);
         if (!item) return;
         openPopupForItem(item, e.lngLat);
       });
@@ -523,7 +527,7 @@ export function MaddadMap({ className, onItemSelect, selectedItemId, isPanelOpen
       );
     }
     if (selectedItemId) {
-      const item = mapItems.find((x) => x.id === selectedItemId);
+      const item = (itemsProp ?? mapItems).find((x) => x.id === selectedItemId);
       if (item) {
         const padding = getCameraPadding();
         const targetZoom = Math.max(map.getZoom(), 11);

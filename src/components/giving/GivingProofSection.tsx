@@ -1,22 +1,27 @@
 import { ProofPack } from "@/components/verification/ProofPack";
 import { ImpactTimeline } from "@/components/verification/ImpactTimeline";
-import { givingCampaigns } from "@/data/givingCampaignsData";
-import { milestoneTemplates } from "@/data/verificationRules";
-import { getPublicEvidenceByIds } from "@/data/evidenceData";
+import { useEvidence } from "@/hooks/queries/useEvidence";
+import {
+  givingProgramChecklists,
+  givingProgramTrackingIds,
+  milestoneTemplates,
+} from "@/data/verificationRules";
 import { ShieldCheck } from "lucide-react";
 
 interface GivingProofSectionProps {
   givingCategory: string;
+  campaignId?: string;
+  orgId?: string;
   className?: string;
 }
 
-export function GivingProofSection({ givingCategory, className }: GivingProofSectionProps) {
-  const campaign = givingCampaigns[givingCategory];
-  if (!campaign) return null;
+export function GivingProofSection({ givingCategory, campaignId, orgId, className }: GivingProofSectionProps) {
+  const checklist = givingProgramChecklists[givingCategory];
+  if (!checklist) return null;
 
-  const publicEvidence = getPublicEvidenceByIds(campaign.evidenceIds);
-  const approvedCount = publicEvidence.filter((e) => e.status === "approved").length;
+  const { data: evidenceItems } = useEvidence({ campaignId, orgId });
   const trackingPlan = milestoneTemplates[givingCategory] || milestoneTemplates.default;
+  const trackingId = givingProgramTrackingIds[givingCategory] ?? `MDD-${givingCategory.toUpperCase().slice(0, 4)}-2026-XXXX`;
 
   return (
     <div className={className}>
@@ -29,16 +34,17 @@ export function GivingProofSection({ givingCategory, className }: GivingProofSec
 
       <div className="space-y-8">
         <ProofPack
-          evidenceIds={campaign.evidenceIds}
-          checklist={campaign.checklist}
+          evidenceIds={[]}
+          evidence={evidenceItems.length > 0 ? evidenceItems : undefined}
+          checklist={checklist}
           trackingPlan={trackingPlan}
         />
 
         <ImpactTimeline
-          milestones={campaign.milestones}
-          trackingId={campaign.trackingId}
-          approvedEvidenceCount={approvedCount}
-          totalEvidenceCount={publicEvidence.length}
+          milestones={[]}
+          trackingId={trackingId}
+          approvedEvidenceCount={evidenceItems.filter(e => e.status === 'approved').length}
+          totalEvidenceCount={evidenceItems.length}
         />
       </div>
     </div>

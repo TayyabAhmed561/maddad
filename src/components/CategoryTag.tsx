@@ -1,40 +1,26 @@
 import { cn } from "@/lib/utils";
-import { Utensils, Home, Stethoscope, BookOpen, Building2 } from "lucide-react";
+import { Utensils, Home, Stethoscope, BookOpen, Building2, Moon, Beef, Coins } from "lucide-react";
+import type { CampaignCategory } from "@/lib/supabase";
 
-export type Category = "food" | "shelter" | "medical" | "education" | "masjid";
+// Re-export so consumers that `import type { Category }` from this file
+// automatically get the widened 8-value DB type.
+export type Category = CampaignCategory;
 
 interface CategoryTagProps {
-  category: Category;
+  category: CampaignCategory;
   showIcon?: boolean;
   size?: "sm" | "md";
 }
 
 const categoryConfig = {
-  food: {
-    label: "Food",
-    icon: Utensils,
-    className: "tag-food",
-  },
-  shelter: {
-    label: "Shelter",
-    icon: Home,
-    className: "tag-shelter",
-  },
-  medical: {
-    label: "Medical",
-    icon: Stethoscope,
-    className: "tag-medical",
-  },
-  education: {
-    label: "Education",
-    icon: BookOpen,
-    className: "tag-education",
-  },
-  masjid: {
-    label: "Masjid",
-    icon: Building2,
-    className: "tag-masjid",
-  },
+  food:      { label: "Food",      icon: Utensils,    className: "tag-food" },
+  shelter:   { label: "Shelter",   icon: Home,        className: "tag-shelter" },
+  medical:   { label: "Medical",   icon: Stethoscope, className: "tag-medical" },
+  education: { label: "Education", icon: BookOpen,    className: "tag-education" },
+  masjid:    { label: "Masjid",    icon: Building2,   className: "tag-masjid" },
+  fidya:     { label: "Fidya",     icon: Moon,        className: "tag-fidya" },
+  qurbani:   { label: "Qurbani",   icon: Beef,        className: "tag-qurbani" },
+  zakat:     { label: "Zakat",     icon: Coins,       className: "tag-zakat" },
 };
 
 export function CategoryTag({ category, showIcon = true, size = "md" }: CategoryTagProps) {

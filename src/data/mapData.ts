@@ -1,7 +1,7 @@
 export type MapItemType = "organization" | "need" | "appeal" | "fidya_partner" | "qurbani_partner";
 export type MapCategory = "Food" | "Shelter" | "Medical" | "Education" | "Masjid" | "Fidya" | "Qurbani" | "Zakat";
 export type VerifiedStatus = "verified" | "pending" | "unverified";
-export type PrivacyLevel = "local_private" | "global_ok";
+export type PrivacyLevel = "local_private" | "global_ok" | "region_only";
 
 export interface MapItem {
   id: string;
@@ -22,7 +22,8 @@ export interface MapItem {
   description?: string;
   countryCode?: string;
   isPlaceholder?: boolean;
-  createdAt?: string; // ISO date string for timeline filtering
+  createdAt?: string;
+  urgency?: number; // 0–10 from DB; used for heatmap weight
 }
 
 // ============================================

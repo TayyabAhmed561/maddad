@@ -156,7 +156,7 @@ export default function ReceiptDetail() {
                 )}
                 <Button variant="outline" className="flex-1" disabled>
                   <Download className="w-4 h-4 mr-2" />
-                  Download PDF (coming soon)
+                  Download PDF
                 </Button>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default function ReceiptDetail() {
             {/* Footer Note */}
             <div className="bg-muted/30 border-t border-border px-6 py-4">
               <p className="text-xs text-muted-foreground text-center">
-                This is a demo receipt. In production, tax-deductible receipts will be issued by partner organizations.
+                Tax-deductible receipts are issued by the registered organization. Contact them directly for official documentation.
               </p>
             </div>
           </div>

@@ -15,8 +15,6 @@ export interface DonationReceipt {
   givingCampaignId?: string;
 }
 
-const STORAGE_KEY = "maddad_receipts";
-
 function generateReceiptId(): string {
   const num = Math.floor(Math.random() * 999999)
     .toString()
@@ -27,32 +25,18 @@ function generateReceiptId(): string {
 export function createReceipt(
   data: Omit<DonationReceipt, "receiptId" | "date">
 ): DonationReceipt {
-  const receipt: DonationReceipt = {
+  return {
     ...data,
     receiptId: generateReceiptId(),
     date: new Date().toISOString(),
   };
-  saveReceipt(receipt);
-  return receipt;
 }
 
-export function saveReceipt(receipt: DonationReceipt): void {
-  const existing = getReceipts();
-  existing.unshift(receipt);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
-}
-
-export function getReceipts(): DonationReceipt[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
+// Real receipts are stored in the Supabase `receipts` table and fetched by
+// serial number. This stub preserves the call signature used by ReceiptDetail.tsx
+// until that page is wired to Supabase (Phase 2).
 export function getReceiptById(
-  receiptId: string
+  _receiptId: string
 ): DonationReceipt | undefined {
-  return getReceipts().find((r) => r.receiptId === receiptId);
+  return undefined;
 }

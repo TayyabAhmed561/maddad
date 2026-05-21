@@ -4,6 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import NeedDetail from "./pages/NeedDetail";
@@ -25,9 +28,11 @@ import ReceiptDetail from "./pages/ReceiptDetail";
 import MyGiving from "./pages/MyGiving";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AuthCallback from "./pages/AuthCallback";
 import OrgVerificationForm from "./pages/verification/OrgVerificationForm";
 import CampaignVerificationForm from "./pages/verification/CampaignVerificationForm";
 import VerifierDashboard from "./pages/verification/VerifierDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +52,7 @@ const AppRoutes = () => (
   <>
     <ScrollToTop />
     <Routes>
+      {/* ── Public routes ──────────────────────────────────────────── */}
       <Route path="/" element={<Index />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/needs" element={<Explore />} />
@@ -55,10 +61,6 @@ const AppRoutes = () => (
       <Route path="/appeals" element={<Appeals />} />
       <Route path="/appeals/:id" element={<AppealDetail />} />
       <Route path="/charity/:id" element={<CharityDetail />} />
-      <Route path="/verification" element={<Verification />} />
-      <Route path="/verify/organization" element={<OrgVerificationForm />} />
-      <Route path="/verify/campaign" element={<CampaignVerificationForm />} />
-      <Route path="/verifier" element={<VerifierDashboard />} />
       <Route path="/impact" element={<Impact />} />
       <Route path="/giving" element={<GivingHub />} />
       <Route path="/give" element={<GivingHub />} />
@@ -75,10 +77,74 @@ const AppRoutes = () => (
       <Route path="/giving/kaffarah" element={<KaffarahPage />} />
       <Route path="/give/kaffarah" element={<KaffarahPage />} />
       <Route path="/ramadan" element={<RamadanPage />} />
-      <Route path="/receipt/:receiptId" element={<ReceiptDetail />} />
-      <Route path="/my-giving" element={<MyGiving />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+
+      {/* ── Auth-gated: any signed-in donor ────────────────────────── */}
+      <Route
+        path="/my-giving"
+        element={
+          <ProtectedRoute>
+            <MyGiving />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/receipt/:receiptId"
+        element={
+          <ProtectedRoute>
+            <ReceiptDetail />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* ── Auth-gated: charity_admin, verifier, or platform_admin ──── */}
+      <Route
+        path="/verification"
+        element={
+          <RoleProtectedRoute allowedRoles={["charity_admin", "verifier", "platform_admin"]}>
+            <Verification />
+          </RoleProtectedRoute>
+        }
+      />
+      <Route
+        path="/verify/organization"
+        element={
+          <RoleProtectedRoute allowedRoles={["charity_admin", "verifier", "platform_admin"]}>
+            <OrgVerificationForm />
+          </RoleProtectedRoute>
+        }
+      />
+      <Route
+        path="/verify/campaign"
+        element={
+          <RoleProtectedRoute allowedRoles={["charity_admin", "verifier", "platform_admin"]}>
+            <CampaignVerificationForm />
+          </RoleProtectedRoute>
+        }
+      />
+
+      {/* ── Auth-gated: verifier or platform_admin only ─────────────── */}
+      <Route
+        path="/verifier"
+        element={
+          <RoleProtectedRoute allowedRoles={["verifier", "platform_admin"]}>
+            <VerifierDashboard />
+          </RoleProtectedRoute>
+        }
+      />
+
+      {/* ── Auth-gated: platform_admin only ─────────────────────────── */}
+      <Route
+        path="/admin"
+        element={
+          <RoleProtectedRoute allowedRoles={["platform_admin"]}>
+            <AdminDashboard />
+          </RoleProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   </>
@@ -90,7 +156,11 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppRoutes />
+        {/* AuthProvider inside BrowserRouter so child components can use
+            both useAuth() and React Router hooks in the same component. */}
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

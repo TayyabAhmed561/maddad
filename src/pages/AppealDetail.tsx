@@ -16,18 +16,20 @@ import { ImpactTimeline } from "@/components/verification/ImpactTimeline";
 import { UpdatesSubscriptionDialog } from "@/components/verification/UpdatesSubscriptionDialog";
 import { useScrollToHash } from "@/hooks/useScrollToHash";
 import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
-import { getAppealById, categoryLabels } from "@/data/appealsData";
+import { useAppeal } from "@/hooks/queries/useAppeals";
+import { useEvidence } from "@/hooks/queries/useEvidence";
+import { categoryLabels } from "@/data/appealsData";
 import { allocationRules } from "@/data/givingData";
 import { appealChecklists, appealTimelines, appealEvidenceIds } from "@/data/verificationRules";
 import { computeVerificationLevel } from "@/types/verification";
-import { getPublicEvidenceByIds } from "@/data/evidenceData";
 import { createReceipt, type DonationReceipt } from "@/types/receipt";
+import { Loader2 } from "lucide-react";
 import { 
-  ArrowLeft, 
-  MapPin, 
-  Clock, 
-  Building2, 
-  Shield, 
+  ArrowLeft,
+  MapPin,
+  Clock,
+  Building2,
+  Shield,
   CheckCircle,
   Heart,
   FileText,
@@ -39,12 +41,11 @@ export default function AppealDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   useScrollToHash();
-  const appeal = id ? getAppealById(id) : undefined;
+  const { data: appeal, isLoading } = useAppeal(id);
+  const { data: evidenceItems } = useEvidence({ campaignId: id });
   const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
-  
-  const effectiveAmountRef = { current: 0 };
 
   const [donationState, donationActions] = useDonation({
     defaultAmount: 50,
@@ -67,7 +68,18 @@ export default function AppealDetail() {
     }
   });
 
-  // Show 404 if appeal not found
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 size={40} className="animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!appeal) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -99,11 +111,12 @@ export default function AppealDetail() {
   // Verification data for this appeal
   const checklist = appealChecklists[appeal.id];
   const milestones = appealTimelines[appeal.id] || [];
+  // Use live evidence items from useEvidence; fall back to the static ID list for
+  // the checklist count when live data hasn't loaded yet.
   const evidenceIds = appealEvidenceIds[appeal.id] || [];
-  const publicEvidence = getPublicEvidenceByIds(evidenceIds);
-  const approvedCount = publicEvidence.filter((e) => e.status === "approved").length;
+  const approvedCount = evidenceItems.filter(e => e.status === 'approved').length;
   const verificationLevel = checklist
-    ? computeVerificationLevel(checklist, evidenceIds.length)
+    ? computeVerificationLevel(checklist, evidenceItems.length || evidenceIds.length)
     : "pending";
   const trackingId = `MDD-${appeal.category.toUpperCase().slice(0, 4)}-2026-${appeal.id.padStart(4, "0")}`;
 
@@ -225,6 +238,7 @@ export default function AppealDetail() {
                 {checklist && (
                   <ProofPack
                     evidenceIds={evidenceIds}
+                    evidence={evidenceItems.length > 0 ? evidenceItems : undefined}
                     checklist={checklist}
                   />
                 )}
@@ -235,7 +249,7 @@ export default function AppealDetail() {
                     milestones={milestones}
                     trackingId={trackingId}
                     approvedEvidenceCount={approvedCount}
-                    totalEvidenceCount={publicEvidence.length}
+                    totalEvidenceCount={evidenceItems.length}
                     nextUpdateDue="2026-02-10"
                     onSubscribeUpdates={() => setShowSubscribeDialog(true)}
                   />
