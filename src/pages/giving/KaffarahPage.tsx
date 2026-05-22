@@ -168,7 +168,7 @@ export default function KaffarahPage() {
                 <p className="text-sm text-muted-foreground mb-6">{selectedType ? "Use the calculator above or enter your amount directly." : "Select an obligation type above, then enter your amount."}</p>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">Amount (USD)</label>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Amount (CAD)</label>
                     <div className="relative max-w-xs">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                       <Input type="number" min={1} step="0.01" placeholder="0.00" value={donationAmount} onChange={(e) => setDonationAmount(e.target.value)} className="pl-8 text-lg font-medium" disabled={!selectedType} />
@@ -208,7 +208,7 @@ export default function KaffarahPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-card rounded-xl border border-border p-6 sticky top-6">
+              <div className="bg-card rounded-xl border border-border p-6">
                 <h3 className="font-serif text-lg font-semibold text-foreground mb-4">Donation Summary</h3>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Kaffarah type</span><span className="font-medium text-foreground text-right">{selectedOption?.title || "Not selected"}</span></div>

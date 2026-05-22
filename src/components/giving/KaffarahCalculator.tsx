@@ -25,8 +25,8 @@ interface KaffarahCalculatorProps {
   className?: string;
 }
 
-// Default cost per meal (can be made configurable by region)
-const DEFAULT_MEAL_COST = 15;
+// Default cost per meal — Ontario, Canada average
+const DEFAULT_MEAL_COST = 20;
 
 export function KaffarahCalculator({ type, onCalculate, className }: KaffarahCalculatorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -124,7 +124,7 @@ export function KaffarahCalculator({ type, onCalculate, className }: KaffarahCal
 
               <div>
                 <Label htmlFor="mealCost" className="text-sm text-muted-foreground flex items-center gap-1">
-                  Cost per Meal (USD)
+                  Cost per Meal (CAD)
                   <span className="text-xs text-muted-foreground/70">(editable)</span>
                 </Label>
                 <div className="relative mt-1.5">

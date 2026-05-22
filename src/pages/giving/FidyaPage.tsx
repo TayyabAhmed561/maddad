@@ -123,7 +123,7 @@ export default function FidyaPage() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block flex items-center gap-1">
-                        Cost per meal (USD)
+                        Cost per meal (CAD)
                         <span className="text-xs text-muted-foreground font-normal">(editable)</span>
                       </label>
                       <div className="relative">
@@ -189,7 +189,7 @@ export default function FidyaPage() {
 
             {/* Sidebar */}
             <div className="space-y-6">
-              <div className="bg-card rounded-xl border border-border p-6 sticky top-6">
+              <div className="bg-card rounded-xl border border-border p-6">
                 <h3 className="font-serif text-lg font-semibold text-foreground mb-4">Donation Summary</h3>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm"><span className="text-muted-foreground">Missed fasts</span><span className="font-medium text-foreground">{missedDays} days</span></div>

@@ -290,7 +290,7 @@ export default function NeedDetail() {
 
             {/* Right Column - Donation Module */}
             <div className="lg:w-96">
-              <div id="donate" className="lg:sticky lg:top-24 bg-card rounded-xl border border-border p-6 shadow-card">
+              <div id="donate" className="bg-card rounded-xl border border-border p-6 shadow-card">
                 {donationState.isSuccess ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">

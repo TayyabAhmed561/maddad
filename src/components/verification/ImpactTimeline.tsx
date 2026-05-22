@@ -140,7 +140,7 @@ function MilestoneRow({
       </div>
 
       {/* Content */}
-      <div className={cn("flex-1 pb-6", isLast && "pb-0")}>
+      <div className={cn("flex-1 pb-8", isLast && "pb-0")}>
         <div className="flex items-center gap-2 mb-1">
           <h4
             className={cn(
@@ -284,7 +284,7 @@ export function ImpactTimeline({
   };
 
   return (
-    <div id="impact-timeline" className={cn("space-y-0 scroll-mt-24", className)}>
+    <div id="impact-timeline" className={cn("scroll-mt-24", className)}>
       {/* Header with tracking ID */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

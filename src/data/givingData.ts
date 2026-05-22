@@ -191,8 +191,8 @@ export const allocationRules: Record<string, AllocationRule[]> = {
 // ============================================
 
 export const fidyaConfig = {
-  amountPerDay: 15,
-  currency: "USD"
+  amountPerDay: 20,
+  currency: "CAD"
 };
 
 // ============================================
@@ -200,9 +200,9 @@ export const fidyaConfig = {
 // ============================================
 
 export const mealSponsorshipConfig = {
-  mealCost: 8,
+  mealCost: 15,
   presetMeals: [10, 25, 50, 100, 250],
-  currency: "USD"
+  currency: "CAD"
 };
 
 // ============================================
@@ -211,7 +211,7 @@ export const mealSponsorshipConfig = {
 
 export const zakatConfig = {
   presetAmounts: [100, 250, 500, 1000, 2500],
-  currency: "USD",
+  currency: "CAD",
   categories: [
     { id: "poor", label: "The Poor (Al-Fuqara)", count: 234 },
     { id: "needy", label: "The Needy (Al-Masakin)", count: 189 },

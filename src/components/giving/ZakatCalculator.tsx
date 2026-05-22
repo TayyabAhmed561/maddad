@@ -27,8 +27,8 @@ interface ZakatCalculatorProps {
 // Current approximate values (these would be fetched from an API in production)
 const NISAB_GOLD_GRAMS = 87.48; // grams of gold
 const NISAB_SILVER_GRAMS = 612.36; // grams of silver
-const GOLD_PRICE_PER_GRAM = 75; // USD (approximate)
-const SILVER_PRICE_PER_GRAM = 0.95; // USD (approximate)
+const GOLD_PRICE_PER_GRAM = 75; // CAD (approximate)
+const SILVER_PRICE_PER_GRAM = 0.95; // CAD (approximate)
 
 const NISAB_GOLD_VALUE = NISAB_GOLD_GRAMS * GOLD_PRICE_PER_GRAM;
 const NISAB_SILVER_VALUE = NISAB_SILVER_GRAMS * SILVER_PRICE_PER_GRAM;

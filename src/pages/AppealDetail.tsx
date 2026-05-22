@@ -317,7 +317,7 @@ export default function AppealDetail() {
               <div className="lg:col-span-1">
                 <div 
                   id="donate" 
-                  className="bg-card rounded-xl border border-border p-6 sticky top-24"
+                  className="bg-card rounded-xl border border-border p-6"
                 >
                   {donationState.isSuccess ? (
                     /* Success State */

@@ -27,10 +27,10 @@ export default function ReceiptDetail() {
           <div className="text-center px-4">
             <AlertCircle size={64} className="mx-auto text-muted-foreground mb-4" />
             <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">
-              Receipt Not Found
+              Receipt Unavailable
             </h1>
             <p className="text-muted-foreground mb-6">
-              This receipt doesn't exist. It may have been cleared from your browser.
+              This receipt could not be found. Receipts are generated after a donation is confirmed — if you completed a donation recently, please allow a moment for it to appear.
             </p>
             <Button onClick={() => navigate("/my-giving")}>
               <ArrowLeft size={16} className="mr-2" />
