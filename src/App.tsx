@@ -24,6 +24,7 @@ import QurbaniPage from "./pages/giving/QurbaniPage";
 import SadaqahJariyahPage from "./pages/giving/SadaqahJariyahPage";
 import KaffarahPage from "./pages/giving/KaffarahPage";
 import RamadanPage from "./pages/RamadanPage";
+import DhulHijjah from "./pages/DhulHijjah";
 import ReceiptDetail from "./pages/ReceiptDetail";
 import MyGiving from "./pages/MyGiving";
 import Login from "./pages/Login";
@@ -77,6 +78,7 @@ const AppRoutes = () => (
       <Route path="/giving/kaffarah" element={<KaffarahPage />} />
       <Route path="/give/kaffarah" element={<KaffarahPage />} />
       <Route path="/ramadan" element={<RamadanPage />} />
+      <Route path="/dhul-hijjah" element={<DhulHijjah />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

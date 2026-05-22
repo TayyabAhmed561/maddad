@@ -3,17 +3,18 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { GivingTypeCard } from "@/components/giving/GivingTypeCard";
 import { GivingGuide } from "@/components/giving/GivingGuide";
-import { 
-  Utensils, 
-  Heart, 
-  Coins, 
+import {
+  Utensils,
+  Heart,
+  Coins,
   Moon,
   Infinity,
   Scale,
   ArrowRight,
   Shield,
   Calendar,
-  Star
+  Star,
+  Sun
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { givingTypes, platformStats, recurringPrograms } from "@/data/givingData";
@@ -72,27 +73,51 @@ export default function GivingHub() {
           </div>
         </section>
 
-        {/* Ramadan CTA */}
+        {/* Seasonal CTAs — Ramadan & Dhul Hijjah */}
         <section className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 border-y border-border">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center gap-6">
-              <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                <Moon size={28} className="text-accent" />
+            <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+              {/* Ramadan */}
+              <div className="flex items-center gap-4 bg-card rounded-xl border border-border p-5">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                  <Moon size={24} className="text-accent" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-serif text-base font-semibold text-foreground mb-0.5">
+                    Ramadan Giving Mode
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Plan your Last 10 Nights and track your giving.
+                  </p>
+                  <Button asChild size="sm">
+                    <Link to="/ramadan">
+                      <Star size={13} />
+                      Enter Ramadan Mode
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="font-serif text-xl font-semibold text-foreground mb-1">
-                  Ramadan Giving Mode
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Plan your Last 10 Nights, track your giving, and support featured causes this Ramadan.
-                </p>
+
+              {/* Dhul Hijjah */}
+              <div className="flex items-center gap-4 bg-card rounded-xl border border-primary/20 p-5">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Sun size={24} className="text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-serif text-base font-semibold text-foreground mb-0.5">
+                    10 Best Days — Dhul Hijjah
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Schedule 10-day giving and track your Dhul Hijjah amal.
+                  </p>
+                  <Button asChild size="sm">
+                    <Link to="/dhul-hijjah">
+                      <Sun size={13} />
+                      Start 10-Day Plan
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              <Button asChild>
-                <Link to="/ramadan">
-                  <Star size={16} />
-                  Enter Ramadan Mode
-                </Link>
-              </Button>
             </div>
           </div>
         </section>

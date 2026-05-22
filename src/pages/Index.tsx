@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
@@ -15,8 +15,11 @@ import {
   CheckCircle,
   ArrowRight,
   Users,
-  Sparkles
+  Sparkles,
+  Sun,
+  X,
 } from "lucide-react";
+import { SEASONS } from "@/config/seasons";
 
 // Brand + Partner logos
 import alRahmahLogo from "@/assets/logos/al-rahmah.png";
@@ -66,10 +69,22 @@ function formatCount(n: number): string {
   return n.toString()
 }
 
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+
+function useDhulHijjahBanner() {
+  const now = Date.now()
+  const start = SEASONS.dhulHijjah2026.start.getTime()
+  const end   = SEASONS.dhulHijjah2026.end.getTime()
+  const visible = now < end && start - now <= THIRTY_DAYS_MS
+  return visible
+}
+
 export default function Index() {
   const navigate = useNavigate();
   const { stats, isLoading: statsLoading } = usePlatformStats();
   const { data: campaigns, isLoading: campaignsLoading } = useCampaigns({ verifiedOnly: true });
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const showDhulHijjahBanner = useDhulHijjahBanner() && !bannerDismissed;
 
   const featuredNeeds = campaigns.slice(0, 4);
 
@@ -132,6 +147,33 @@ export default function Index() {
 
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background-cream to-transparent" />
         </section>
+
+        {/* Dhul Hijjah seasonal banner */}
+        {showDhulHijjahBanner && (
+          <div className="bg-primary text-primary-foreground">
+            <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5 text-sm font-medium">
+                <Sun size={16} className="shrink-0" />
+                <span>
+                  The 10 Best Days are coming — schedule your Dhul Hijjah giving now
+                </span>
+                <Link
+                  to="/dhul-hijjah"
+                  className="underline underline-offset-2 hover:opacity-80 transition-opacity whitespace-nowrap"
+                >
+                  Start my plan →
+                </Link>
+              </div>
+              <button
+                onClick={() => setBannerDismissed(true)}
+                aria-label="Dismiss banner"
+                className="p-1 hover:opacity-70 transition-opacity shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats Section */}
         <section className="relative border-y border-border section-cream pattern-geometric">

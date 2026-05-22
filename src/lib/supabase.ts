@@ -317,6 +317,43 @@ export type Database = {
         Update: Partial<Omit<Database['public']['Tables']['recurring_donations']['Insert'], 'donor_id'>>
       }
 
+      // ── scheduled_donations ────────────────────────────────────────────
+      scheduled_donations: {
+        Row: {
+          id: string
+          donor_id: string
+          campaign_id: string | null
+          giving_type: Database['public']['Enums']['giving_type']
+          amount: number
+          currency: string
+          scheduled_date: string        // YYYY-MM-DD
+          status: ScheduledDonationStatus
+          campaign_series: CampaignSeries | null
+          stripe_payment_intent_id: string | null
+          processed_at: string | null
+          created_at: string
+          updated_at: string
+          deleted_at: string | null
+        }
+        Insert: {
+          id?: string
+          donor_id: string
+          campaign_id?: string | null
+          giving_type: Database['public']['Enums']['giving_type']
+          amount: number
+          currency?: string
+          scheduled_date: string
+          status?: ScheduledDonationStatus
+          campaign_series?: CampaignSeries | null
+          stripe_payment_intent_id?: string | null
+          processed_at?: string | null
+          created_at?: string
+          updated_at?: string
+          deleted_at?: string | null
+        }
+        Update: Partial<Omit<Database['public']['Tables']['scheduled_donations']['Insert'], 'donor_id'>>
+      }
+
       // ── verification_submissions ───────────────────────────────────────
       verification_submissions: {
         Row: {
@@ -665,6 +702,8 @@ export type SubmissionType = 'organization' | 'campaign'
 export type EvidenceStatus = 'pending' | 'approved' | 'rejected'
 export type EvidenceVisibility = 'public' | 'private'
 export type MediaType = 'image' | 'video' | 'pdf' | 'link'
+export type ScheduledDonationStatus = 'scheduled' | 'processing' | 'completed' | 'failed' | 'cancelled'
+export type CampaignSeries = 'dhul_hijjah' | 'ramadan' | 'custom'
 
 // ── Convenience type helpers ───────────────────────────────────────────────
 // Usage:  Tables<'campaigns'>        → the Row type
@@ -691,6 +730,7 @@ export type Donor                = Tables<'donors'>
 export type Donation             = Tables<'donations'>
 export type Receipt              = Tables<'receipts'>
 export type RecurringDonation    = Tables<'recurring_donations'>
+export type ScheduledDonation    = Tables<'scheduled_donations'>
 export type VerificationSubmission = Tables<'verification_submissions'>
 export type VerificationDecision = Tables<'verification_decisions'>
 export type EvidenceItem         = Tables<'evidence_items'>
