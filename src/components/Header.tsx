@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, LogOut, Heart, Receipt } from "lucide-react";
+import { Menu, X, User, LogOut, Heart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,12 +129,6 @@ export function Header() {
                       My Giving
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/my-giving" className="flex items-center gap-2 cursor-pointer">
-                      <Receipt size={14} />
-                      My Receipts
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleSignOut}
@@ -204,12 +198,6 @@ export function Header() {
                     <Button variant="ghost" className="w-full justify-start gap-2">
                       <Heart size={14} />
                       My Giving
-                    </Button>
-                  </Link>
-                  <Link to="/my-giving" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start gap-2">
-                      <Receipt size={14} />
-                      My Receipts
                     </Button>
                   </Link>
                   <div className="flex gap-3 mt-1">
