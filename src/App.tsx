@@ -40,6 +40,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Apply from "./pages/Apply";
 import Partners from "./pages/Partners";
 import AppealsSubmit from "./pages/AppealsSubmit";
+import Transparency from "./pages/Transparency";
+import Privacy from "./pages/Privacy";
+import Mission from "./pages/Mission";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +93,10 @@ const AppRoutes = () => (
       <Route path="/apply" element={<Apply />} />
       <Route path="/partners" element={<Partners />} />
       <Route path="/appeals/submit" element={<AppealsSubmit />} />
+      <Route path="/transparency" element={<Transparency />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/mission" element={<Mission />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

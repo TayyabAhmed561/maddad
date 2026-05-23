@@ -17,6 +17,7 @@ import {
   Calendar,
   Download,
   Loader2,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -217,6 +218,25 @@ export default function MyGiving() {
                 )}
               </TabsContent>
             </Tabs>
+
+            {/* Support Maddad nudge */}
+            <div className="mt-8 bg-card border border-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-foreground mb-0.5">
+                  Enjoying Maddad? Help us stay free.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  100% of your donations go to causes. We run on community support.
+                </p>
+              </div>
+              <Link to="/support-maddad" className="shrink-0">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  Support Maddad
+                  <ArrowRight size={13} />
+                </Button>
+              </Link>
+            </div>
+
           </div>
         </section>
       </main>

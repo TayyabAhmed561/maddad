@@ -101,7 +101,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  to="/about"
+                  to="/mission"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
                   Our Mission
@@ -134,7 +134,7 @@ export function Footer() {
               <li>
                 <Link
                   to="/support-maddad"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
                   Support Maddad
                 </Link>

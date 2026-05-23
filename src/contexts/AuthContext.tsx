@@ -42,6 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Fetch role from donors table ────────────────────────────────────────
   const fetchAndSetRole = useCallback(async (userId: string) => {
+    // Try JWT app_metadata first (populated by DB trigger after role change)
+    const { data: { session: current } } = await supabase.auth.getSession()
+    const jwtRole = current?.user?.app_metadata?.role as DonorRole | undefined
+    if (jwtRole) {
+      setRole(jwtRole)
+      return
+    }
+    // Fallback: read own row directly (own_select policy allows this)
     const { data } = await supabase
       .from('donors')
       .select('role')
@@ -68,7 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('id', signedInUser.id)
           .maybeSingle()
 
-        if (existing) return
+        if (existing) {
+          // Profile exists — refresh JWT to pick up latest role from app_metadata
+          await supabase.auth.refreshSession()
+          await fetchAndSetRole(signedInUser.id)
+          return
+        }
 
         const { error } = await supabase
           .from('donors')
@@ -82,12 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (error) {
           console.error('[Maddad] ensureDonorProfile failed:', error.message)
+        } else {
+          // New profile created — refresh JWT and re-read role
+          await supabase.auth.refreshSession()
+          await fetchAndSetRole(signedInUser.id)
         }
       } catch (err) {
         console.error('[Maddad] ensureDonorProfile unexpected error:', err)
       }
     },
-    []
+    [fetchAndSetRole]
   )
 
   // ── Auth state initialization ───────────────────────────────────────────

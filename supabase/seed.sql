@@ -21,7 +21,7 @@
 
 INSERT INTO organizations (
   id,
-  legal_name,
+  legal_name,''
   display_name,
   slug,
   ontario_charity_registration_number,

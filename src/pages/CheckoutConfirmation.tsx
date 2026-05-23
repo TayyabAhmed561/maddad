@@ -100,6 +100,14 @@ export default function CheckoutConfirmation() {
               <Link to="/explore">Explore more causes</Link>
             </Button>
           </div>
+
+          {/* Support Maddad nudge */}
+          <p className="text-xs text-muted-foreground text-center">
+            Want to help Maddad stay free? Leave a tip next time or{" "}
+            <Link to="/support-maddad" className="text-primary hover:underline">
+              support us directly →
+            </Link>
+          </p>
         </div>
       </main>
     </div>

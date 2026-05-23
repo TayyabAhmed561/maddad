@@ -415,6 +415,27 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['organization_applications']['Insert']>
       }
 
+      // ── contact_messages ───────────────────────────────────────────────
+      contact_messages: {
+        Row: {
+          id:         string
+          name:       string
+          email:      string
+          subject:    string
+          message:    string
+          created_at: string
+        }
+        Insert: {
+          id?:         string
+          name:        string
+          email:       string
+          subject:     string
+          message:     string
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['contact_messages']['Insert']>
+      }
+
       // ── maddad_waitlist ────────────────────────────────────────────────
       maddad_waitlist: {
         Row: {

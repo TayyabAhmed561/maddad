@@ -199,7 +199,7 @@ export default function Partners() {
         </section>
 
         {/* ── How it works ──────────────────────────────────────────────── */}
-        <section id="how-it-works" className="section-spacing-sm border-b border-border">
+        <section id="how-it-works" className="section-spacing-sm">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="heading-section text-3xl text-foreground mb-4">
