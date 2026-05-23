@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,10 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  AlertCircle,
   Loader2,
+  Building2,
+  Users,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubmissionsQueue } from "@/hooks/queries/useAdmin";
@@ -64,19 +66,80 @@ export default function VerifierDashboard() {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 flex items-center justify-center py-16">
-          <div className="text-center px-4">
-            <AlertCircle size={48} className="mx-auto text-muted-foreground mb-4" />
-            <h1 className="font-serif text-2xl font-semibold text-foreground mb-2">
-              Access Denied
-            </h1>
-            <p className="text-muted-foreground mb-6">
-              You need verifier or admin access to view this dashboard.
-            </p>
-            <Button onClick={() => navigate("/verification")}>
-              Go to Verification Hub
-            </Button>
-          </div>
+        <main className="flex-1">
+          <section className="py-20 md:py-28 bg-gradient-to-br from-primary/10 via-background to-accent/5">
+            <div className="container mx-auto px-4 max-w-3xl text-center">
+              <h1 className="font-serif text-4xl md:text-5xl font-semibold text-foreground mb-4">
+                How to get on Maddad
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                Every campaign on Maddad is reviewed and verified before donors can give. Choose the path that fits your need.
+              </p>
+            </div>
+          </section>
+
+          <section className="py-16 border-b border-border">
+            <div className="container mx-auto px-4">
+              <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {/* Card 1 */}
+                <div className="bg-card rounded-xl border border-border p-6 flex flex-col">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <Building2 size={22} className="text-primary" />
+                  </div>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary w-fit mb-3">
+                    Full verification
+                  </span>
+                  <h3 className="font-serif text-lg font-semibold text-foreground mb-2">
+                    Organizations & Masjids
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                    Registered charities, masjids, MSAs, and community organizations can apply to host campaigns with 0% platform fees and CRA-compliant tax receipts.
+                  </p>
+                  <Link to="/apply" className="mt-5">
+                    <Button className="w-full" size="sm">Apply to join</Button>
+                  </Link>
+                </div>
+
+                {/* Card 2 */}
+                <div className="bg-card rounded-xl border border-border p-6 flex flex-col">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <Users size={22} className="text-primary" />
+                  </div>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary w-fit mb-3">
+                    Masjid-endorsed
+                  </span>
+                  <h3 className="font-serif text-lg font-semibold text-foreground mb-2">
+                    Personal & Community Appeals
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                    Individuals or informal groups with a genuine need can submit an appeal. We require an endorsement from a local masjid or community leader before listing.
+                  </p>
+                  <Link to="/appeals/submit" className="mt-5">
+                    <Button className="w-full" size="sm" variant="outline">Submit an appeal</Button>
+                  </Link>
+                </div>
+
+                {/* Card 3 */}
+                <div className="bg-card rounded-xl border border-border p-6 flex flex-col">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                    <Star size={22} className="text-primary" />
+                  </div>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary w-fit mb-3">
+                    Scholar-verified
+                  </span>
+                  <h3 className="font-serif text-lg font-semibold text-foreground mb-2">
+                    Zakat, Fidya & Qurbani
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                    Obligatory giving types follow strict scholarly guidelines. Campaigns eligible for Zakat are individually reviewed and tagged — donors can give with confidence.
+                  </p>
+                  <Link to="/giving" className="mt-5">
+                    <Button className="w-full" size="sm" variant="outline">Explore giving types</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
         </main>
         <Footer />
       </div>

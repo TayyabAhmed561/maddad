@@ -436,6 +436,33 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['contact_messages']['Insert']>
       }
 
+      // ── community_appeal_intakes ───────────────────────────────────────
+      community_appeal_intakes: {
+        Row: {
+          id:                string
+          name:              string
+          email:             string
+          need_type:         'medical' | 'housing' | 'education' | 'emergency' | 'other'
+          description:       string
+          endorsing_contact: string
+          status:            'pending' | 'reviewing' | 'approved' | 'rejected' | 'more_info'
+          admin_notes:       string | null
+          created_at:        string
+        }
+        Insert: {
+          id?:               string
+          name:              string
+          email:             string
+          need_type:         'medical' | 'housing' | 'education' | 'emergency' | 'other'
+          description:       string
+          endorsing_contact: string
+          status?:           'pending' | 'reviewing' | 'approved' | 'rejected' | 'more_info'
+          admin_notes?:      string | null
+          created_at?:       string
+        }
+        Update: Partial<Database['public']['Tables']['community_appeal_intakes']['Insert']>
+      }
+
       // ── maddad_waitlist ────────────────────────────────────────────────
       maddad_waitlist: {
         Row: {

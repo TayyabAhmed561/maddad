@@ -39,9 +39,12 @@ import {
   useRecentDonations,
 } from "@/hooks/queries/useAdmin";
 import { useApplications } from "@/hooks/queries/useApplications";
+import { useAppealIntakes } from "@/hooks/queries/useAppealIntakes";
 import { updateSubmissionStatus, toggleCampaignActive } from "@/lib/queries/admin";
 import { updateApplicationStatus, approveApplication } from "@/lib/queries/applications";
+import { updateAppealIntakeStatus } from "@/lib/queries/appealIntakes";
 import type { OrgApplication, ApplicationStatus } from "@/lib/queries/applications";
+import type { AppealIntakeRow } from "@/lib/queries/appealIntakes";
 import type { SubmissionRow } from "@/lib/queries/verification";
 import type { VerificationStatus } from "@/lib/supabase";
 
@@ -328,6 +331,7 @@ export default function AdminDashboard() {
   const { data: campaigns,   isLoading: campLoading, refetch: refetchCamps } = useAllCampaigns();
   const { data: donations,   isLoading: donLoading }                        = useRecentDonations();
   const { data: applications, isLoading: appsLoading, refetch: refetchApps } = useApplications();
+  const { data: appealIntakes, isLoading: intakesLoading, refetch: refetchIntakes } = useAppealIntakes();
 
   const [orgSearch,      setOrgSearch]      = useState("");
   const [campStatus,     setCampStatus]     = useState<VerificationStatus | "all">("all");
@@ -507,6 +511,103 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               )}
+              {/* ── Community Appeal Intakes ───────────────────────────── */}
+              <div className="mt-10">
+                <h3 className="font-serif text-lg font-semibold text-foreground mb-4">
+                  Community Appeal Intakes
+                </h3>
+                {intakesLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 size={24} className="animate-spin text-muted-foreground" />
+                  </div>
+                ) : appealIntakes.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground text-sm">
+                    No community appeal submissions yet.
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-border overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-muted/40 border-b border-border">
+                          <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Name</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden sm:table-cell">Type</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Email</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Submitted</th>
+                          <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
+                          <th className="px-4 py-3 text-xs font-medium text-muted-foreground text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {appealIntakes.map((intake: AppealIntakeRow, i: number) => (
+                          <tr
+                            key={intake.id}
+                            className={`${i % 2 === 0 ? "bg-background" : "bg-muted/20"}`}
+                          >
+                            <td className="px-4 py-3 font-medium text-foreground max-w-[120px] truncate">{intake.name}</td>
+                            <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell capitalize">{intake.need_type.replace(/_/g, " ")}</td>
+                            <td className="px-4 py-3 text-muted-foreground hidden md:table-cell max-w-[160px] truncate">{intake.email}</td>
+                            <td className="px-4 py-3 text-muted-foreground text-xs hidden md:table-cell">
+                              {new Date(intake.created_at).toLocaleDateString("en-CA")}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                                intake.status === "approved"   ? "bg-primary/10 text-primary"
+                                : intake.status === "rejected"  ? "bg-destructive/10 text-destructive"
+                                : intake.status === "reviewing" ? "bg-amber-500/10 text-amber-700"
+                                : "bg-muted text-muted-foreground"
+                              }`}>
+                                {intake.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex gap-1 justify-end">
+                                {intake.status === "pending" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs px-2"
+                                    onClick={async () => {
+                                      await updateAppealIntakeStatus(intake.id, "reviewing");
+                                      refetchIntakes();
+                                    }}
+                                  >
+                                    Review
+                                  </Button>
+                                )}
+                                {intake.status !== "approved" && (
+                                  <Button
+                                    size="sm"
+                                    className="h-7 text-xs px-2"
+                                    onClick={async () => {
+                                      await updateAppealIntakeStatus(intake.id, "approved");
+                                      refetchIntakes();
+                                    }}
+                                  >
+                                    Approve
+                                  </Button>
+                                )}
+                                {intake.status !== "rejected" && (
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="h-7 text-xs px-2"
+                                    onClick={async () => {
+                                      await updateAppealIntakeStatus(intake.id, "rejected");
+                                      refetchIntakes();
+                                    }}
+                                  >
+                                    Reject
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </TabsContent>
 
             {/* ── Submissions Tab ─────────────────────────────────────── */}

@@ -199,7 +199,7 @@ export default function Partners() {
         </section>
 
         {/* ── How it works ──────────────────────────────────────────────── */}
-        <section id="how-it-works" className="section-spacing-sm">
+        <section id="how-it-works" className="section-spacing-sm bg-background">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
               <h2 className="heading-section text-3xl text-foreground mb-4">
@@ -211,8 +211,8 @@ export default function Partners() {
               <div className="relative flex flex-col sm:flex-row gap-8 sm:gap-0">
                 <div className="hidden sm:block absolute top-6 left-[16.67%] right-[16.67%] h-px bg-border z-0" />
                 {processSteps.map((s) => (
-                  <div key={s.n} className="relative z-10 flex sm:flex-col items-center gap-4 sm:gap-0 flex-1">
-                    <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shrink-0 sm:mb-4">
+                  <div key={s.n} className="flex sm:flex-col items-center gap-4 sm:gap-0 flex-1">
+                    <div className="relative z-10 w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shrink-0 sm:mb-4">
                       {s.n}
                     </div>
                     <div className="sm:text-center">

@@ -39,7 +39,7 @@ import VerifierDashboard from "./pages/verification/VerifierDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Apply from "./pages/Apply";
 import Partners from "./pages/Partners";
-import AppealsSubmit from "./pages/AppealsSubmit";
+import SubmitAppeal from "./pages/appeals/SubmitAppeal";
 import Transparency from "./pages/Transparency";
 import Privacy from "./pages/Privacy";
 import Mission from "./pages/Mission";
@@ -92,7 +92,7 @@ const AppRoutes = () => (
       <Route path="/support-maddad" element={<SupportMaddad />} />
       <Route path="/apply" element={<Apply />} />
       <Route path="/partners" element={<Partners />} />
-      <Route path="/appeals/submit" element={<AppealsSubmit />} />
+      <Route path="/appeals/submit" element={<SubmitAppeal />} />
       <Route path="/transparency" element={<Transparency />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/mission" element={<Mission />} />
@@ -154,15 +154,8 @@ const AppRoutes = () => (
         }
       />
 
-      {/* ── Auth-gated: verifier or platform_admin only ─────────────── */}
-      <Route
-        path="/verifier"
-        element={
-          <RoleProtectedRoute allowedRoles={["verifier", "platform_admin"]}>
-            <VerifierDashboard />
-          </RoleProtectedRoute>
-        }
-      />
+      {/* ── /verifier: public landing + role-gated dashboard ───────── */}
+      <Route path="/verifier" element={<VerifierDashboard />} />
 
       {/* ── Auth-gated: platform_admin only ─────────────────────────── */}
       <Route
