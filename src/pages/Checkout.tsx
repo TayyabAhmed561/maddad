@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -35,15 +35,27 @@ function stepToVisual(step: string): number {
   return 3;
 }
 
+interface CheckoutLocationState {
+  campaignId?: string | null;
+  campaignName?: string;
+  givingType?: string;
+  amount?: number;
+}
+
 export default function Checkout() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
-  const campaignId   = searchParams.get("campaignId") ?? "";
-  const campaignName = decodeURIComponent(searchParams.get("campaignName") ?? "");
-  const initialGT    = (searchParams.get("givingType") ?? "sadaqah") as GivingType;
-  const initialAmt   = parseFloat(searchParams.get("amount") ?? "50") || 50;
+  // Support both URL query params (from NeedDetail/AppealDetail) and
+  // navigation state (from giving type pages like Fidya, Zakat, etc.)
+  const locState = (location.state as CheckoutLocationState | null) ?? {};
+
+  const campaignId   = searchParams.get("campaignId") ?? locState.campaignId ?? "";
+  const campaignName = decodeURIComponent(searchParams.get("campaignName") ?? "") || (locState.campaignName ?? "");
+  const initialGT    = ((searchParams.get("givingType") ?? locState.givingType ?? "sadaqah") as GivingType);
+  const initialAmt   = parseFloat(searchParams.get("amount") ?? "") || locState.amount || 50;
 
   const { data: campaign } = useCampaign(campaignId || undefined);
   const displayName = campaign?.title ?? (campaignName || "this cause");
@@ -51,6 +63,7 @@ export default function Checkout() {
   const [state, actions] = useDonationCheckout();
   const [customAmount, setCustomAmount] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [tipSubmitError, setTipSubmitError] = useState<string | null>(null);
   const [donorInfo, setDonorInfo] = useState<DonorInfo>({
     fullName: "", email: "", addressStreet: "", addressCity: "",
     addressProvince: "ON", addressPostalCode: "",
@@ -99,12 +112,19 @@ export default function Checkout() {
   };
 
   const handleAmountContinue = () => {
-    if (amount <= 0 || !campaignId) return;
+    if (amount <= 0) return;
     nextStep(); nextStep(); // skip 'details' → land on 'tip'
   };
 
   const handleTipConfirm = async (confirmedTip: number) => {
-    if (!campaignId || amount <= 0) return;
+    if (amount <= 0) return;
+    if (!campaignId) {
+      setTipSubmitError(
+        "No campaign linked. Browse verified causes and donate directly from a campaign page."
+      );
+      return;
+    }
+    setTipSubmitError(null);
     clearError();
     try {
       const { clientSecret: cs } = await submitDonation(campaignId, confirmedTip);
@@ -322,16 +342,11 @@ export default function Checkout() {
                 </div>
 
                 <Button className="w-full" size="lg" onClick={handleAmountContinue}
-                  disabled={amount <= 0 || !campaignId}>
+                  disabled={amount <= 0}>
                   <Heart size={18} />
                   Continue
                   <ArrowRight size={16} />
                 </Button>
-                {!campaignId && (
-                  <p className="text-xs text-destructive text-center -mt-4">
-                    No campaign selected — return to the campaign page and try again.
-                  </p>
-                )}
               </div>
             ) : null}
 
@@ -341,7 +356,7 @@ export default function Checkout() {
                 donationAmount={amount}
                 campaignTitle={displayName}
                 isSubmitting={isSubmitting}
-                error={error}
+                error={state.error ?? tipSubmitError}
                 onConfirm={handleTipConfirm}
                 onBack={() => { prevStep(); prevStep(); }}
               />

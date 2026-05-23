@@ -185,7 +185,16 @@ export default function RamadanPage() {
                     ${nightPlan.reduce((sum, n) => sum + n.amount, 0)}
                   </p>
                 </div>
-                <Button>
+                <Button
+                  onClick={() => navigate("/checkout", {
+                    state: {
+                      campaignName: "Ramadan Last 10 Nights",
+                      givingType: "sadaqah",
+                      amount: nightlyAmount,
+                      campaignId: null,
+                    },
+                  })}
+                >
                   <Heart className="w-4 h-4" />
                   Activate Plan
                 </Button>

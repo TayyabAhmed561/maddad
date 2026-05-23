@@ -8,15 +8,14 @@ import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationTo
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
 import { ZakatCalculator } from "@/components/giving/ZakatCalculator";
 import { GivingProofSection } from "@/components/giving/GivingProofSection";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
-import { Coins, Heart, Loader2, Check, ArrowLeft, ShieldCheck, Users, FileCheck, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Coins, Heart, ArrowLeft, ShieldCheck, Users, FileCheck, Eye } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { zakatConfig, zakatCases, allocationRules, zakatTransparencyLog } from "@/data/givingData";
 import type { DonationFrequency } from "@/types/giving";
 
 export default function ZakatPage() {
+  const navigate = useNavigate();
   const [amount, setAmount] = useState<number>(250);
   const [customAmount, setCustomAmount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -24,34 +23,9 @@ export default function ZakatPage() {
   const [anonymous, setAnonymous] = useState(true);
   const [hideAmount, setHideAmount] = useState(true);
   const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const allocation = allocationRules.zakat;
   const selectedAmount = customAmount ? parseFloat(customAmount) || 0 : amount;
-
-  const handleDonate = async () => {
-    if (selectedAmount <= 0) return;
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
-    const receipt = createReceipt({
-      amount: selectedAmount,
-      campaignTitle: "Zakat Distribution",
-      organizationName: "Verified Masjid & Scholar Network",
-      donationType: "zakat",
-      frequency,
-      isAnonymous: anonymous,
-      hideAmount,
-      duaIntention: duaIntention || undefined,
-      givingCategory: "zakat",
-    });
-    setLastReceipt(receipt);
-    setShowConfirmDialog(true);
-  };
 
   const handleCalculatorResult = (calculatedAmount: number) => {
     setCustomAmount(calculatedAmount.toFixed(2));
@@ -164,15 +138,20 @@ export default function ZakatPage() {
                 </div>
                 <AllocationBreakdown items={allocation} title="Zakat allocation" className="mb-6" />
                 <p className="text-xs text-muted-foreground mb-4 p-3 bg-accent-light rounded-lg">100% of your Zakat reaches eligible recipients. Platform costs are covered separately.</p>
-                <Button className="w-full" size="lg" onClick={handleDonate} disabled={selectedAmount <= 0 || isLoading || isSuccess}>
-                  {isLoading ? (<><Loader2 size={18} className="animate-spin" />Processing...</>) : isSuccess ? (<><Check size={18} />Zakat Submitted</>) : (<><Heart size={18} />Submit Zakat</>)}
+                <Button
+                  className="w-full" size="lg"
+                  disabled={selectedAmount <= 0}
+                  onClick={() => navigate("/checkout", {
+                    state: {
+                      campaignName: "Zakat Distribution",
+                      givingType: "zakat",
+                      amount: selectedAmount,
+                      campaignId: null,
+                    },
+                  })}
+                >
+                  <Heart size={18} />Submit Zakat
                 </Button>
-                {isSuccess && (
-                  <div className="mt-4 space-y-3">
-                    <p className="text-sm text-center text-muted-foreground">May Allah accept your Zakat.</p>
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => setShowConfirmDialog(true)}>View Receipt & Track Impact</Button>
-                  </div>
-                )}
               </div>
 
               <div className="bg-card rounded-xl border border-border p-6">
@@ -192,7 +171,6 @@ export default function ZakatPage() {
         </div>
       </main>
       <Footer />
-      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath="/giving/zakat" />
     </div>
   );
 }

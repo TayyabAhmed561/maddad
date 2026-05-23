@@ -11,10 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { KaffarahCalculator } from "@/components/giving/KaffarahCalculator";
 import { GivingProofSection } from "@/components/giving/GivingProofSection";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
-import { Scale, Heart, Loader2, Check, ArrowLeft, Info, ShieldCheck, BookOpen, AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Scale, Heart, ArrowLeft, Info, ShieldCheck, BookOpen, AlertCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { verifiedPartners, allocationRules } from "@/data/givingData";
 import type { GivingPartner } from "@/types/giving";
@@ -47,49 +45,17 @@ const kaffarahOptions: KaffarahOption[] = [
 ];
 
 export default function KaffarahPage() {
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<KaffarahType | null>(null);
   const [donationAmount, setDonationAmount] = useState<string>("");
   const [selectedPartner, setSelectedPartner] = useState<GivingPartner | null>(null);
   const [anonymous, setAnonymous] = useState(true);
   const [hideAmount, setHideAmount] = useState(true);
   const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const partners = verifiedPartners.kaffarah || verifiedPartners.fidya || [];
   const allocation = allocationRules.kaffarah || allocationRules.fidya;
   const amount = parseFloat(donationAmount) || 0;
-
-  const handleDonate = async () => {
-    if (!selectedPartner || !selectedType || amount <= 0) return;
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
-    const receipt = createReceipt({
-      amount,
-      campaignTitle: `Kaffarah – ${selectedType === "broken-fast" ? "Broken Fast" : "Broken Oath"}`,
-      organizationName: selectedPartner.name,
-      donationType: "kaffarah",
-      frequency: "one-time",
-      isAnonymous: anonymous,
-      hideAmount,
-      duaIntention: duaIntention || undefined,
-      givingCategory: "kaffarah",
-    });
-    setLastReceipt(receipt);
-    setShowConfirmDialog(true);
-  };
-
-  const handleReset = () => {
-    setIsSuccess(false);
-    setSelectedType(null);
-    setDonationAmount("");
-    setSelectedPartner(null);
-    setDuaIntention("");
-  };
 
   const handleCalculatorResult = (calculatedAmount: number) => {
     setDonationAmount(calculatedAmount.toFixed(2));
@@ -218,25 +184,28 @@ export default function KaffarahPage() {
                   </div>
                 </div>
                 <AllocationBreakdown items={allocation} className="mb-6" />
-                <Button className="w-full" size="lg" onClick={handleDonate} disabled={!selectedPartner || !selectedType || amount <= 0 || isLoading || isSuccess}>
-                  {isLoading ? (<><Loader2 size={18} className="animate-spin" />Processing...</>) : isSuccess ? (<><Check size={18} />Kaffarah Complete</>) : (<><Heart size={18} />Complete Kaffarah</>)}
+                <Button
+                  className="w-full" size="lg"
+                  disabled={!selectedPartner || !selectedType || amount <= 0}
+                  onClick={() => navigate("/checkout", {
+                    state: {
+                      campaignName: selectedType
+                        ? `Kaffarah – ${selectedType === "broken-fast" ? "Broken Fast" : "Broken Oath"}`
+                        : "Kaffarah",
+                      givingType: "kaffarah",
+                      amount,
+                      campaignId: null,
+                    },
+                  })}
+                >
+                  <Heart size={18} />Complete Kaffarah
                 </Button>
-                {isSuccess && (
-                  <div className="mt-4 space-y-3">
-                    <p className="text-sm text-center text-muted-foreground">May Allah accept your Kaffarah.</p>
-                    <div className="flex flex-col gap-2">
-                      <Button variant="outline" size="sm" className="w-full" onClick={() => setShowConfirmDialog(true)}>View Receipt & Track Impact</Button>
-                      <Button variant="ghost" size="sm" className="w-full" onClick={handleReset}>Make Another Donation</Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </div>
       </main>
       <Footer />
-      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath="/giving/kaffarah" />
     </div>
   );
 }

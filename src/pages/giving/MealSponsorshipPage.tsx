@@ -9,15 +9,14 @@ import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationTo
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
 import { ImpactLog } from "@/components/giving/ImpactLog";
 import { GivingProofSection } from "@/components/giving/GivingProofSection";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
-import { Utensils, Heart, Loader2, Check, ArrowLeft, Users, ShieldCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Utensils, Heart, ArrowLeft, Users, ShieldCheck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { mealSponsorshipConfig, verifiedPartners, allocationRules, mealSponsorshipImpactLogs } from "@/data/givingData";
 import type { GivingPartner, DonationFrequency } from "@/types/giving";
 
 export default function MealSponsorshipPage() {
+  const navigate = useNavigate();
   const [meals, setMeals] = useState<number>(25);
   const [customMeals, setCustomMeals] = useState("");
   const [selectedPartner, setSelectedPartner] = useState<GivingPartner | null>(null);
@@ -25,37 +24,12 @@ export default function MealSponsorshipPage() {
   const [anonymous, setAnonymous] = useState(true);
   const [hideAmount, setHideAmount] = useState(false);
   const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const partners = verifiedPartners["meal-sponsorship"] || [];
   const allocation = allocationRules["meal-sponsorship"];
   const { mealCost, presetMeals } = mealSponsorshipConfig;
   const selectedMeals = customMeals ? parseInt(customMeals) || 0 : meals;
   const totalAmount = selectedMeals * mealCost;
-
-  const handleDonate = async () => {
-    if (!selectedPartner || selectedMeals <= 0) return;
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
-    const receipt = createReceipt({
-      amount: totalAmount,
-      campaignTitle: `Meal Sponsorship – ${selectedPartner.name}`,
-      organizationName: selectedPartner.name,
-      donationType: "general",
-      frequency,
-      isAnonymous: anonymous,
-      hideAmount,
-      duaIntention: duaIntention || undefined,
-      givingCategory: "meal-sponsorship",
-    });
-    setLastReceipt(receipt);
-    setShowConfirmDialog(true);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -148,15 +122,22 @@ export default function MealSponsorshipPage() {
                   </div>
                 </div>
                 <AllocationBreakdown items={allocation} className="mb-6" />
-                <Button className="w-full" size="lg" onClick={handleDonate} disabled={!selectedPartner || selectedMeals <= 0 || isLoading || isSuccess}>
-                  {isLoading ? (<><Loader2 size={18} className="animate-spin" />Processing...</>) : isSuccess ? (<><Check size={18} />Sponsorship Complete</>) : (<><Heart size={18} />Sponsor {selectedMeals.toLocaleString()} Meals</>)}
+                <Button
+                  className="w-full" size="lg"
+                  disabled={!selectedPartner || selectedMeals <= 0}
+                  onClick={() => navigate("/checkout", {
+                    state: {
+                      campaignName: selectedPartner
+                        ? `Meal Sponsorship – ${selectedPartner.name}`
+                        : "Meal Sponsorship",
+                      givingType: "meal_sponsorship",
+                      amount: totalAmount,
+                      campaignId: null,
+                    },
+                  })}
+                >
+                  <Heart size={18} />Sponsor {selectedMeals.toLocaleString()} Meals
                 </Button>
-                {isSuccess && (
-                  <div className="mt-4 space-y-3">
-                    <p className="text-sm text-center text-muted-foreground">JazakAllah Khair.</p>
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => setShowConfirmDialog(true)}>View Receipt & Track Impact</Button>
-                  </div>
-                )}
               </div>
               <ImpactLog logs={mealSponsorshipImpactLogs} title="Recent Distributions" />
             </div>
@@ -164,7 +145,6 @@ export default function MealSponsorshipPage() {
         </div>
       </main>
       <Footer />
-      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath="/giving/meal-sponsorship" />
     </div>
   );
 }

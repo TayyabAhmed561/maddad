@@ -8,10 +8,8 @@ import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationTo
 import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
 import { ProgressBar } from "@/components/ProgressBar";
 import { GivingProofSection } from "@/components/giving/GivingProofSection";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
-import { Infinity, Loader2, Check, ArrowLeft, Droplets, BookOpen, Building2, Stethoscope, Users, MapPin, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Infinity, ArrowLeft, Droplets, BookOpen, Building2, Stethoscope, Users, MapPin, Clock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { sadaqahJariyahProjects, sadaqahJariyahConfig, allocationRules } from "@/data/givingData";
 import type { SadaqahJariyahProject, DonationFrequency } from "@/types/giving";
@@ -24,6 +22,7 @@ const typeIcons: Record<string, typeof Infinity> = {
 };
 
 export default function SadaqahJariyahPage() {
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState("all");
   const [selectedProject, setSelectedProject] = useState<SadaqahJariyahProject | null>(null);
   const [localAmount, setLocalAmount] = useState<number>(100);
@@ -32,45 +31,12 @@ export default function SadaqahJariyahPage() {
   const [anonymous, setAnonymous] = useState(true);
   const [hideAmount, setHideAmount] = useState(false);
   const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const selectedAmount = customAmount ? parseFloat(customAmount) || 0 : localAmount;
   const allocationItems = allocationRules["sadaqah-jariyah"];
   const presetAmounts = sadaqahJariyahConfig.presetAmounts;
   const projectTypes = sadaqahJariyahConfig.projectTypes;
   const filteredProjects = selectedType === "all" ? sadaqahJariyahProjects : sadaqahJariyahProjects.filter(p => p.type === selectedType);
-
-  const handleDonate = async () => {
-    if (!selectedProject || selectedAmount <= 0) return;
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
-    const receipt = createReceipt({
-      amount: selectedAmount,
-      campaignTitle: `Sadaqah Jariyah – ${selectedProject.title}`,
-      organizationName: selectedProject.partner,
-      donationType: "sadaqah-jariyah",
-      frequency,
-      isAnonymous: anonymous,
-      hideAmount,
-      duaIntention: duaIntention || undefined,
-      givingCategory: "sadaqah-jariyah",
-      givingCampaignId: selectedProject.id,
-    });
-    setLastReceipt(receipt);
-    setShowConfirmDialog(true);
-  };
-
-  const handleReset = () => {
-    setIsSuccess(false);
-    setSelectedProject(null);
-    setLocalAmount(100);
-    setCustomAmount("");
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -183,16 +149,22 @@ export default function SadaqahJariyahPage() {
                       <div className="border-t border-border pt-3"><div className="flex justify-between"><span className="font-medium text-foreground">{frequency === "one-time" ? "Total" : `Per ${frequency.replace("ly", "")}`}</span><span className="text-xl font-serif font-semibold text-primary">${selectedAmount.toLocaleString()}</span></div></div>
                     </div>
                     <AllocationBreakdown items={allocationItems} className="mb-6" />
-                    <Button className="w-full" size="lg" onClick={handleDonate} disabled={selectedAmount <= 0 || isLoading || isSuccess}>
-                      {isLoading ? (<><Loader2 size={18} className="animate-spin" />Processing...</>) : isSuccess ? (<><Check size={18} />Contribution Complete</>) : (<><Infinity size={18} />Contribute</>)}
+                    <Button
+                      className="w-full" size="lg"
+                      disabled={selectedAmount <= 0}
+                      onClick={() => navigate("/checkout", {
+                        state: {
+                          campaignName: selectedProject
+                            ? `Sadaqah Jariyah – ${selectedProject.title}`
+                            : "Sadaqah Jariyah",
+                          givingType: "sadaqah_jariyah",
+                          amount: selectedAmount,
+                          campaignId: null,
+                        },
+                      })}
+                    >
+                      <Infinity size={18} />Contribute
                     </Button>
-                    {isSuccess && (
-                      <div className="mt-4 space-y-3">
-                        <p className="text-sm text-center text-muted-foreground">May this be a source of ongoing reward.</p>
-                        <Button variant="outline" size="sm" className="w-full" onClick={() => setShowConfirmDialog(true)}>View Receipt & Track Impact</Button>
-                        <Button variant="ghost" size="sm" className="w-full" onClick={handleReset}>Make Another Contribution</Button>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-8">Select a project to contribute</p>
@@ -208,7 +180,6 @@ export default function SadaqahJariyahPage() {
         </div>
       </main>
       <Footer />
-      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath="/giving/sadaqah-jariyah" />
     </div>
   );
 }

@@ -8,20 +8,16 @@ import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { ImpactLog } from "@/components/giving/ImpactLog";
 import { GivingProofSection } from "@/components/giving/GivingProofSection";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
-import { 
-  Moon, 
-  Calculator, 
+import {
+  Moon,
+  Calculator,
   Heart,
-  Loader2,
-  Check,
   ArrowLeft,
   Info,
   ShieldCheck,
   HelpCircle
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   fidyaConfig, 
@@ -32,42 +28,18 @@ import {
 import type { GivingPartner } from "@/types/giving";
 
 export default function FidyaPage() {
+  const navigate = useNavigate();
   const [missedDays, setMissedDays] = useState<number>(1);
   const [mealCost, setMealCost] = useState<number>(fidyaConfig.amountPerDay);
   const [selectedPartner, setSelectedPartner] = useState<GivingPartner | null>(null);
   const [anonymous, setAnonymous] = useState(true);
   const [hideAmount, setHideAmount] = useState(true);
   const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const partners = verifiedPartners.fidya || [];
   const allocation = allocationRules.fidya;
   const totalAmount = missedDays * mealCost;
-
-  const handleDonate = async () => {
-    if (!selectedPartner) return;
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
-    const receipt = createReceipt({
-      amount: totalAmount,
-      campaignTitle: `Fidya – ${selectedPartner.name}`,
-      organizationName: selectedPartner.name,
-      donationType: "fidya",
-      frequency: "one-time",
-      isAnonymous: anonymous,
-      hideAmount,
-      duaIntention: duaIntention || undefined,
-      givingCategory: "fidya",
-    });
-    setLastReceipt(receipt);
-    setShowConfirmDialog(true);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -200,15 +172,20 @@ export default function FidyaPage() {
                   </div>
                 </div>
                 <AllocationBreakdown items={allocation} className="mb-6" />
-                <Button className="w-full" size="lg" onClick={handleDonate} disabled={!selectedPartner || isLoading || isSuccess}>
-                  {isLoading ? (<><Loader2 size={18} className="animate-spin" />Processing...</>) : isSuccess ? (<><Check size={18} />Fidya Complete</>) : (<><Heart size={18} />Complete Fidya</>)}
+                <Button
+                  className="w-full" size="lg"
+                  disabled={!selectedPartner || totalAmount <= 0}
+                  onClick={() => navigate("/checkout", {
+                    state: {
+                      campaignName: selectedPartner ? `Fidya – ${selectedPartner.name}` : "Fidya",
+                      givingType: "fidya",
+                      amount: totalAmount,
+                      campaignId: null,
+                    },
+                  })}
+                >
+                  <Heart size={18} />Complete Fidya
                 </Button>
-                {isSuccess && (
-                  <div className="mt-4 space-y-3">
-                    <p className="text-sm text-center text-muted-foreground">May Allah accept your Fidya.</p>
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => setShowConfirmDialog(true)}>View Receipt & Track Impact</Button>
-                  </div>
-                )}
               </div>
               <ImpactLog logs={fidyaImpactLogs} title="Recent Distributions (Aggregate)" />
             </div>
@@ -218,12 +195,6 @@ export default function FidyaPage() {
 
       <Footer />
 
-      <DonationConfirmDialog
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        receipt={lastReceipt}
-        trackingPath="/giving/fidya"
-      />
     </div>
   );
 }

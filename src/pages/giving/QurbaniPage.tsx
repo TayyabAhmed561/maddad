@@ -6,55 +6,23 @@ import { AllocationBreakdown } from "@/components/giving/AllocationBreakdown";
 import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
 import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { GivingProofSection } from "@/components/giving/GivingProofSection";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
-import { Heart, Loader2, Check, ArrowLeft, MapPin, Calendar, CheckCircle, Info, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Heart, ArrowLeft, MapPin, Calendar, CheckCircle, Info, Clock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { qurbaniPackages, qurbaniProcessSteps, animalLabels, allocationRules } from "@/data/givingData";
 import type { QurbaniPackage } from "@/types/giving";
 
 export default function QurbaniPage() {
+  const navigate = useNavigate();
   const [selectedPackage, setSelectedPackage] = useState<QurbaniPackage | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [anonymous, setAnonymous] = useState(true);
   const [hideAmount, setHideAmount] = useState(false);
   const [duaIntention, setDuaIntention] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const totalAmount = selectedPackage ? selectedPackage.price * quantity : 0;
   const allocationItems = allocationRules.qurbani;
   const isQurbaniSeason = true;
-
-  const handleDonate = async () => {
-    if (!selectedPackage) return;
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    setIsSuccess(true);
-    const receipt = createReceipt({
-      amount: totalAmount,
-      campaignTitle: `Qurbani – ${animalLabels[selectedPackage.animal]} (${selectedPackage.region})`,
-      organizationName: selectedPackage.partner,
-      donationType: "qurbani",
-      frequency: "one-time",
-      isAnonymous: anonymous,
-      hideAmount,
-      duaIntention: duaIntention || undefined,
-      givingCategory: "qurbani",
-    });
-    setLastReceipt(receipt);
-    setShowConfirmDialog(true);
-  };
-
-  const handleReset = () => {
-    setIsSuccess(false);
-    setSelectedPackage(null);
-    setQuantity(1);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -155,16 +123,19 @@ export default function QurbaniPage() {
                       <div className="border-t border-border pt-3"><div className="flex justify-between"><span className="font-medium text-foreground">Total</span><span className="text-xl font-serif font-semibold text-primary">${totalAmount.toLocaleString()}</span></div></div>
                     </div>
                     <AllocationBreakdown items={allocationItems} className="mb-6" />
-                    <Button className="w-full" size="lg" onClick={handleDonate} disabled={isLoading || isSuccess}>
-                      {isLoading ? (<><Loader2 size={18} className="animate-spin" />Processing...</>) : isSuccess ? (<><Check size={18} />Qurbani Booked</>) : (<><Heart size={18} />Complete Qurbani</>)}
+                    <Button
+                      className="w-full" size="lg"
+                      onClick={() => navigate("/checkout", {
+                        state: {
+                          campaignName: `Qurbani – ${animalLabels[selectedPackage.animal]} (${selectedPackage.region})`,
+                          givingType: "qurbani",
+                          amount: totalAmount,
+                          campaignId: null,
+                        },
+                      })}
+                    >
+                      <Heart size={18} />Complete Qurbani
                     </Button>
-                    {isSuccess && (
-                      <div className="mt-4 space-y-3">
-                        <p className="text-sm text-center text-muted-foreground">Eid Mubarak! You will receive a confirmation report after distribution.</p>
-                        <Button variant="outline" size="sm" className="w-full" onClick={() => setShowConfirmDialog(true)}>View Receipt & Track Impact</Button>
-                        <Button variant="ghost" size="sm" className="w-full" onClick={handleReset}>Book Another Qurbani</Button>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-8">Select a Qurbani package to continue</p>
@@ -184,7 +155,6 @@ export default function QurbaniPage() {
         </div>
       </main>
       <Footer />
-      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath="/giving/qurbani" />
     </div>
   );
 }
