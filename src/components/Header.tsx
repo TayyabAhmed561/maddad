@@ -69,21 +69,23 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group cursor-pointer flex-shrink-0">
-            <div className="h-[60px] w-[60px] overflow-hidden flex items-center justify-center">
+        {/* 3-zone grid: logo | nav (truly centered) | actions */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center h-16">
+
+          {/* LEFT: Logo */}
+          <Link to="/" className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+            <div className="h-10 w-10 overflow-hidden flex items-center justify-center">
               <img
                 src={maddadLogo}
                 alt="Maddad logo"
                 className="h-full w-full object-cover scale-[1.45] origin-center"
               />
             </div>
-            <span className="text-2xl font-serif font-semibold text-foreground leading-none">Maddad</span>
+            <span className="text-xl font-serif font-semibold text-foreground leading-none">Maddad</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          {/* CENTER: Main nav — col-2 auto-width, so it stays truly centered */}
+          <nav className="hidden md:flex items-center gap-0.5">
             {navLinks.map((link) => {
               const isActive =
                 location.pathname === link.href ||
@@ -93,7 +95,7 @@ export function Header() {
                   key={link.href}
                   to={link.href}
                   className={cn(
-                    "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-secondary text-secondary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
@@ -105,75 +107,84 @@ export function Header() {
             })}
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link
-              to="/partners"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 px-2"
-            >
-              For organizations
-            </Link>
-            <Link
-              to="/support-maddad"
-              className={cn(
-                "px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
-                location.pathname === "/support-maddad"
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
-              )}
-            >
-              <Heart size={13} />
-              Support us
-            </Link>
-            {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                    aria-label="Account menu"
-                  >
-                    {initials ?? <User size={16} />}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  <DropdownMenuLabel className="font-normal">
-                    <p className="text-xs text-muted-foreground">Signed in as</p>
-                    <p className="text-sm font-medium text-foreground truncate">{labelText}</p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/my-giving" className="flex items-center gap-2 cursor-pointer">
-                      <Heart size={14} />
-                      My Giving
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleSignOut}
-                    className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
-                  >
-                    <LogOut size={14} />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link to="/login">
-                <Button variant="ghost" size="sm">Sign In</Button>
-              </Link>
-            )}
-            <Link to="/explore">
-              <Button size="sm">Donate Now</Button>
-            </Link>
-          </div>
+          {/* RIGHT: Secondary links + auth + CTA */}
+          <div className="flex items-center justify-end gap-2">
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2.5 rounded-lg hover:bg-secondary transition-colors duration-200"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            {/* Desktop only */}
+            <div className="hidden md:flex items-center gap-2">
+              <Link
+                to="/partners"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 px-2 py-1.5"
+              >
+                For organizations
+              </Link>
+              <Link
+                to="/support-maddad"
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-colors duration-200",
+                  location.pathname === "/support-maddad"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Heart size={12} />
+                Support us
+              </Link>
+
+              {/* Divider */}
+              <div className="w-px h-4 bg-border opacity-30" />
+
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      aria-label="Account menu"
+                    >
+                      {initials ?? <User size={14} />}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuLabel className="font-normal">
+                      <p className="text-xs text-muted-foreground">Signed in as</p>
+                      <p className="text-sm font-medium text-foreground truncate">{labelText}</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/my-giving" className="flex items-center gap-2 cursor-pointer">
+                        <Heart size={14} />
+                        My Giving
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                    >
+                      <LogOut size={14} />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">Sign In</Button>
+                </Link>
+              )}
+
+              <Link to="/explore">
+                <Button size="sm">Donate Now</Button>
+              </Link>
+            </div>
+
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-secondary transition-colors duration-200"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -205,7 +216,6 @@ export function Header() {
             <div className="flex flex-col gap-2 mt-5 px-4">
               {isAuthenticated ? (
                 <>
-                  {/* Identity row */}
                   <div className="flex items-center gap-3 px-1 py-2 mb-1">
                     <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {initials ?? <User size={14} />}
