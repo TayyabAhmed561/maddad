@@ -26,6 +26,8 @@ import KaffarahPage from "./pages/giving/KaffarahPage";
 import RamadanPage from "./pages/RamadanPage";
 import DhulHijjah from "./pages/DhulHijjah";
 import SupportMaddad from "./pages/SupportMaddad";
+import Checkout from "./pages/Checkout";
+import CheckoutConfirmation from "./pages/CheckoutConfirmation";
 import ReceiptDetail from "./pages/ReceiptDetail";
 import MyGiving from "./pages/MyGiving";
 import Login from "./pages/Login";
@@ -86,6 +88,15 @@ const AppRoutes = () => (
       <Route path="/auth/callback" element={<AuthCallback />} />
 
       {/* ── Auth-gated: any signed-in donor ────────────────────────── */}
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/checkout/confirmation" element={<CheckoutConfirmation />} />
       <Route
         path="/my-giving"
         element={

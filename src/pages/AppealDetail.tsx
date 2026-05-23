@@ -2,29 +2,21 @@ import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
-import { AllocationBreakdown } from "@/components/giving/AllocationBreakdown";
-import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
-import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
-import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
 import { DetailPageSkeleton } from "@/components/skeletons/CardSkeleton";
 import { VerificationBadge } from "@/components/VerificationBadge";
 import { ProofPack } from "@/components/verification/ProofPack";
 import { ImpactTimeline } from "@/components/verification/ImpactTimeline";
 import { UpdatesSubscriptionDialog } from "@/components/verification/UpdatesSubscriptionDialog";
 import { useScrollToHash } from "@/hooks/useScrollToHash";
-import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
 import { useAppeal } from "@/hooks/queries/useAppeals";
 import { useEvidence } from "@/hooks/queries/useEvidence";
 import { categoryLabels } from "@/data/appealsData";
-import { allocationRules } from "@/data/givingData";
 import { appealChecklists, appealTimelines, appealEvidenceIds } from "@/data/verificationRules";
 import { computeVerificationLevel } from "@/types/verification";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
 import { Loader2 } from "lucide-react";
-import { 
+import {
   ArrowLeft,
   MapPin,
   Clock,
@@ -43,30 +35,7 @@ export default function AppealDetail() {
   useScrollToHash();
   const { data: appeal, isLoading } = useAppeal(id);
   const { data: evidenceItems } = useEvidence({ campaignId: id });
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
-
-  const [donationState, donationActions] = useDonation({
-    defaultAmount: 50,
-    defaultAnonymous: true,
-    onSuccess: (data) => {
-      if (!appeal) return;
-      const receipt = createReceipt({
-        amount: data.amount,
-        campaignId: appeal.id,
-        campaignTitle: appeal.title,
-        organizationName: appeal.endorsedBy.name,
-        donationType: appeal.zakatEligible ? "zakat" : "sadaqah",
-        frequency: data.frequency,
-        isAnonymous: data.anonymous,
-        hideAmount: data.hideAmount,
-        duaIntention: data.duaIntention,
-      });
-      setLastReceipt(receipt);
-      setShowConfirmDialog(true);
-    }
-  });
 
   if (isLoading) {
     return (
@@ -105,8 +74,7 @@ export default function AppealDetail() {
   }
 
   const categoryStyle = categoryLabels[appeal.category];
-  const presetAmounts = [25, 50, 100, 250, 500];
-  const effectiveAmount = getEffectiveAmount(donationState);
+  const checkoutUrl = `/checkout?campaignId=${encodeURIComponent(appeal.id)}&campaignName=${encodeURIComponent(appeal.title)}&givingType=${appeal.zakatEligible ? "zakat" : "sadaqah"}&amount=50`;
 
   // Verification data for this appeal
   const checklist = appealChecklists[appeal.id];
@@ -313,163 +281,27 @@ export default function AppealDetail() {
                 </div>
               </div>
 
-              {/* Right Column - Donate Section */}
+              {/* Right Column - Donate CTA */}
               <div className="lg:col-span-1">
-                <div 
-                  id="donate" 
-                  className="bg-card rounded-xl border border-border p-6"
-                >
-                  {donationState.isSuccess ? (
-                    /* Success State */
-                    <div className="text-center py-8">
-                      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                        <Heart size={32} className="text-primary" />
-                      </div>
-                      <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
-                        JazakAllah Khair
-                      </h3>
-                      <p className="text-muted-foreground text-sm mb-4">
-                        Your support of ${effectiveAmount.toLocaleString()} has been processed.
-                        {donationState.anonymous && " Your donation will remain anonymous."}
-                      </p>
-                      {lastReceipt && (
-                        <p className="text-xs text-muted-foreground font-mono mb-6">
-                          Receipt: {lastReceipt.receiptId}
-                        </p>
-                      )}
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          variant="default"
-                          onClick={() => setShowConfirmDialog(true)}
-                          className="w-full"
-                        >
-                          View Receipt & Track
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            donationActions.reset();
-                            setLastReceipt(null);
-                          }}
-                          className="w-full"
-                        >
-                          Make Another Contribution
-                        </Button>
-                      </div>
+                <div id="donate" className="bg-card rounded-xl border border-border p-6">
+                  <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
+                    Support This Appeal
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    100% of your donation goes directly to {appeal.title}.
+                  </p>
+                  {appeal.zakatEligible && (
+                    <div className="bg-primary-light rounded-lg p-3 mb-5 flex items-center gap-2">
+                      <CheckCircle size={16} className="text-primary shrink-0" />
+                      <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
                     </div>
-                  ) : (
-                    /* Donation Form */
-                    <>
-                      <h3 className="font-serif text-xl font-semibold text-foreground mb-6">
-                        Support This Appeal
-                      </h3>
-
-                      {/* Preset Amounts */}
-                      <div className="grid grid-cols-3 gap-2 mb-4">
-                        {presetAmounts.map((preset) => (
-                          <button
-                            key={preset}
-                            onClick={() => {
-                              donationActions.setAmount(preset);
-                              donationActions.setCustomAmount("");
-                            }}
-                            className={cn(
-                              "py-3 px-4 rounded-lg text-sm font-medium transition-all",
-                              donationState.amount === preset && !donationState.customAmount
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-foreground hover:bg-muted/80"
-                            )}
-                          >
-                            ${preset}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Custom Amount */}
-                      <div className="mb-6">
-                        <label className="text-sm text-muted-foreground mb-2 block">
-                          Custom amount
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                          <input
-                            type="text"
-                            value={donationState.customAmount}
-                            onChange={(e) => donationActions.setCustomAmount(e.target.value)}
-                            placeholder="Enter amount"
-                            className="w-full pl-8 pr-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Recurring Toggle */}
-                      <RecurringDonationToggle
-                        value={donationState.frequency}
-                        onChange={donationActions.setFrequency}
-                        className="mb-6"
-                      />
-
-                      {/* Privacy Options */}
-                      <AnonymousDonationToggle
-                        anonymous={donationState.anonymous}
-                        hideAmount={donationState.hideAmount}
-                        onAnonymousChange={donationActions.setAnonymous}
-                        onHideAmountChange={donationActions.setHideAmount}
-                        className="mb-6"
-                      />
-
-                      {/* Zakat Eligibility Notice */}
-                      {appeal.zakatEligible && (
-                        <div className="bg-primary-light rounded-lg p-4 mb-6">
-                          <div className="flex items-start gap-3">
-                            <CheckCircle size={18} className="text-primary shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                This appeal qualifies for Zakat funds as verified by {appeal.endorsedBy.name}.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Allocation Breakdown */}
-                      <AllocationBreakdown
-                        items={allocationRules["general"]}
-                        className="mb-6"
-                      />
-
-                      {/* Dua Intention */}
-                      <DuaIntentionField
-                        value={donationState.duaIntention}
-                        onChange={donationActions.setDuaIntention}
-                        className="mb-6"
-                      />
-
-                      {/* Donate Button */}
-                      <Button 
-                        className="w-full py-6 text-base"
-                        onClick={donationActions.processDonation}
-                        disabled={donationState.isLoading || effectiveAmount <= 0}
-                      >
-                        {donationState.isLoading ? (
-                          "Processing..."
-                        ) : (
-                          <>
-                            <Heart size={18} />
-                            Support with ${effectiveAmount.toLocaleString()}
-                            {donationState.frequency !== "one-time" && `/${donationState.frequency.slice(0, 2)}`}
-                          </>
-                        )}
-                      </Button>
-
-                      {donationState.error && (
-                        <p className="text-sm text-destructive mt-3 text-center">
-                          {donationState.error}
-                        </p>
-                      )}
-                    </>
                   )}
+                  <Button asChild className="w-full py-6 text-base">
+                    <Link to={checkoutUrl}>
+                      <Heart size={18} />
+                      Donate Now
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -478,14 +310,6 @@ export default function AppealDetail() {
       </main>
 
       <Footer />
-
-      {/* Donation Confirmation Dialog */}
-      <DonationConfirmDialog
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        receipt={lastReceipt}
-        trackingPath={`/appeals/${appeal.id}`}
-      />
 
       {/* Updates Subscription Dialog */}
       <UpdatesSubscriptionDialog

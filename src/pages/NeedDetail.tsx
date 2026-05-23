@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -8,18 +7,12 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { AllocationBreakdown } from "@/components/giving/AllocationBreakdown";
 import { GivingProofSection } from "@/components/giving/GivingProofSection";
-import { DuaIntentionField } from "@/components/giving/DuaIntentionField";
-import { RecurringDonationToggle } from "@/components/giving/RecurringDonationToggle";
-import { AnonymousDonationToggle } from "@/components/giving/AnonymousDonationToggle";
-import { DonationConfirmDialog } from "@/components/DonationConfirmDialog";
 import { CampaignUpdates } from "@/components/CampaignUpdates";
 import { TransparencyScore } from "@/components/TransparencyScore";
 import { UrgencyIndicator } from "@/components/map/UrgencyIndicator";
-import { useDonation, getEffectiveAmount } from "@/hooks/useDonation";
 import { useCampaign } from "@/hooks/queries/useCampaigns";
 import { useEvidence } from "@/hooks/queries/useEvidence";
 import { allocationRules } from "@/data/givingData";
-import { createReceipt, type DonationReceipt } from "@/types/receipt";
 import type { UrgencyLevel } from "@/types/platform";
 import {
   MapPin, CheckCircle, Clock, FileText, ArrowLeft, Calendar, Heart, AlertCircle, Loader2
@@ -40,29 +33,6 @@ export default function NeedDetail() {
   const navigate = useNavigate();
   const { data: need, isLoading } = useCampaign(id);
   const { data: evidenceItems } = useEvidence({ campaignId: id });
-  const [lastReceipt, setLastReceipt] = useState<DonationReceipt | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-
-  const [donationState, donationActions] = useDonation({
-    defaultAmount: 50,
-    defaultAnonymous: true,
-    onSuccess: (data) => {
-      if (!need) return;
-      const receipt = createReceipt({
-        amount: data.amount,
-        needId: id,
-        campaignTitle: need.title,
-        organizationName: need.organization,
-        donationType: need.zakatEligible ? "zakat" : "sadaqah",
-        frequency: data.frequency,
-        isAnonymous: data.anonymous,
-        hideAmount: data.hideAmount,
-        duaIntention: data.duaIntention,
-      });
-      setLastReceipt(receipt);
-      setShowConfirmDialog(true);
-    }
-  });
 
   if (isLoading) {
     return (
@@ -93,9 +63,8 @@ export default function NeedDetail() {
     );
   }
 
-  const presetAmounts = [25, 50, 100, 250, 500];
-  const effectiveAmount = getEffectiveAmount(donationState);
   const urgency = toUrgencyLevel(need.urgency);
+  const checkoutUrl = `/checkout?campaignId=${encodeURIComponent(need.id)}&campaignName=${encodeURIComponent(need.title)}&givingType=${need.zakatEligible ? "zakat" : "sadaqah"}&amount=50`;
 
   // Verification checklist: prefer live evidence items, fall back to need.verificationChecks
   const verificationChecks = evidenceItems.length > 0
@@ -288,81 +257,25 @@ export default function NeedDetail() {
               )}
             </div>
 
-            {/* Right Column - Donation Module */}
+            {/* Right Column - Donate CTA */}
             <div className="lg:w-96">
               <div id="donate" className="bg-card rounded-xl border border-border p-6 shadow-card">
-                {donationState.isSuccess ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <Heart size={32} className="text-primary" />
-                    </div>
-                    <h3 className="font-serif text-xl font-semibold text-foreground mb-2">JazakAllah Khair</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Your donation of ${effectiveAmount.toLocaleString()} has been processed.
-                      {donationState.anonymous && " Your donation will remain anonymous."}
-                    </p>
-                    {lastReceipt && <p className="text-xs text-muted-foreground font-mono mb-6">Receipt: {lastReceipt.receiptId}</p>}
-                    <div className="flex flex-col gap-2">
-                      <Button variant="default" onClick={() => setShowConfirmDialog(true)} className="w-full">View Receipt & Track</Button>
-                      <Button variant="outline" onClick={() => { donationActions.reset(); setLastReceipt(null); }} className="w-full">Make Another Donation</Button>
-                    </div>
+                <h3 className="font-serif text-xl font-semibold text-foreground mb-2">Support This Need</h3>
+                <p className="text-sm text-muted-foreground mb-5">
+                  100% of your donation goes directly to {need.title}.
+                </p>
+                {need.zakatEligible && (
+                  <div className="bg-primary-light rounded-lg p-3 mb-5 flex items-center gap-2">
+                    <CheckCircle size={16} className="text-primary shrink-0" />
+                    <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
                   </div>
-                ) : (
-                  <>
-                    <h3 className="font-serif text-xl font-semibold text-foreground mb-6">Support This Need</h3>
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      {presetAmounts.map((preset) => (
-                        <button
-                          key={preset}
-                          onClick={() => { donationActions.setAmount(preset); donationActions.setCustomAmount(""); }}
-                          className={cn(
-                            "py-3 px-4 rounded-lg text-sm font-medium transition-all",
-                            donationState.amount === preset && !donationState.customAmount
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-foreground hover:bg-muted/80"
-                          )}
-                        >
-                          ${preset}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="mb-6">
-                      <label className="text-sm text-muted-foreground mb-2 block">Custom amount</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                        <input
-                          type="text"
-                          value={donationState.customAmount}
-                          onChange={(e) => donationActions.setCustomAmount(e.target.value)}
-                          placeholder="Enter amount"
-                          className="w-full pl-8 pr-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                    </div>
-                    <RecurringDonationToggle value={donationState.frequency} onChange={donationActions.setFrequency} className="mb-6" />
-                    <AnonymousDonationToggle anonymous={donationState.anonymous} hideAmount={donationState.hideAmount} onAnonymousChange={donationActions.setAnonymous} onHideAmountChange={donationActions.setHideAmount} className="mb-6" />
-                    {need.zakatEligible && (
-                      <div className="bg-primary-light rounded-lg p-4 mb-6">
-                        <div className="flex items-start gap-3">
-                          <CheckCircle size={18} className="text-primary shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-foreground">Zakat Eligible</p>
-                            <p className="text-xs text-muted-foreground mt-1">This need qualifies for Zakat funds as verified by {need.organization}.</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <AllocationBreakdown
-                      items={id && needCampaignMap[id] && allocationRules[needCampaignMap[id]] ? allocationRules[needCampaignMap[id]] : allocationRules["general"]}
-                      className="mb-6"
-                    />
-                    <DuaIntentionField value={donationState.duaIntention} onChange={donationActions.setDuaIntention} className="mb-6" />
-                    <Button className="w-full py-6 text-base" onClick={donationActions.processDonation} disabled={donationState.isLoading || effectiveAmount <= 0}>
-                      {donationState.isLoading ? "Processing..." : (<><Heart size={18} />Donate ${effectiveAmount.toLocaleString()}{donationState.frequency !== "one-time" && `/${donationState.frequency.slice(0, 2)}`}</>)}
-                    </Button>
-                    {donationState.error && <p className="text-sm text-destructive mt-3 text-center">{donationState.error}</p>}
-                  </>
                 )}
+                <Button asChild className="w-full py-6 text-base">
+                  <Link to={checkoutUrl}>
+                    <Heart size={18} />
+                    Donate Now
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -370,7 +283,6 @@ export default function NeedDetail() {
       </main>
 
       <Footer />
-      <DonationConfirmDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog} receipt={lastReceipt} trackingPath={id ? `/need/${id}` : undefined} />
     </div>
   );
 }

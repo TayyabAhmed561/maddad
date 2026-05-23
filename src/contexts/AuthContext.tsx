@@ -103,8 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchAndSetRole(newSession.user.id)
         // On SIGNED_IN ensure the donors row exists — covers the
         // email-confirmation flow and signup profile-creation failures.
-        if (event === 'SIGNED_IN') {
-          ensureDonorProfile(newSession.user)
+        // Delay 500 ms to let Supabase auth fully propagate before the
+        // RLS check runs (avoids transient "permission denied" errors).
+        if (event === 'SIGNED_IN' && newSession.user.id) {
+          setTimeout(() => void ensureDonorProfile(newSession.user), 500)
         }
       } else {
         setRole(null)

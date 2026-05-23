@@ -36,11 +36,20 @@ function StatusBadge({ status }: { status: VerificationStatus | string }) {
 
 export default function VerifierDashboard() {
   const navigate = useNavigate();
-  const { role }  = useAuth();
+  const { user, role, isLoading: authLoading } = useAuth();
 
   const { data: queue, isLoading, refetch } = useSubmissionsQueue();
   const [reviewNotes, setReviewNotes]       = useState<Record<string, string>>({});
   const [actioning, setActioning]           = useState<string | null>(null);
+
+  // Waiting for role to resolve — brief window after session check completes
+  if (authLoading || (user !== null && role === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (role !== "verifier" && role !== "platform_admin") {
     return (
