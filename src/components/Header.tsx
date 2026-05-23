@@ -105,9 +105,14 @@ export function Header() {
             })}
             <Link
               to="/support-maddad"
-              className="ml-1 px-3 py-2 rounded-lg text-xs text-muted-foreground/70 hover:text-muted-foreground flex items-center gap-1.5 transition-colors duration-200"
+              className={cn(
+                "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
+                location.pathname === "/support-maddad"
+                  ? "bg-secondary text-secondary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+              )}
             >
-              <Heart size={12} className="text-primary/60" />
+              <Heart size={14} />
               Support us
             </Link>
           </nav>
