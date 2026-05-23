@@ -13,7 +13,7 @@ import { STRIPE_CONFIG } from "@/lib/stripe";
 import type { GivingType, DonationFrequency } from "@/lib/supabase";
 import maddadLogo from "@/assets/maddad-logo.png";
 import {
-  ArrowLeft, Heart, Loader2, ArrowRight, Lock, Check, ChevronLeft,
+  ArrowLeft, Heart, Loader2, ArrowRight, Lock, Check, ChevronLeft, Pencil,
 } from "lucide-react";
 
 const PRESET_AMOUNTS = [25, 50, 100, 250, 500];
@@ -56,6 +56,8 @@ export default function Checkout() {
   const campaignName = decodeURIComponent(searchParams.get("campaignName") ?? "") || (locState.campaignName ?? "");
   const initialGT    = ((searchParams.get("givingType") ?? locState.givingType ?? "sadaqah") as GivingType);
   const initialAmt   = parseFloat(searchParams.get("amount") ?? "") || locState.amount || 50;
+
+  const hasPrefilledState = !!(locState.amount && locState.givingType);
 
   const { data: campaign } = useCampaign(campaignId || undefined);
   const displayName = campaign?.title ?? (campaignName || "this cause");
@@ -165,26 +167,26 @@ export default function Checkout() {
       </header>
 
       {/* Progress indicator */}
-      <div className="border-b border-border bg-card">
+      <div className="border-b border-border bg-card py-4">
         <div className="container mx-auto px-4">
-          <div className="flex items-center max-w-2xl mx-auto">
+          <div className="flex items-center max-w-lg mx-auto">
             {VISUAL_STEPS.map((label, idx) => {
               const n = idx + 1;
               const active = n === visualStep;
               const done = n < visualStep;
               return (
                 <div key={label} className="flex items-center flex-1">
-                  <div className="flex items-center gap-2 py-3">
+                  <div className="flex items-center gap-2">
                     <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors",
+                      "w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors shrink-0",
                       done ? "bg-primary text-primary-foreground" :
                       active ? "bg-primary text-primary-foreground" :
                       "bg-secondary text-muted-foreground"
                     )}>
-                      {done ? <Check size={12} /> : n}
+                      {done ? <Check size={13} /> : n}
                     </div>
                     <span className={cn(
-                      "text-sm hidden sm:inline transition-colors",
+                      "text-sm hidden sm:inline transition-colors whitespace-nowrap",
                       active ? "text-foreground font-medium" : "text-muted-foreground"
                     )}>
                       {label}
@@ -215,7 +217,78 @@ export default function Checkout() {
             )}
 
             {/* ── Step 1: Amount + details ─────────────────────────────── */}
-            {step === "amount" || step === "details" ? (
+            {(step === "amount" || step === "details") && hasPrefilledState ? (
+              /* Summary view — arrived from a giving type page */
+              <div className="space-y-4">
+                <div className="bg-card rounded-xl border border-border p-6 md:p-8">
+                  <div className="flex items-start justify-between mb-5">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Giving summary</p>
+                      <h2 className="font-serif text-xl font-semibold text-foreground">{displayName}</h2>
+                    </div>
+                    <button
+                      onClick={() => navigate(-1)}
+                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5"
+                    >
+                      <Pencil size={13} />
+                      Edit
+                    </button>
+                  </div>
+                  <div className="space-y-2.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Amount</span>
+                      <span className="font-semibold text-foreground text-base">${amount.toFixed(2)} CAD</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Type</span>
+                      <span className="font-medium text-foreground capitalize">{givingType.replace("_", " ")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Frequency</span>
+                      <span className="font-medium text-foreground capitalize">{frequency.replace("-", " ")}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-xl border border-border p-6 space-y-5">
+                  {/* Anonymous toggle */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Anonymous donation</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Your name won't be shown publicly</p>
+                    </div>
+                    <button role="switch" aria-checked={isAnonymous} onClick={() => setIsAnonymous(!isAnonymous)}
+                      className={cn("relative w-10 h-6 rounded-full shrink-0 transition-colors",
+                        isAnonymous ? "bg-primary" : "bg-muted")}>
+                      <span className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform",
+                        isAnonymous ? "translate-x-5" : "translate-x-1"
+                      )} />
+                    </button>
+                  </div>
+
+                  <div className="divider-subtle" />
+
+                  {/* Dua intention */}
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1 block">
+                      Intention{" "}
+                      <span className="text-muted-foreground font-normal text-xs">(private — never shared)</span>
+                    </label>
+                    <textarea value={duaIntention} onChange={(e) => setDuaIntention(e.target.value)}
+                      placeholder="E.g. For the wellbeing of my family…" rows={2}
+                      className="w-full rounded-lg border border-border bg-background text-sm text-foreground placeholder:text-muted-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none" />
+                  </div>
+
+                  <Button className="w-full" size="lg" onClick={handleAmountContinue} disabled={amount <= 0}>
+                    <Heart size={18} />
+                    Continue
+                    <ArrowRight size={16} />
+                  </Button>
+                </div>
+              </div>
+            ) : (step === "amount" || step === "details") ? (
+              /* Full input form — arrived directly (NeedDetail / AppealDetail / direct URL) */
               <div className="bg-card rounded-xl border border-border p-6 md:p-8 space-y-6">
                 {/* Preset amounts */}
                 <div>
