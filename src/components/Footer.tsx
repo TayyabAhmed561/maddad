@@ -123,6 +123,14 @@ export function Footer() {
                   Contact
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/support-maddad"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+                >
+                  Support Maddad
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

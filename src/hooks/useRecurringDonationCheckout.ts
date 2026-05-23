@@ -12,7 +12,7 @@ export interface RecurringDonationCheckoutState extends DonationCheckoutState {
 
 export interface RecurringDonationCheckoutActions extends DonationCheckoutActions {
   setRecurringFrequency: (f: RecurringFrequency) => void
-  submitRecurringDonation: (campaignId: string) => Promise<{ clientSecret: string }>
+  submitRecurringDonation: (campaignId: string, confirmedTipAmount?: number) => Promise<{ clientSecret: string }>
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
@@ -35,12 +35,12 @@ export function useRecurringDonationCheckout(): [
   // The create-payment-intent Edge Function already records frequency on the
   // donation row, enabling subscription migration without data changes.
   const submitRecurringDonation = useCallback(
-    async (campaignId: string): Promise<{ clientSecret: string }> => {
+    async (campaignId: string, confirmedTipAmount = 0): Promise<{ clientSecret: string }> => {
       if (state.frequency === 'one-time') {
         // Enforce recurring — default to monthly if caller forgot to set frequency
         actions.setFrequency('monthly')
       }
-      return actions.submitDonation(campaignId)
+      return actions.submitDonation(campaignId, confirmedTipAmount)
     },
     [state.frequency, actions]
   )

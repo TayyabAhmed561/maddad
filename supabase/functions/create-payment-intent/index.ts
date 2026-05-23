@@ -133,8 +133,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // CAD Stripe rate: 2.9% + $0.30
   const feesCents   = coverFees ? Math.round((amount * 0.029 + 0.30) * 100) : 0
   const totalCents  = baseCents + tipCents + feesCents
-  // Maddad 3% operational fee on the base donation (tip goes entirely to Maddad)
-  const platformFeeCents = Math.round(baseCents * 0.03)
+  // Maddad takes 0% from donations — revenue comes entirely from optional tips
+  const platformFeeCents = 0
 
   // ── Create Stripe Payment Intent ──────────────────────────────────────────
   let paymentIntent: Stripe.PaymentIntent
@@ -149,7 +149,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
         frequency,
         donorId: donorId ?? 'guest',
         tipAmount: String(tipCents),
-        platformFee: String(platformFeeCents),
+        tipSkipped: String(tipCents === 0),
+        platformFee: '0',
         coverFees: String(coverFees),
         isAnonymous: String(isAnonymous),
       },

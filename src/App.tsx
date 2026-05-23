@@ -25,6 +25,7 @@ import SadaqahJariyahPage from "./pages/giving/SadaqahJariyahPage";
 import KaffarahPage from "./pages/giving/KaffarahPage";
 import RamadanPage from "./pages/RamadanPage";
 import DhulHijjah from "./pages/DhulHijjah";
+import SupportMaddad from "./pages/SupportMaddad";
 import ReceiptDetail from "./pages/ReceiptDetail";
 import MyGiving from "./pages/MyGiving";
 import Login from "./pages/Login";
@@ -79,6 +80,7 @@ const AppRoutes = () => (
       <Route path="/give/kaffarah" element={<KaffarahPage />} />
       <Route path="/ramadan" element={<RamadanPage />} />
       <Route path="/dhul-hijjah" element={<DhulHijjah />} />
+      <Route path="/support-maddad" element={<SupportMaddad />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

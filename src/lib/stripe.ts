@@ -20,12 +20,6 @@ export const STRIPE_CONFIG = {
   // so that 100% of the donation reaches the campaign.
   feeCoverableGivingTypes: ['zakat', 'fidya', 'kaffarah'] as GivingType[],
 
-  // Default tip percentage pre-selected in checkout
-  defaultTipPercent: 10,
-
-  // Quick-select tip options shown as buttons
-  tipOptions: [5, 10, 15, 20] as const,
-
-  // Maddad operational fee deducted from each donation before org payout (%)
-  platformFeePercent: 3,
+  // Maddad takes 0% from donations — revenue comes entirely from optional tips
+  platformFeePercent: 0,
 } as const

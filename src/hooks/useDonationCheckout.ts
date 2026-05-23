@@ -4,7 +4,7 @@ import { STRIPE_CONFIG } from '@/lib/stripe'
 import { useAuth } from '@/hooks/useAuth'
 import type { GivingType, DonationFrequency } from '@/lib/supabase'
 
-export type CheckoutStep = 'amount' | 'details' | 'payment' | 'confirmation'
+export type CheckoutStep = 'amount' | 'details' | 'tip' | 'payment' | 'confirmation'
 
 // ── Request / response shape shared with the create-payment-intent Edge Function
 export interface CreatePaymentIntentRequest {
@@ -30,14 +30,13 @@ export interface DonationCheckoutState {
   isAnonymous: boolean
   hideAmount: boolean
   duaIntention: string
-  tipPercent: number
+  tipAmount: number     // confirmed tip (set when tip step resolves; 0 = not yet chosen or skipped)
   coverFees: boolean
   step: CheckoutStep
   // Computed
   processingFee: number
-  tipAmount: number
   totalCharged: number
-  charityReceives: number
+  charityReceives: number // = amount (platform fee is 0)
   // Meta
   isSubmitting: boolean
   error: string | null
@@ -50,15 +49,16 @@ export interface DonationCheckoutActions {
   setIsAnonymous: (v: boolean) => void
   setHideAmount: (v: boolean) => void
   setDuaIntention: (v: string) => void
-  setTipPercent: (n: number) => void
+  setTipAmount: (n: number) => void
   setCoverFees: (v: boolean) => void
   nextStep: () => void
   prevStep: () => void
-  submitDonation: (campaignId: string) => Promise<{ clientSecret: string }>
+  // confirmedTipAmount is passed explicitly to avoid stale closure issues
+  submitDonation: (campaignId: string, confirmedTipAmount: number) => Promise<{ clientSecret: string }>
   clearError: () => void
 }
 
-const STEPS: CheckoutStep[] = ['amount', 'details', 'payment', 'confirmation']
+const STEPS: CheckoutStep[] = ['amount', 'details', 'tip', 'payment', 'confirmation']
 
 export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutActions] {
   const { user } = useAuth()
@@ -69,7 +69,7 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
   const [isAnonymous, setIsAnonymousState] = useState(false)
   const [hideAmount, setHideAmountState] = useState(false)
   const [duaIntention, setDuaIntentionState] = useState('')
-  const [tipPercent, setTipPercentState] = useState(STRIPE_CONFIG.defaultTipPercent)
+  const [tipAmount, setTipAmountState] = useState(0)
   const [coverFees, setCoverFeesState] = useState(false)
   const [step, setStep] = useState<CheckoutStep>('amount')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -81,10 +81,8 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
     () => Math.round((amount * 0.029 + 0.3) * 100) / 100,
     [amount]
   )
-  const tipAmount = useMemo(
-    () => Math.round(amount * (tipPercent / 100) * 100) / 100,
-    [amount, tipPercent]
-  )
+  // Platform fee is 0 — charity receives the full donation amount
+  const charityReceives = amount
   const totalCharged = useMemo(
     () =>
       Math.round(
@@ -92,17 +90,11 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
       ) / 100,
     [amount, processingFee, tipAmount, coverFees]
   )
-  // The portion that reaches the campaign after Maddad's 3% operational fee
-  const charityReceives = useMemo(
-    () => Math.round(amount * (1 - STRIPE_CONFIG.platformFeePercent / 100) * 100) / 100,
-    [amount]
-  )
 
   // ── Setters ─────────────────────────────────────────────────────────────────
   const setAmount = useCallback((n: number) => setAmountState(n), [])
   const setGivingType = useCallback((t: GivingType) => {
     setGivingTypeState(t)
-    // Reset fee coverage when switching to a non-coverable type
     if (!STRIPE_CONFIG.feeCoverableGivingTypes.includes(t)) {
       setCoverFeesState(false)
     }
@@ -111,7 +103,7 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
   const setIsAnonymous = useCallback((v: boolean) => setIsAnonymousState(v), [])
   const setHideAmount = useCallback((v: boolean) => setHideAmountState(v), [])
   const setDuaIntention = useCallback((v: string) => setDuaIntentionState(v), [])
-  const setTipPercent = useCallback((n: number) => setTipPercentState(n), [])
+  const setTipAmount = useCallback((n: number) => setTipAmountState(n), [])
   const setCoverFees = useCallback((v: boolean) => setCoverFeesState(v), [])
   const clearError = useCallback(() => setError(null), [])
 
@@ -131,16 +123,18 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
 
   // ── Submission ──────────────────────────────────────────────────────────────
   const submitDonation = useCallback(
-    async (campaignId: string): Promise<{ clientSecret: string }> => {
+    async (campaignId: string, confirmedTipAmount: number): Promise<{ clientSecret: string }> => {
       setIsSubmitting(true)
       setError(null)
+      // Store for confirmation display
+      setTipAmountState(confirmedTipAmount)
 
       const body: CreatePaymentIntentRequest = {
         campaignId,
         amount,
         givingType,
         frequency,
-        tipAmount,
+        tipAmount: confirmedTipAmount,
         coverFees,
         isAnonymous,
         donorId: user?.id ?? null,
@@ -161,7 +155,7 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
 
       return { clientSecret: data.clientSecret }
     },
-    [amount, givingType, frequency, tipAmount, coverFees, isAnonymous, user]
+    [amount, givingType, frequency, coverFees, isAnonymous, user]
   )
 
   const state: DonationCheckoutState = {
@@ -171,11 +165,10 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
     isAnonymous,
     hideAmount,
     duaIntention,
-    tipPercent,
+    tipAmount,
     coverFees,
     step,
     processingFee,
-    tipAmount,
     totalCharged,
     charityReceives,
     isSubmitting,
@@ -189,7 +182,7 @@ export function useDonationCheckout(): [DonationCheckoutState, DonationCheckoutA
     setIsAnonymous,
     setHideAmount,
     setDuaIntention,
-    setTipPercent,
+    setTipAmount,
     setCoverFees,
     nextStep,
     prevStep,

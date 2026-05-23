@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Heart, Loader2, Check, ChevronLeft } from "lucide-react";
+import { Heart, Loader2, Check, ChevronLeft, ArrowRight } from "lucide-react";
 import { useDonationCheckout } from "@/hooks/useDonationCheckout";
 import { STRIPE_CONFIG } from "@/lib/stripe";
 import { DonationPaymentStep } from "@/components/donation/DonationPaymentStep";
+import { DonationTipStep } from "@/components/donation/DonationTipStep";
 import type { GivingType, DonationFrequency } from "@/lib/supabase";
 
 interface DonationModuleProps {
@@ -15,7 +16,6 @@ interface DonationModuleProps {
 
 const presetAmounts = [25, 50, 100, 250, 500];
 
-// Map the two-option UI toggle to DB giving_type values
 const givingTypeMap: Record<"sadaqah" | "zakat", GivingType> = {
   sadaqah: "sadaqah",
   zakat: "zakat",
@@ -25,14 +25,12 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
   const [state, actions] = useDonationCheckout();
   const [customAmount, setCustomAmount] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  // UI alias: track which simple option is selected (sadaqah vs zakat)
   const [givingTypeUI, setGivingTypeUI] = useState<"sadaqah" | "zakat">("sadaqah");
 
   const {
     amount,
     givingType,
     frequency,
-    tipPercent,
     coverFees,
     duaIntention,
     processingFee,
@@ -48,7 +46,6 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
     setAmount,
     setGivingType,
     setFrequency,
-    setTipPercent,
     setCoverFees,
     setDuaIntention,
     nextStep,
@@ -77,35 +74,52 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
     setGivingType(givingTypeMap[key]);
   };
 
-  const handleFrequencyToggle = (f: DonationFrequency) => setFrequency(f);
+  // Amount step "Continue" — skip 'details', land on 'tip'
+  const handleAmountContinue = () => {
+    if (!campaignId || amount <= 0) return;
+    nextStep();
+    nextStep();
+  };
 
-  const handleDonate = async () => {
-    if (!campaignId || totalCharged <= 0) return;
+  // Tip step "Continue" or "Skip" — submit payment intent then go to payment
+  const handleTipConfirm = async (confirmedTipAmount: number) => {
+    if (!campaignId || amount <= 0) return;
     clearError();
     try {
-      const { clientSecret: cs } = await submitDonation(campaignId);
+      const { clientSecret: cs } = await submitDonation(campaignId, confirmedTipAmount);
       setClientSecret(cs);
-      // Skip 'details' step (form is flat) — go directly to 'payment'
-      nextStep();
       nextStep();
     } catch {
-      // error already set inside submitDonation
+      // error set inside submitDonation
     }
   };
 
-  // ── Confirmation step ───────────────────────────────────────────────────────
+  // ── Confirmation ────────────────────────────────────────────────────────────
   if (step === "confirmation") {
     return (
       <div className={cn("bg-card rounded-xl border border-border shadow-card p-6 text-center", className)}>
         <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <Check size={28} className="text-primary" />
         </div>
-        <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
+        <h3 className="font-serif text-xl font-semibold text-foreground mb-4">
           JazakAllah Khayran
         </h3>
-        <p className="text-muted-foreground text-sm mb-1">
-          Your donation of ${totalCharged.toFixed(2)} CAD has been received.
-        </p>
+        <div className="bg-secondary rounded-lg p-4 text-sm text-left space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Sent to</span>
+            <span className="font-medium text-foreground">{campaignTitle ?? "campaign"}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Donation</span>
+            <span className="font-medium text-foreground">${charityReceives.toFixed(2)} CAD</span>
+          </div>
+          {tipAmount > 0 && (
+            <div className="flex justify-between pt-2 border-t border-border">
+              <span className="text-muted-foreground">+ ${tipAmount.toFixed(2)} to keep Maddad free</span>
+              <span className="text-primary font-medium">Thank you</span>
+            </div>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">
           A tax receipt will be emailed to you shortly.
         </p>
@@ -113,37 +127,48 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
     );
   }
 
-  // ── Payment step — Stripe Payment Element ───────────────────────────────────
-  if (step === "payment" && clientSecret) {
+  // ── Tip step ─────────────────────────────────────────────────────────────────
+  if (step === "tip") {
     return (
-      <div className={cn("bg-card rounded-xl border border-border shadow-card p-6", className)}>
-        <button
-          onClick={() => { prevStep(); prevStep(); }}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
-        >
-          <ChevronLeft size={16} />
-          Back
-        </button>
-        <h3 className="font-semibold text-lg text-foreground mb-2">Complete Payment</h3>
-        <p className="text-sm text-muted-foreground mb-5">
-          Total: <span className="font-medium text-foreground">${totalCharged.toFixed(2)} CAD</span>
-        </p>
-        <DonationPaymentStep
-          clientSecret={clientSecret}
-          onSuccess={() => nextStep()}
-          onError={(msg) => {
-            // Surface Stripe error in the same error area
-            actions.clearError();
-            // Use the error state by setting it via a side-channel
-            // (DonationPaymentStep renders its own error inline)
-            void msg;
-          }}
+      <div className={cn(className)}>
+        <DonationTipStep
+          donationAmount={amount}
+          campaignTitle={campaignTitle ?? "this cause"}
+          isSubmitting={isSubmitting}
+          error={error}
+          onConfirm={handleTipConfirm}
+          onBack={() => { prevStep(); prevStep(); }}
         />
       </div>
     );
   }
 
-  // ── Main form (amount + details combined) ───────────────────────────────────
+  // ── Payment step ─────────────────────────────────────────────────────────────
+  if (step === "payment" && clientSecret) {
+    return (
+      <div className={cn("bg-card rounded-xl border border-border shadow-card p-6", className)}>
+        <button
+          onClick={() => prevStep()}
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+        >
+          <ChevronLeft size={16} />
+          Back
+        </button>
+        <h3 className="font-semibold text-lg text-foreground mb-1">Complete Payment</h3>
+        <p className="text-sm text-muted-foreground mb-5">
+          Total:{" "}
+          <span className="font-medium text-foreground">${totalCharged.toFixed(2)} CAD</span>
+        </p>
+        <DonationPaymentStep
+          clientSecret={clientSecret}
+          onSuccess={() => nextStep()}
+          onError={(msg) => { void msg; }}
+        />
+      </div>
+    );
+  }
+
+  // ── Amount + details form ────────────────────────────────────────────────────
   return (
     <div className={cn("bg-card rounded-xl border border-border shadow-card p-6", className)}>
       <h3 className="font-semibold text-lg text-foreground mb-5">Make a Donation</h3>
@@ -190,7 +215,7 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
           {(["one-time", "monthly"] as DonationFrequency[]).map((f) => (
             <button
               key={f}
-              onClick={() => handleFrequencyToggle(f)}
+              onClick={() => setFrequency(f)}
               className={cn(
                 "flex-1 py-2 rounded-md text-sm font-medium transition-all",
                 frequency === f
@@ -225,44 +250,7 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
         </div>
       </div>
 
-      {/* Tip Selector */}
-      <div className="mb-4">
-        <label className="text-sm font-medium text-foreground mb-1 block">
-          Support Maddad's operations
-        </label>
-        <p className="text-xs text-muted-foreground mb-2">
-          Over 70% of donors leave a tip — it keeps the platform free for charities
-        </p>
-        <div className="flex gap-2 flex-wrap">
-          {STRIPE_CONFIG.tipOptions.map((pct) => (
-            <button
-              key={pct}
-              onClick={() => setTipPercent(pct)}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
-                tipPercent === pct
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-secondary text-secondary-foreground border-transparent hover:bg-secondary/80"
-              )}
-            >
-              {pct}%
-            </button>
-          ))}
-          <button
-            onClick={() => setTipPercent(0)}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
-              tipPercent === 0
-                ? "bg-muted text-foreground border-border"
-                : "bg-secondary text-secondary-foreground border-transparent hover:bg-secondary/80"
-            )}
-          >
-            None
-          </button>
-        </div>
-      </div>
-
-      {/* Fee Coverage Toggle — only for zakat / fidya / kaffarah */}
+      {/* Fee Coverage Toggle — Zakat / Fidya / Kaffarah only */}
       {showFeeCoverage && (
         <div className="mb-4 bg-primary/5 rounded-lg p-3 border border-primary/10">
           <div className="flex items-start justify-between gap-3">
@@ -297,25 +285,15 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
         </div>
       )}
 
-      {/* Fund Usage / Transparency Line */}
+      {/* 100% transparency line */}
       <div className="bg-primary-light rounded-lg p-4 mb-4">
-        <p className="text-sm font-medium text-primary mb-2">Where your donation goes</p>
-        <div className="space-y-1.5 text-sm text-secondary-foreground">
-          <div className="flex justify-between">
-            <span>To {campaignTitle ?? "campaign"}</span>
-            <span className="font-medium">${charityReceives.toFixed(2)}</span>
-          </div>
-          {tipAmount > 0 && (
-            <div className="flex justify-between">
-              <span>Tip to Maddad</span>
-              <span className="font-medium">${tipAmount.toFixed(2)}</span>
-            </div>
-          )}
-          <div className="flex justify-between text-muted-foreground text-xs pt-1 border-t border-primary/10">
-            <span>Maddad operational ({STRIPE_CONFIG.platformFeePercent}%)</span>
-            <span>${(amount * STRIPE_CONFIG.platformFeePercent / 100).toFixed(2)}</span>
-          </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="font-medium text-primary">100% to {campaignTitle ?? "campaign"}</span>
+          <span className="font-medium text-foreground">${charityReceives.toFixed(2)}</span>
         </div>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          Maddad adds nothing — your full donation reaches the cause.
+        </p>
       </div>
 
       {/* Dua Intention */}
@@ -333,29 +311,16 @@ export function DonationModule({ campaignId, campaignTitle, className }: Donatio
         />
       </div>
 
-      {/* Error */}
-      {error && (
-        <p className="text-sm text-destructive mb-3">{error}</p>
-      )}
-
-      {/* Donate Button */}
+      {/* Continue button */}
       <Button
         className="w-full"
         size="lg"
-        onClick={handleDonate}
-        disabled={totalCharged <= 0 || isSubmitting || !campaignId}
+        onClick={handleAmountContinue}
+        disabled={amount <= 0 || !campaignId}
       >
-        {isSubmitting ? (
-          <>
-            <Loader2 size={18} className="animate-spin" />
-            Processing…
-          </>
-        ) : (
-          <>
-            <Heart size={18} />
-            Donate ${totalCharged.toFixed(2)} CAD
-          </>
-        )}
+        <Heart size={18} />
+        Continue
+        <ArrowRight size={16} />
       </Button>
       {!campaignId && (
         <p className="text-xs text-muted-foreground text-center mt-2">
