@@ -46,7 +46,7 @@ export default function Checkout() {
   const initialAmt   = parseFloat(searchParams.get("amount") ?? "50") || 50;
 
   const { data: campaign } = useCampaign(campaignId || undefined);
-  const displayName = campaign?.title ?? campaignName || "this cause";
+  const displayName = campaign?.title ?? (campaignName || "this cause");
 
   const [state, actions] = useDonationCheckout();
   const [customAmount, setCustomAmount] = useState("");
