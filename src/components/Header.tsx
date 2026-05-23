@@ -19,7 +19,7 @@ const navLinks = [
   { href: "/explore", label: "Explore Needs" },
   { href: "/giving", label: "Giving" },
   { href: "/appeals", label: "Community Appeals" },
-  { href: "/verification", label: "Verification" },
+  { href: "/verification", label: "Get Verified" },
   { href: "/impact", label: "Impact" },
 ];
 
@@ -112,12 +112,6 @@ export function Header() {
 
             {/* Desktop only */}
             <div className="hidden md:flex items-center gap-2">
-              <Link
-                to="/partners"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 px-2 py-1.5"
-              >
-                For organizations
-              </Link>
               <Link
                 to="/support-maddad"
                 className={cn(
