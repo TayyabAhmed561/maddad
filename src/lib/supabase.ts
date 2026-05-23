@@ -354,6 +354,67 @@ export type Database = {
         Update: Partial<Omit<Database['public']['Tables']['scheduled_donations']['Insert'], 'donor_id'>>
       }
 
+      // ── organization_applications ─────────────────────────────────────
+      organization_applications: {
+        Row: {
+          id: string
+          org_name: string
+          org_type: 'registered_charity' | 'masjid' | 'university_msa' | 'community_group'
+          province: string
+          website_url: string | null
+          org_description: string
+          campaign_title: string
+          campaign_type: string
+          campaign_category: string
+          campaign_goal_cad: number | null
+          campaign_description: string
+          zakat_eligible: boolean
+          contact_name: string
+          contact_role: string
+          contact_email: string
+          contact_phone: string | null
+          cra_number: string | null
+          how_heard: string | null
+          document_paths: Json
+          status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'more_info_needed'
+          admin_notes: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          created_organization_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_name: string
+          org_type: 'registered_charity' | 'masjid' | 'university_msa' | 'community_group'
+          province?: string
+          website_url?: string | null
+          org_description: string
+          campaign_title: string
+          campaign_type: string
+          campaign_category: string
+          campaign_goal_cad?: number | null
+          campaign_description: string
+          zakat_eligible?: boolean
+          contact_name: string
+          contact_role: string
+          contact_email: string
+          contact_phone?: string | null
+          cra_number?: string | null
+          how_heard?: string | null
+          document_paths?: Json
+          status?: 'pending' | 'under_review' | 'approved' | 'rejected' | 'more_info_needed'
+          admin_notes?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          created_organization_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['organization_applications']['Insert']>
+      }
+
       // ── maddad_waitlist ────────────────────────────────────────────────
       maddad_waitlist: {
         Row: {

@@ -37,6 +37,8 @@ import OrgVerificationForm from "./pages/verification/OrgVerificationForm";
 import CampaignVerificationForm from "./pages/verification/CampaignVerificationForm";
 import VerifierDashboard from "./pages/verification/VerifierDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import Apply from "./pages/Apply";
+import Partners from "./pages/Partners";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +85,8 @@ const AppRoutes = () => (
       <Route path="/ramadan" element={<RamadanPage />} />
       <Route path="/dhul-hijjah" element={<DhulHijjah />} />
       <Route path="/support-maddad" element={<SupportMaddad />} />
+      <Route path="/apply" element={<Apply />} />
+      <Route path="/partners" element={<Partners />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

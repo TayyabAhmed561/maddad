@@ -107,6 +107,12 @@ export function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <Link
+              to="/partners"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 px-2"
+            >
+              For organizations
+            </Link>
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

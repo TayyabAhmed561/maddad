@@ -112,7 +112,15 @@ export function Footer() {
                   to="/partners"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  Partners
+                  For Organizations
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/apply"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
+                >
+                  Apply to Join
                 </Link>
               </li>
               <li>
