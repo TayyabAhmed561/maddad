@@ -59,18 +59,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // with a higher role (charity_admin, verifier) is never downgraded.
   const ensureDonorProfile = useCallback(
     async (signedInUser: User) => {
-      const { error } = await supabase.from('donors').upsert(
-        {
-          id: signedInUser.id,
-          email: signedInUser.email ?? '',
-          full_name: (signedInUser.user_metadata?.full_name as string) ?? null,
-          display_name: (signedInUser.user_metadata?.full_name as string) ?? null,
-          role: 'donor' as DonorRole,
-        },
-        { onConflict: 'id', ignoreDuplicates: true }
-      )
-      if (error) {
-        console.error('[Maddad] ensureDonorProfile failed:', error.message)
+      try {
+        await new Promise<void>(resolve => setTimeout(resolve, 800))
+
+        const { data: existing } = await supabase
+          .from('donors')
+          .select('id')
+          .eq('id', signedInUser.id)
+          .maybeSingle()
+
+        if (existing) return
+
+        const { error } = await supabase
+          .from('donors')
+          .insert({
+            id: signedInUser.id,
+            email: signedInUser.email ?? '',
+            full_name: (signedInUser.user_metadata?.full_name as string) ?? null,
+            display_name: (signedInUser.user_metadata?.full_name as string) ?? null,
+            role: 'donor' as DonorRole,
+          })
+
+        if (error) {
+          console.error('[Maddad] ensureDonorProfile failed:', error.message)
+        }
+      } catch (err) {
+        console.error('[Maddad] ensureDonorProfile unexpected error:', err)
       }
     },
     []
@@ -106,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Delay 500 ms to let Supabase auth fully propagate before the
         // RLS check runs (avoids transient "permission denied" errors).
         if (event === 'SIGNED_IN' && newSession.user.id) {
-          setTimeout(() => void ensureDonorProfile(newSession.user), 500)
+          void ensureDonorProfile(newSession.user)
         }
       } else {
         setRole(null)

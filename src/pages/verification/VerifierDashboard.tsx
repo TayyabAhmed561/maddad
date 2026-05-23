@@ -42,8 +42,17 @@ export default function VerifierDashboard() {
   const [reviewNotes, setReviewNotes]       = useState<Record<string, string>>({});
   const [actioning, setActioning]           = useState<string | null>(null);
 
-  // Waiting for role to resolve — brief window after session check completes
-  if (authLoading || (user !== null && role === null)) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  if (role === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

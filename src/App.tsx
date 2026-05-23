@@ -39,6 +39,7 @@ import VerifierDashboard from "./pages/verification/VerifierDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Apply from "./pages/Apply";
 import Partners from "./pages/Partners";
+import AppealsSubmit from "./pages/AppealsSubmit";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const AppRoutes = () => (
       <Route path="/support-maddad" element={<SupportMaddad />} />
       <Route path="/apply" element={<Apply />} />
       <Route path="/partners" element={<Partners />} />
+      <Route path="/appeals/submit" element={<AppealsSubmit />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

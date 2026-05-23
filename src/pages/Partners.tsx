@@ -208,16 +208,12 @@ export default function Partners() {
               <p className="text-muted-foreground">No complicated onboarding. No waiting months to go live.</p>
             </div>
             <div className="max-w-2xl mx-auto">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-center gap-4 sm:gap-0">
-                {processSteps.map((s, idx) => (
-                  <div key={s.n} className="flex sm:flex-col items-center sm:items-center gap-4 sm:gap-0 flex-1">
-                    <div className="flex items-center gap-4 sm:flex-col sm:gap-0">
-                      <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shrink-0 sm:mb-4">
-                        {s.n}
-                      </div>
-                      {idx < processSteps.length - 1 && (
-                        <div className="hidden sm:block w-full h-px bg-border sm:absolute" />
-                      )}
+              <div className="relative flex flex-col sm:flex-row gap-8 sm:gap-0">
+                <div className="hidden sm:block absolute top-6 left-[16.67%] right-[16.67%] h-px bg-border z-0" />
+                {processSteps.map((s) => (
+                  <div key={s.n} className="relative z-10 flex sm:flex-col items-center gap-4 sm:gap-0 flex-1">
+                    <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-lg font-bold shrink-0 sm:mb-4">
+                      {s.n}
                     </div>
                     <div className="sm:text-center">
                       <p className="font-serif text-base font-semibold text-foreground">{s.title}</p>

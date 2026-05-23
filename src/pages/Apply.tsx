@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ArrowRight,
   Building2,
   BookOpen,
   GraduationCap,
@@ -276,6 +277,8 @@ function FileDropZone({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function Apply() {
+  const navigate = useNavigate();
+  const [showForm, setShowForm] = useState(false);
   const [step, setStep] = useState(1);
   const [stepError, setStepError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -429,17 +432,82 @@ export default function Apply() {
             {/* Title */}
             <div className="text-center mb-8">
               <h1 className="font-serif text-3xl font-semibold text-foreground mb-2">
-                Apply to join Maddad
+                {showForm ? "Apply to join Maddad" : "Get started with Maddad"}
               </h1>
               <p className="text-muted-foreground">
-                Takes about 10 minutes. We review all applications within 3 business days.
+                {showForm
+                  ? "Takes about 10 minutes. We review all applications within 3 business days."
+                  : "Choose the path that best describes your situation."}
               </p>
             </div>
 
-            <Progress step={step} total={STEPS.length} />
+            {/* ── Which applies to you? ───────────────────────────────────── */}
+            {!showForm && (
+              <div className="mb-8">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest text-center mb-5">
+                  Which applies to you?
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* Org card */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForm(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="group flex flex-col items-start gap-4 bg-card border border-border hover:border-primary/50 hover:shadow-md rounded-xl p-6 text-left transition-all"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building2 size={20} className="text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-serif text-base font-semibold text-foreground mb-1">
+                        Registered organization, masjid, or MSA
+                      </p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        You represent a registered charity, masjid, Islamic centre, or
+                        university club. You want to run verified fundraising campaigns
+                        with CRA-compliant tax receipts.
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:gap-2.5 transition-all">
+                      Apply as an organization
+                      <ArrowRight size={14} />
+                    </span>
+                  </button>
+
+                  {/* Community appeal card */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/appeals/submit")}
+                    className="group flex flex-col items-start gap-4 bg-card border border-border hover:border-primary/50 hover:shadow-md rounded-xl p-6 text-left transition-all"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Users size={20} className="text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-serif text-base font-semibold text-foreground mb-1">
+                        Personal or community appeal
+                      </p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        You need help for yourself, a family member, or a local community
+                        situation. Appeals require endorsement from a masjid or trusted
+                        community contact.
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary group-hover:gap-2.5 transition-all">
+                      Submit a community appeal
+                      <ArrowRight size={14} />
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {showForm && <Progress step={step} total={STEPS.length} />}
 
             {/* ── Step 1: Organization ───────────────────────────────────── */}
-            {step === 1 && (
+            {showForm && step === 1 && (
               <div className="space-y-6">
                 <div className="bg-card rounded-xl border border-border p-6 md:p-8">
                   <h2 className="font-serif text-xl font-semibold text-foreground mb-6">
@@ -539,7 +607,7 @@ export default function Apply() {
             )}
 
             {/* ── Step 2: Campaign ───────────────────────────────────────── */}
-            {step === 2 && (
+            {showForm && step === 2 && (
               <div className="space-y-6">
                 <div className="bg-card rounded-xl border border-border p-6 md:p-8">
                   <h2 className="font-serif text-xl font-semibold text-foreground mb-2">
@@ -674,7 +742,7 @@ export default function Apply() {
             )}
 
             {/* ── Step 3: Contact + documents ────────────────────────────── */}
-            {step === 3 && (
+            {showForm && step === 3 && (
               <div className="space-y-6">
                 <div className="bg-card rounded-xl border border-border p-6 md:p-8">
                   <h2 className="font-serif text-xl font-semibold text-foreground mb-6">
@@ -778,7 +846,7 @@ export default function Apply() {
             )}
 
             {/* ── Step 4: Review ─────────────────────────────────────────── */}
-            {step === 4 && (
+            {showForm && step === 4 && (
               <div className="space-y-5">
                 {/* Organization */}
                 <div className="bg-card rounded-xl border border-border p-6">
@@ -886,14 +954,14 @@ export default function Apply() {
             )}
 
             {/* ── Error message ──────────────────────────────────────────── */}
-            {stepError && (
+            {showForm && stepError && (
               <div className="mt-5 bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3">
                 <FieldError msg={stepError} />
               </div>
             )}
 
             {/* ── Navigation buttons ─────────────────────────────────────── */}
-            <div className="flex items-center justify-between mt-6">
+            {showForm && <div className="flex items-center justify-between mt-6">
               {step > 1 ? (
                 <button
                   type="button"
@@ -921,10 +989,10 @@ export default function Apply() {
                   )}
                 </Button>
               )}
-            </div>
+            </div>}
 
             {/* Bottom reassurance */}
-            {step === 1 && (
+            {showForm && step === 1 && (
               <p className="text-center text-xs text-muted-foreground mt-8">
                 Free to apply. Zero platform fees.{" "}
                 <Link to="/partners" className="text-primary hover:underline">Learn more</Link>
