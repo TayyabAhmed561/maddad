@@ -52,9 +52,8 @@ export default function VerifierDashboard() {
     );
   }
 
-  if (!user) return null;
-
-  if (role === null) {
+  // Authenticated user whose role hasn't loaded yet — wait
+  if (user && role === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -62,7 +61,9 @@ export default function VerifierDashboard() {
     );
   }
 
-  if (role !== "verifier" && role !== "platform_admin") {
+  const canViewDashboard = role === "verifier" || role === "platform_admin";
+
+  if (!canViewDashboard) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header />

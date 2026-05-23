@@ -103,18 +103,6 @@ export function Header() {
                 </Link>
               );
             })}
-            <Link
-              to="/support-maddad"
-              className={cn(
-                "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
-                location.pathname === "/support-maddad"
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
-              )}
-            >
-              <Heart size={14} />
-              Support us
-            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -124,6 +112,18 @@ export function Header() {
               className="text-xs text-muted-foreground hover:text-foreground transition-colors duration-200 px-2"
             >
               For organizations
+            </Link>
+            <Link
+              to="/support-maddad"
+              className={cn(
+                "px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5",
+                location.pathname === "/support-maddad"
+                  ? "bg-secondary text-secondary-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+              )}
+            >
+              <Heart size={13} />
+              Support us
             </Link>
             {isAuthenticated ? (
               <DropdownMenu>

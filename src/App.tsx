@@ -10,7 +10,6 @@ import { RoleProtectedRoute } from "@/components/auth/RoleProtectedRoute";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import NeedDetail from "./pages/NeedDetail";
-import Verification from "./pages/Verification";
 import Impact from "./pages/Impact";
 import Appeals from "./pages/Appeals";
 import AppealDetail from "./pages/AppealDetail";
@@ -128,29 +127,24 @@ const AppRoutes = () => (
         }
       />
 
-      {/* ── Auth-gated: charity_admin, verifier, or platform_admin ──── */}
-      <Route
-        path="/verification"
-        element={
-          <RoleProtectedRoute allowedRoles={["charity_admin", "verifier", "platform_admin"]}>
-            <Verification />
-          </RoleProtectedRoute>
-        }
-      />
+      {/* ── /verification: public landing + role-gated dashboard ─────── */}
+      <Route path="/verification" element={<VerifierDashboard />} />
+
+      {/* ── Auth-gated: any signed-in user ──────────────────────────── */}
       <Route
         path="/verify/organization"
         element={
-          <RoleProtectedRoute allowedRoles={["charity_admin", "verifier", "platform_admin"]}>
+          <ProtectedRoute>
             <OrgVerificationForm />
-          </RoleProtectedRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/verify/campaign"
         element={
-          <RoleProtectedRoute allowedRoles={["charity_admin", "verifier", "platform_admin"]}>
+          <ProtectedRoute>
             <CampaignVerificationForm />
-          </RoleProtectedRoute>
+          </ProtectedRoute>
         }
       />
 
