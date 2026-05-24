@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
@@ -85,8 +85,14 @@ export default function Index() {
   const { data: campaigns, isLoading: campaignsLoading } = useCampaigns({ verifiedOnly: true });
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const showDhulHijjahBanner = useDhulHijjahBanner() && !bannerDismissed;
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
 
-  const featuredNeeds = campaigns.slice(0, 4);
+  useEffect(() => {
+    const t = setTimeout(() => setLoadTimedOut(true), 5000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const featuredNeeds = campaigns.slice(0, 3);
 
   const statsDisplay = [
     {
@@ -262,31 +268,31 @@ export default function Index() {
         </section>
 
         {/* Featured Verified Needs */}
-        <section className="section-spacing section-warm border-y border-border">
+        <section className="section-spacing section-cream border-y border-border">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-10">
-              <div>
-                <h2 className="heading-section text-2xl md:text-3xl text-foreground mb-2">
+            {/* Header */}
+            <div className="max-w-2xl mx-auto text-center mb-10">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <h2 className="heading-section text-2xl md:text-3xl text-foreground">
                   Verified Needs
                 </h2>
-                <p className="text-muted-foreground text-body">
-                  Campaigns confirmed by our verification team.
-                </p>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  <CheckCircle size={11} />
+                  Verified
+                </span>
               </div>
-              <Button variant="outline" asChild>
-                <Link to="/explore">
-                  View All
-                  <ArrowRight size={16} />
-                </Link>
-              </Button>
+              <p className="text-muted-foreground text-body">
+                Every campaign below has been reviewed by our team for legitimacy and transparency.
+              </p>
             </div>
 
-            {campaignsLoading ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[1, 2, 3, 4].map(i => <NeedCardSkeleton key={i} />)}
+            {/* Cards */}
+            {campaignsLoading && !loadTimedOut ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map(i => <NeedCardSkeleton key={i} />)}
               </div>
             ) : featuredNeeds.length > 0 ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {featuredNeeds.map((need, index) => (
                   <div key={need.id} className="animate-fade-in-up" style={{ animationDelay: `${index * 80}ms` }}>
                     <NeedCard
@@ -297,7 +303,31 @@ export default function Index() {
                   </div>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-6">
+                  Campaigns coming soon — check back after Dhul Hijjah.
+                </p>
+                <Button variant="outline" asChild>
+                  <Link to="/explore">
+                    Explore Needs
+                    <ArrowRight size={16} />
+                  </Link>
+                </Button>
+              </div>
+            )}
+
+            {/* Footer CTA */}
+            {!campaignsLoading && featuredNeeds.length > 0 && (
+              <div className="text-center mt-10">
+                <Button variant="outline" asChild>
+                  <Link to="/explore">
+                    View all verified campaigns
+                    <ArrowRight size={16} />
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 
