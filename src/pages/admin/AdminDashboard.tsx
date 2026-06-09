@@ -484,6 +484,7 @@ export default function AdminDashboard() {
                         <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden sm:table-cell">Type</th>
                         <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Contact</th>
                         <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Submitted</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Risk</th>
                         <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
                         <th className="px-4 py-3" />
                       </tr>
@@ -500,6 +501,19 @@ export default function AdminDashboard() {
                           <td className="px-4 py-3 text-muted-foreground hidden md:table-cell max-w-[140px] truncate">{app.contactEmail}</td>
                           <td className="px-4 py-3 text-muted-foreground text-xs hidden md:table-cell">
                             {new Date(app.createdAt).toLocaleDateString("en-CA")}
+                          </td>
+                          <td className="px-4 py-3 hidden lg:table-cell">
+                            {app.riskScore > 0 && (
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                                app.riskScore >= 70
+                                  ? "bg-destructive/10 text-destructive"
+                                  : app.riskScore >= 40
+                                  ? "bg-amber-500/10 text-amber-700"
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {app.riskScore}
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3"><StatusBadge status={app.status} /></td>
                           <td className="px-4 py-3 text-right">

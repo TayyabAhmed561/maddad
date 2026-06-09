@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { sanitizeText, sanitizeEmail } from "@/lib/sanitize";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -335,22 +336,22 @@ export default function Apply() {
       }
 
       const payload: ApplicationInsert = {
-        orgName:             s1.orgName.trim(),
+        orgName:             sanitizeText(s1.orgName, 200),
         orgType:             s1.orgType as OrgType,
         province:            "ON",
-        websiteUrl:          s1.websiteUrl.trim() || null,
-        orgDescription:      s1.orgDescription.trim(),
-        campaignTitle:       s2.campaignTitle.trim(),
+        websiteUrl:          s1.websiteUrl.trim().slice(0, 500) || null,
+        orgDescription:      sanitizeText(s1.orgDescription, 1000),
+        campaignTitle:       sanitizeText(s2.campaignTitle, 200),
         campaignType:        s2.campaignType,
         campaignCategory:    s2.campaignCategory,
         campaignGoalCad:     s2.campaignGoal ? parseFloat(s2.campaignGoal) : null,
-        campaignDescription: s2.campaignDescription.trim(),
+        campaignDescription: sanitizeText(s2.campaignDescription, 2000),
         zakatEligible:       s2.zakatEligible,
-        contactName:         s3.contactName.trim(),
-        contactRole:         s3.contactRole.trim(),
-        contactEmail:        s3.contactEmail.trim().toLowerCase(),
-        contactPhone:        s3.contactPhone.trim() || null,
-        craNumber:           s3.craNumber.trim() || null,
+        contactName:         sanitizeText(s3.contactName, 200),
+        contactRole:         sanitizeText(s3.contactRole, 100),
+        contactEmail:        sanitizeEmail(s3.contactEmail),
+        contactPhone:        s3.contactPhone.trim().slice(0, 30) || null,
+        craNumber:           s3.craNumber.trim().slice(0, 20) || null,
         howHeard:            s3.howHeard || null,
         documentPaths:       docPaths,
       };

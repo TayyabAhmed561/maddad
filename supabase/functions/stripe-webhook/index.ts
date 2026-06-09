@@ -88,6 +88,20 @@ async function handlePaymentSucceeded(
   admin: ReturnType<typeof createClient>,
   stripe: Stripe,
 ): Promise<void> {
+  // ── Idempotency guard ─────────────────────────────────────────────────────
+  // Stripe can deliver the same event more than once. If we already marked
+  // this PI as succeeded, return immediately — do not re-insert a receipt.
+  const { data: existing } = await admin
+    .from('donations')
+    .select('id, status')
+    .eq('stripe_payment_intent_id', pi.id)
+    .maybeSingle()
+
+  if (existing?.status === 'succeeded') {
+    console.log('[stripe-webhook] Duplicate payment_intent.succeeded for PI:', pi.id, '— skipping')
+    return
+  }
+
   const {
     campaignId,
     givingType,

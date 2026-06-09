@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { CheckCircle, Heart, Shield, Users, ArrowRight } from "lucide-react";
 import { submitAppealIntake } from "@/lib/queries/appealIntakes";
+import { sanitizeText, sanitizeEmail } from "@/lib/sanitize";
 import type { AppealIntakeInsert } from "@/lib/queries/appealIntakes";
 
 type NeedType = AppealIntakeInsert["need_type"];
@@ -69,11 +70,11 @@ export default function SubmitAppeal() {
     setError(null);
 
     const ok = await submitAppealIntake({
-      name:              form.name.trim(),
-      email:             form.email.trim(),
+      name:              sanitizeText(form.name, 200),
+      email:             sanitizeEmail(form.email),
       need_type:         form.need_type,
-      description:       form.description.trim(),
-      endorsing_contact: form.endorsing_contact.trim(),
+      description:       sanitizeText(form.description, 500),
+      endorsing_contact: sanitizeText(form.endorsing_contact, 300),
     });
 
     setSubmitting(false);

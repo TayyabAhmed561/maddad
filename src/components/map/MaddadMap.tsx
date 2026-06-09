@@ -32,7 +32,7 @@ import {
   getDistanceKm,
 } from "@/data/mapData";
 
-mapboxgl.accessToken = "pk.eyJ1IjoibWluaW9uc2EwMCIsImEiOiJjbWt0eTF1MzUxa3dxM3FwcHJuYjhiNXlvIn0.U9u4rqrM2m5yWiqYE5bv2Q";
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN as string;
 
 const PANEL_WIDTH = 420;
 const PANEL_MARGIN = 24;

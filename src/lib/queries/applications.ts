@@ -30,6 +30,7 @@ export interface OrgApplication {
   reviewedAt: string | null
   createdOrganizationId: string | null
   createdAt: string
+  riskScore: number
 }
 
 export interface ApplicationInsert {
@@ -81,6 +82,7 @@ function toApp(row: Record<string, unknown>): OrgApplication {
     reviewedAt:            row.reviewed_at as string | null,
     createdOrganizationId: row.created_organization_id as string | null,
     createdAt:             row.created_at as string,
+    riskScore:             (row.risk_score as number) ?? 0,
   }
 }
 

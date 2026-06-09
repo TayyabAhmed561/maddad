@@ -9,27 +9,7 @@
 
 import Stripe from 'npm:stripe@14'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-interface RequestBody {
-  campaignId: string
-  amount: number          // CAD dollars
-  givingType: string
-  frequency: string
-  tipAmount: number       // CAD dollars
-  coverFees: boolean
-  isAnonymous: boolean
-  donorId: string | null
-}
-
-interface SuccessResponse {
-  clientSecret: string
-}
-
-interface ErrorResponse {
-  error: string
-}
+import { z } from 'npm:zod'
 
 // ── CORS headers ──────────────────────────────────────────────────────────────
 
@@ -38,32 +18,114 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// ── Request schema (Zod) ──────────────────────────────────────────────────────
+
+const AMOUNT_MIN_CAD = 1        // $1.00 CAD minimum
+const AMOUNT_MAX_CAD = 25_000   // $25,000.00 CAD maximum per transaction
+
+const requestSchema = z.object({
+  campaignId:  z.string().uuid('campaignId must be a valid UUID'),
+  amount:      z.number()
+    .min(AMOUNT_MIN_CAD, `Minimum donation is $${AMOUNT_MIN_CAD}.00 CAD`)
+    .max(AMOUNT_MAX_CAD, `Maximum donation per transaction is $${AMOUNT_MAX_CAD.toLocaleString()}.00 CAD`),
+  givingType:  z.enum([
+    'zakat', 'fidya', 'kaffarah', 'qurbani',
+    'sadaqah_jariyah', 'meal_sponsorship', 'sadaqah',
+  ]),
+  frequency:   z.enum(['one-time', 'weekly', 'monthly', 'yearly']),
+  tipAmount:   z.number().min(0).max(1_000),
+  coverFees:   z.boolean(),
+  isAnonymous: z.boolean(),
+  donorId:     z.string().uuid().nullable(),
+})
+
+type RequestBody = z.infer<typeof requestSchema>
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// Max 10 requests per IP per minute for payment intents (card-testing protection)
+
+async function checkRateLimit(
+  admin: ReturnType<typeof createClient>,
+  identifier: string,
+  action: string,
+  maxCount: number,
+  windowMinutes: number,
+): Promise<boolean> {
+  try {
+    const windowStart = new Date(
+      Math.floor(Date.now() / (windowMinutes * 60_000)) * (windowMinutes * 60_000)
+    ).toISOString()
+
+    const { data, error } = await admin.rpc('upsert_rate_limit', {
+      p_identifier: identifier,
+      p_action: action,
+      p_window_start: windowStart,
+    })
+
+    if (error) {
+      // On error, allow the request (fail open — don't break payments over rate-limit errors)
+      console.warn('[create-payment-intent] rate limit check error:', error.message)
+      return true
+    }
+
+    return (data as number) <= maxCount
+  } catch {
+    return true // fail open
+  }
+}
+
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  // Preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const stripeKey      = Deno.env.get('STRIPE_SECRET_KEY')
+  const supabaseUrl    = Deno.env.get('SUPABASE_URL')!
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
   if (!stripeKey) {
     return jsonError('STRIPE_SECRET_KEY is not configured', 500)
   }
 
-  const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' })
-  // Service role client — used for writes that bypass RLS
+  const stripe      = new Stripe(stripeKey, { apiVersion: '2024-06-20' })
   const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-  // ── Parse body ────────────────────────────────────────────────────────────
-  let body: RequestBody
+  // ── Rate limit check ──────────────────────────────────────────────────────
+  const clientIp =
+    req.headers.get('cf-connecting-ip') ??
+    req.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+    'unknown'
+
+  const allowed = await checkRateLimit(adminClient, clientIp, 'create_payment_intent', 10, 1)
+  if (!allowed) {
+    console.warn('[create-payment-intent] Rate limited IP:', clientIp)
+    return new Response(
+      JSON.stringify({ error: 'Too many requests — please wait a moment and try again.' }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': '60',
+        },
+      },
+    )
+  }
+
+  // ── Parse and validate body ───────────────────────────────────────────────
+  let raw: unknown
   try {
-    body = await req.json() as RequestBody
+    raw = await req.json()
   } catch {
-    return jsonError('Invalid request body', 400)
+    return jsonError('Invalid JSON body', 400)
+  }
+
+  const parsed = requestSchema.safeParse(raw)
+  if (!parsed.success) {
+    const message = parsed.error.issues.map(i => i.message).join('; ')
+    return jsonError(`Validation error: ${message}`, 400)
   }
 
   const {
@@ -75,22 +137,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
     coverFees,
     isAnonymous,
     donorId,
-  } = body
+  }: RequestBody = parsed.data
 
-  // ── Validate inputs ───────────────────────────────────────────────────────
-  if (!campaignId || typeof campaignId !== 'string') {
-    return jsonError('campaignId is required', 400)
-  }
-  if (!amount || amount <= 0 || !isFinite(amount)) {
-    return jsonError('amount must be a positive number', 400)
-  }
-  if (!givingType) {
-    return jsonError('givingType is required', 400)
+  // ── Server-side amount bounds (logged for monitoring) ─────────────────────
+  // Zod catches this above, but double-check after parse in case of bypass attempts.
+  if (amount < AMOUNT_MIN_CAD || amount > AMOUNT_MAX_CAD) {
+    console.warn('[create-payment-intent] Out-of-bounds amount attempt:', { amount, clientIp })
+    return jsonError(`Amount must be between $${AMOUNT_MIN_CAD} and $${AMOUNT_MAX_CAD.toLocaleString()} CAD`, 400)
   }
 
   // ── Verify donor identity ─────────────────────────────────────────────────
-  // If donorId is provided, verify the caller's JWT matches it.
-  // Guest donations (donorId === null) are allowed without a session.
   if (donorId !== null) {
     const authHeader = req.headers.get('authorization')
     if (!authHeader) {
@@ -104,7 +160,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   }
 
-  // ── Validate campaign ─────────────────────────────────────────────────────
+  // ── Validate campaign (server-side — never trust client claims) ───────────
   const { data: campaign, error: campaignError } = await adminClient
     .from('campaigns')
     .select('id, title, verification_status, is_active, zakat_eligible, giving_type')
@@ -121,37 +177,32 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (campaign.verification_status !== 'approved') {
     return jsonError('This campaign has not been approved for donations', 400)
   }
-
-  // Zakat can only go to zakat-eligible campaigns
   if (givingType === 'zakat' && !campaign.zakat_eligible) {
     return jsonError('This campaign is not eligible to receive Zakat funds', 400)
   }
 
   // ── Calculate amounts in cents ────────────────────────────────────────────
-  const baseCents   = Math.round(amount * 100)
-  const tipCents    = Math.round(tipAmount * 100)
-  // CAD Stripe rate: 2.9% + $0.30
-  const feesCents   = coverFees ? Math.round((amount * 0.029 + 0.30) * 100) : 0
-  const totalCents  = baseCents + tipCents + feesCents
-  // Maddad takes 0% from donations — revenue comes entirely from optional tips
-  const platformFeeCents = 0
+  const baseCents  = Math.round(amount * 100)
+  const tipCents   = Math.round(tipAmount * 100)
+  const feesCents  = coverFees ? Math.round((amount * 0.029 + 0.30) * 100) : 0
+  const totalCents = baseCents + tipCents + feesCents
 
   // ── Create Stripe Payment Intent ──────────────────────────────────────────
   let paymentIntent: Stripe.PaymentIntent
   try {
     paymentIntent = await stripe.paymentIntents.create({
-      amount: totalCents,
+      amount:   totalCents,
       currency: 'cad',
       automatic_payment_methods: { enabled: true },
       metadata: {
         campaignId,
         givingType,
         frequency,
-        donorId: donorId ?? 'guest',
-        tipAmount: String(tipCents),
-        tipSkipped: String(tipCents === 0),
+        donorId:     donorId ?? 'guest',
+        tipAmount:   String(tipCents),
+        tipSkipped:  String(tipCents === 0),
         platformFee: '0',
-        coverFees: String(coverFees),
+        coverFees:   String(coverFees),
         isAnonymous: String(isAnonymous),
       },
     })
@@ -164,25 +215,25 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const { error: insertError } = await adminClient
     .from('donations')
     .insert({
-      campaign_id: campaignId,
-      donor_id: donorId ?? null,
-      giving_type: givingType,
-      amount,                             // CAD dollars
-      platform_fee_amount: platformFeeCents / 100,
-      status: 'pending',
+      campaign_id:              campaignId,
+      donor_id:                 donorId ?? null,
+      giving_type:              givingType,
+      amount,
+      platform_fee_amount:      0,
+      status:                   'pending',
       frequency,
-      is_anonymous: isAnonymous,
-      hide_amount: false,
+      is_anonymous:             isAnonymous,
+      hide_amount:              false,
       stripe_payment_intent_id: paymentIntent.id,
     })
 
   if (insertError) {
-    // The Payment Intent was already created — log and continue so the donor
-    // can still complete payment. The webhook will reconcile the row.
+    // PI already created — log and continue so the donor can complete payment.
+    // The webhook will reconcile the row on success.
     console.error('[create-payment-intent] DB insert error:', insertError)
   }
 
-  return json<SuccessResponse>({ clientSecret: paymentIntent.client_secret! }, 200)
+  return json({ clientSecret: paymentIntent.client_secret! }, 200)
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -195,5 +246,5 @@ function json<T>(body: T, status: number): Response {
 }
 
 function jsonError(error: string, status: number): Response {
-  return json<ErrorResponse>({ error }, status)
+  return json({ error }, status)
 }

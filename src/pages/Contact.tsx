@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, CheckCircle, Loader2 } from "lucide-react";
 import { submitContactMessage } from "@/lib/queries/contact";
+import { sanitizeText, sanitizeEmail } from "@/lib/sanitize";
 
 const SUBJECTS = [
   "General question",
@@ -41,10 +42,10 @@ export default function Contact() {
     setError(null);
     setSubmitting(true);
     const ok = await submitContactMessage({
-      name:    name.trim(),
-      email:   email.trim().toLowerCase(),
-      subject,
-      message: message.trim(),
+      name:    sanitizeText(name, 200),
+      email:   sanitizeEmail(email),
+      subject: sanitizeText(subject, 200),
+      message: sanitizeText(message, 2000),
     });
     setSubmitting(false);
     if (!ok) {

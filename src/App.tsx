@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import { CookieBanner } from "@/components/CookieBanner";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -176,6 +177,7 @@ const App = () => (
             both useAuth() and React Router hooks in the same component. */}
         <AuthProvider>
           <AppRoutes />
+          <CookieBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

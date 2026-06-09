@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -18,7 +18,11 @@ import {
   Download,
   Loader2,
   ArrowRight,
+  Trash2,
+  ShieldCheck,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 type SortBy = "date-desc" | "date-asc" | "amount-desc" | "amount-asc";
@@ -37,10 +41,24 @@ const filterLabels: Record<FilterType, string> = {
 
 export default function MyGiving() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: allDonations, isLoading: donationsLoading } = useMyDonations();
   const { data: allReceipts, isLoading: receiptsLoading } = useMyReceipts();
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [sortBy, setSortBy] = useState<SortBy>("date-desc");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteState, setDeleteState] = useState<"idle" | "submitting" | "done">("idle");
+
+  const requestDataDeletion = useCallback(async () => {
+    if (!user?.id) return;
+    setDeleteState("submitting");
+    await supabase
+      .from("donors")
+      .update({ data_deletion_requested_at: new Date().toISOString() })
+      .eq("id", user.id);
+    setDeleteState("done");
+    setShowDeleteDialog(false);
+  }, [user?.id]);
 
   const filteredDonations = useMemo(() => {
     let result = [...allDonations];
@@ -236,6 +254,76 @@ export default function MyGiving() {
                 </Button>
               </Link>
             </div>
+
+            {/* PIPEDA data deletion */}
+            {deleteState === "done" ? (
+              <div className="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-5 flex items-start gap-3">
+                <ShieldCheck size={18} className="text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Deletion request received</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Our team will process your request within 30 days. Financial records are retained for tax compliance but your personal details will be anonymized.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 border border-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Privacy (PIPEDA)</p>
+                  <p className="text-sm text-muted-foreground">
+                    Request deletion of your personal data from Maddad.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/5 shrink-0"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 size={13} />
+                  Delete my data
+                </Button>
+              </div>
+            )}
+
+            {/* Delete confirmation dialog */}
+            {showDeleteDialog && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full shadow-xl">
+                  <h3 className="font-serif text-lg font-semibold text-foreground mb-2">
+                    Delete your data?
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                    This will request deletion of your name, email, and address from Maddad.
+                    Donation records are retained for tax compliance but will be anonymized.
+                    This action cannot be undone.
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setShowDeleteDialog(false)}
+                      disabled={deleteState === "submitting"}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1 gap-1.5"
+                      onClick={requestDataDeletion}
+                      disabled={deleteState === "submitting"}
+                    >
+                      {deleteState === "submitting" ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                      Confirm deletion
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
         </section>
